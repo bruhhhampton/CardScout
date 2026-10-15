@@ -1,1 +1,2 @@
 # CardScout
+Leonard - Dev
