@@ -8,7 +8,8 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en-AU">
-      <body>{children}</body>
+      {/* suppressHydrationWarning: browser extensions sometimes add attributes to <body> */}
+      <body suppressHydrationWarning>{children}</body>
     </html>
   );
 }

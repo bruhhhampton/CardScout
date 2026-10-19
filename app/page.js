@@ -1,4 +1,5 @@
 import { listOffers } from '@/lib/offers';
+import OfferForm from './offer-form';
 
 // Always read fresh rows from the database, never a cached copy.
 export const dynamic = 'force-dynamic';
@@ -17,35 +18,41 @@ export default async function Home() {
     <main>
       <header>
         <h1>CardScout</h1>
-        <p className="sub">Card offers waiting for assessment, newest first.</p>
+        <p className="sub">Record card offers for assessment. Newest offers are listed first.</p>
       </header>
 
-      {error && (
-        <p className="error" role="alert">
-          {error}
-        </p>
-      )}
+      <OfferForm />
 
-      {!error && offers.length === 0 && <p className="empty">No offers saved yet.</p>}
+      <section aria-labelledby="offers-heading">
+        <h2 id="offers-heading" className="list-heading">Saved offers</h2>
 
-      <ul className="offers">
-        {offers.map((o) => (
-          <li key={o.id} className="offer">
-            <div className="row">
-              <h2>{o.player}</h2>
-              <span className="badge">Not assessed</span>
-            </div>
-            <p className="card">
-              {o.year} {o.set_name} #{o.card_number} · {o.variant}
-            </p>
-            <p className="condition">{o.grade_condition}</p>
-            <div className="row">
-              <span className="price">Asking {aud.format(Number(o.asking_price_aud))}</span>
-              <time dateTime={o.created_at}>{when.format(new Date(o.created_at))}</time>
-            </div>
-          </li>
-        ))}
-      </ul>
+        {error && (
+          <p className="error" role="alert">
+            {error}
+          </p>
+        )}
+
+        {!error && offers.length === 0 && <p className="empty">No offers saved yet.</p>}
+
+        <ul className="offers">
+          {offers.map((o) => (
+            <li key={o.id} className="offer">
+              <div className="row">
+                <h3>{o.player}</h3>
+                <span className="badge">Not assessed</span>
+              </div>
+              <p className="card">
+                {o.year} {o.set_name} #{o.card_number} · {o.variant}
+              </p>
+              <p className="condition">{o.grade_condition}</p>
+              <div className="row">
+                <span className="price">Asking {aud.format(Number(o.asking_price_aud))}</span>
+                <time dateTime={o.created_at}>{when.format(new Date(o.created_at))}</time>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </section>
 
       <footer>Development data is invented. CardScout never buys cards automatically.</footer>
     </main>
