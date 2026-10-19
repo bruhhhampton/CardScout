@@ -119,3 +119,43 @@ input:focus-visible, button:focus-visible, [tabindex="-1"]:focus-visible {
   border-radius: 8px;
   padding: 12px 14px;
 }
+
+/* FM player context */
+a { color: var(--accent); }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.offer-links { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
+.offer-links a { font-weight: 600; min-height: 44px; display: inline-flex; align-items: center; }
+.offer-title { margin: 0; font-size: 1.4rem; }
+.panel h2 { margin-bottom: 8px; }
+.notice {
+  background: var(--badge-bg);
+  color: var(--badge-text);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 0.95rem;
+}
+.player-name { margin: 8px 0 2px; font-size: 1.15rem; }
+.search-row { display: flex; gap: 8px; margin: 12px 0 4px; }
+.search-row input {
+  flex: 1; min-width: 0; font: inherit; padding: 10px 12px; min-height: 44px;
+  border: 1px solid var(--line); border-radius: 8px; background: var(--input-bg); color: var(--text);
+}
+button.secondary {
+  font: inherit; font-weight: 600; padding: 10px 14px; min-height: 44px;
+  border: 1px solid var(--accent); border-radius: 8px; background: transparent; color: var(--accent); cursor: pointer;
+}
+.results { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 8px; }
+.result {
+  display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;
+  border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px;
+}
+.attr-groups { display: grid; gap: 16px; margin: 16px 0; }
+@media (min-width: 640px) { .attr-groups { grid-template-columns: repeat(3, 1fr); } }
+.attr-group h4 { margin: 0 0 8px; font-size: 0.95rem; color: var(--muted); }
+.attr-group dl { margin: 0; display: grid; gap: 6px; }
+.attr { display: grid; grid-template-columns: 1fr auto; gap: 4px 8px; align-items: center; }
+.attr dt { font-size: 0.9rem; }
+.attr dd { margin: 0; display: flex; align-items: center; gap: 8px; }
+.bar { width: 64px; height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; display: inline-block; }
+.bar span { display: block; height: 100%; background: var(--accent); }
+.attr-value { font-variant-numeric: tabular-nums; font-weight: 600; min-width: 3.2em; text-align: right; }

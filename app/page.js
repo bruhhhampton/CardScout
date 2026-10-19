@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { listOffers } from '@/lib/offers';
 import OfferForm from './offer-form';
 
@@ -48,6 +49,15 @@ export default async function Home() {
               <div className="row">
                 <span className="price">Asking {aud.format(Number(o.asking_price_aud))}</span>
                 <time dateTime={o.created_at}>{when.format(new Date(o.created_at))}</time>
+              </div>
+              <div className="row offer-links">
+                <span className="hint">
+                  {o.players?.name ? `FM player: ${o.players.name}` : 'No FM player linked'}
+                </span>
+                <Link href={`/offers/${o.id}`}>
+                  {o.players?.name ? 'View player context' : 'Match FM player'}
+                  <span className="sr-only"> for {o.player}</span>
+                </Link>
               </div>
             </li>
           ))}
