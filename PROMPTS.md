@@ -28,3 +28,14 @@ Tool: Vercel (no AI prompt)
 What changed: Deployed to Vercel at card-scout-psi.vercel.app. SUPABASE_URL and SUPABASE_SECRET_KEY set in Vercel settings. Replaced the secret key after it appeared in screenshots and deleted the old keys.
 Validation performed and outcome: Opened the link on a phone using mobile data. Added Demo Player F from the phone and it appeared in Supabase. Site still loads offers after the key change.
 Commit: Log publish step
+
+## Entry 4
+Date/time: 19 Oct 2026
+Member: Daniel
+Slice: 2 - FM player context
+Tool: Claude (instead of Copilot)
+Exact prompt: "Show Luka's FM26 player data next to an offer. Staff search and confirm the player (no automatic matching). Show the ratings with a clear 'unverified, not price evidence' label. It must not change the assessment."
+Result: kept
+What changed: Added players table (34,644 rows) and player_id link on card_offers. Added offer page (app/offers/[id]) with player search, link and unlink, and ratings display. Offer list shows the linked player.
+Validation performed and outcome: [fill in after Step 7]
+Commit: Add FM player context to offers
