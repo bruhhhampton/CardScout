@@ -19,3 +19,12 @@ Result: kept, with one fix
 What changed: Added offer form (app/offer-form.js), server save action (app/actions.js), server-side validation (lib/validate-offer.js), createOffer in lib/offers.js. Fix: Codespaces blocked form submits ("Invalid Server Actions request") because it forwards the app through *.app.github.dev, so next.config.mjs now trusts that address in development only.
 Validation performed and outcome: Blank player, year "abcd" and price "1.234" were rejected with field messages and typed values kept. Valid offer (Demo Player E, 95.50) saved once, appeared at the top as Not assessed and showed in Supabase with status new.
 Commit: Add form to save a new offer
+
+## Entry 3
+Date/time: 19 Oct 2026
+Member: Daniel
+Slice: 1 - publish
+Tool: Vercel (no AI prompt)
+What changed: Deployed to Vercel at card-scout-psi.vercel.app. SUPABASE_URL and SUPABASE_SECRET_KEY set in Vercel settings. Replaced the secret key after it appeared in screenshots and deleted the old keys.
+Validation performed and outcome: Opened the link on a phone using mobile data. Added Demo Player F from the phone and it appeared in Supabase. Site still loads offers after the key change.
+Commit: Log publish step
