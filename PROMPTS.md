@@ -37,5 +37,5 @@ Tool: Claude (instead of Copilot)
 Exact prompt: "Show Luka's FM26 player data next to an offer. Staff search and confirm the player (no automatic matching). Show the ratings with a clear 'unverified, not price evidence' label. It must not change the assessment."
 Result: kept
 What changed: Added players table (34,644 rows) and player_id link on card_offers. Added offer page (app/offers/[id]) with player search, link and unlink, and ratings display. Offer list shows the linked player.
-Validation performed and outcome: [fill in after Step 7]
+Validation performed and outcome: On the live site (card-scout-psi.vercel.app), searched "Bukayo Saka", confirmed the match and linked him to an offer. 15 ratings shown with the "unverified, not price evidence" label and source. Offer list showed "FM player: Bukayo Saka". Offer status stayed "Not assessed".
 Commit: Add FM player context to offers
