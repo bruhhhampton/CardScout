@@ -1,6 +1,38 @@
+# Decisions and assumptions
+
+## Direction
+- Staff-focused football card purchasing assessment.
+- Option C: the main flow is assessing a card offer against the owner's buying rules. Football Manager player ratings are shown as extra context on each offer.
+- First build: enter, save and display one card offer.
+
+## Platform
+- Week 4 SDD preferred Python + Streamlit + SQLite. Team moved to GitHub + Codespaces + Supabase + Next.js + Vercel.
+- Reasons: course-supported route, shared hosted database, public link for the Week 7 PoC, keys kept on the server.
+- Trade-off: JavaScript instead of Python. Claude used instead of GitHub Copilot to write code; prompts logged in PROMPTS.md.
+
 ## FM26 player data
 - Provided by Luka. Team confirmed we are allowed to use it for this project.
 - Source: community FM26 dataset (github.com/vfxper/fm26), downloaded 15 Oct 2026.
 - Stored as unverified game ratings. Never used as price or real performance evidence.
 - CA/PA (potential) excluded because some values are scrambled and it would drift into price prediction.
 - Staff confirm each player match; the app never matches automatically.
+
+## Security
+- Secret key kept in .env.local (Codespace) and Vercel settings only. Never in the repo, prompts or chat.
+- Key replaced on 19 Oct 2026 after it appeared in screenshots; old keys deleted.
+- Public link has no login, so it is shared with the team and tutor only. Only invented offer data is stored.
+
+## Evidence boundary
+- Interview evidence supports owner-led sourcing, limited staff knowledge and owner approval for high-value sales. How often staff assess purchases, and how painful it is, is still unconfirmed.
+- No measured time savings, usage rate or willingness to pay yet.
+- Existing price, buylist and inventory tools overlap with some functions.
+
+## Open decisions
+- Owner's real buying rules: staff spending limit, excluded sets, max copies, minimum margin (Pat and Luka to confirm with the owner).
+- Outcomes: eligible, decline, counteroffer and owner review, or Buy / Don't Buy / Escalate.
+- Persona: shop staff plus owner, or a sole trader like Cerf.
+- Legal, approved source for recent sales data.
+- Whether an AI agent is in scope for the PoC (ask the tutor at Week 7).
+
+## Agent boundary
+- Optional later tool orchestration. Fixed calculations and policy checks stay in plain code. No automatic purchases.
