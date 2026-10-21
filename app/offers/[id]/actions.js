@@ -2,8 +2,13 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { OFFER_ID_PATTERN, setOfferPlayer } from '@/lib/offers';
+import { getOffer, OFFER_ID_PATTERN, setOfferPlayer } from '@/lib/offers';
 import { getPlayer, PLAYER_ID_PATTERN } from '@/lib/players';
+
+import { getSettings } from '@/lib/settings';
+import { createAssessment } from '@/lib/assessments';
+import { validateAssessment } from '@/lib/assessment-fields';
+import { assess } from '@/lib/assess.mjs';
 
 function field(formData, name) {
   const v = formData.get(name);
@@ -31,4 +36,31 @@ export async function unlinkPlayer(formData) {
   revalidatePath('/');
   revalidatePath(`/offers/${offerId}`);
   redirect(`/offers/${offerId}?msg=${error ? 'save-failed' : 'unlinked'}`);
+}
+
+
+const ASSESS_FIELDS = [
+  'stock_count', 'condition', 'sales_count', 'median_sold_aud', 'evidence_source',
+  'score_football', 'score_career', 'score_collector', 'score_card', 'score_valuation',
+];
+
+// Runs the owner's rules (plain code) on what staff entered, then saves the result.
+export async function assessOffer(_prev, formData) {
+  const offerId = field(formData, 'offer_id');
+  const values = {};
+  for (const k of ASSESS_FIELDS) values[k] = typeof formData.get(k) === 'string' ? formData.get(k) : '';
+  const attempt = Date.now();
+  const fail = (message, errors = {}) => ({ status: 'error', message, errors, values, attempt });
+  if (!OFFER_ID_PATTERN.test(offerId)) return fail('This offer could not be found.');
+  const check = validateAssessment(values);
+  if (!check.ok) return fail('Please fix the highlighted fields.', check.errors);
+  const [{ offer }, { settings, error: sErr }] = await Promise.all([getOffer(offerId), getSettings()]);
+  if (!offer) return fail('This offer could not be found.');
+  if (sErr) return fail(sErr);
+  const result = assess(offer, check.input, settings);
+  const { error } = await createAssessment(offerId, check.input, result, settings);
+  if (error) return fail(error);
+  revalidatePath('/');
+  revalidatePath(`/offers/${offerId}`);
+  return { status: 'success', message: 'Assessment saved.', errors: {}, values, attempt };
 }
