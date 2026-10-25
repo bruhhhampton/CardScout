@@ -2,9 +2,9 @@
 Status: v1, 25 Oct 2026. Draft for team review at check-in 1. Change the Design Card first, then the instructions, then the code.
 
 ## Design Card
-**Context:** Cerf runs a small football card business alongside his studies. He buys cards from sellers and decides on each one himself, using his own CERF model: football quality, career path, collector appeal, card quality and valuation. Today each assessment means searching recent sold listings, checking player news and comparing prices by hand. Anyone helping him cannot make these calls without asking him.
+**Context:** Cerf Collectables is an Australian online sports card business: the owner, Cerf, plus 3 part-time and 1 full-time staff. Cerf personally manages purchasing and sourcing (interview, 21 Sept) and decides on each card himself, using his own CERF model: football quality, career path, collector appeal, card quality and valuation. Today each assessment means searching recent sold listings, checking player news and comparing prices by hand. Anyone helping him cannot make these calls without asking him.
 
-**Problem:** Buying decisions depend on the owner's judgement and repeated manual research. In the interview (21 Sept, Luka), Cerf described missing a Yamal purchase because he had no time to keep tracking the player, prices and news, and later regretted it. Routine offers need the same research every time, so either Cerf does it all or decisions wait for him.
+**Problem:** Buying decisions depend on the owner's judgement and repeated manual research. In the interview (21 Sept), the owner said he personally manages purchasing, staff need his approval for some high-value cards, and if he were away for a week staff's limited product and market knowledge would make some decisions hard. Our Week 4 user story adds that Cerf passed on Yamal cards because he had no time to keep tracking the player, prices and news, and later regretted it. Routine offers need the same research every time, so either Cerf does it all or decisions wait for him.
 
 1. **Task:** For one saved card offer, gather recent sold prices for that exact card and current information about the player, then draft the five CERF scores, each with a short reason and source links, plus questions for staff.
 

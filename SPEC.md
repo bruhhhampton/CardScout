@@ -2,7 +2,7 @@
 Status: Week 07 PoC build. The owner's real spending, stock and pricing limits are provisional until Cerf confirms them. Business value still needs testing with users in Weeks 8 to 9.
 
 ## Who uses it
-Cerf, the owner of a small football card business, and anyone who assesses card offers for him. Whether Cerf has staff or works alone is still to be confirmed; the app works either way.
+Staff at Cerf Collectables (an Australian online sports card business with 3 part-time and 1 full-time staff) who assess card offers, and Cerf, the owner, who sets the rules and reviews referred cases. Sole traders can use it the same way, as both assessor and owner.
 
 ## Problem
 Buying decisions depend on the owner's judgement and repeated manual research (sold prices, player form, card details). CardScout records the owner's judgement once (Owner settings), uses an AI agent to do the research and draft the evidence, and applies the owner's rules the same way every time. Routine offers can be handled without the owner; uncertain or high-value offers go to the owner with reasons. Stream: Founder's Second Brain.
