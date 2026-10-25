@@ -22,7 +22,7 @@ Buying decisions depend on the owner's judgement and repeated manual research (s
 5. Demo data: one realistic offer per outcome · Vignesh
 6. Owner's real limits entered in settings · Luka and Pat (from Cerf)
 Agent: research sold prices and player news for one offer and draft the five CERF scores with sources, for a person to check · Daniel builds, the team reviews AGENT.md
-Check-ins: [day and time 1] and [day and time 2] on Teams (team to confirm)
+Check-ins: Thursday 22 Oct and Sunday 25 Oct on Teams
 Each person brings: what they finished, a link to their commit, and where they are stuck
 
 ## Slices
@@ -74,3 +74,5 @@ Next.js server reads and writes Supabase; the browser only receives what it need
 - 21 Oct 2026: Outcomes come from plain code, never the AI, because the same inputs must always give the same answer and mentors and owners must be able to check it.
 - 25 Oct 2026: Agent on Claude (Anthropic API, paid) rather than the Gemini free tier, because web search is built in and already tested, there are no free-tier quota limits during the demo, and paid API data is not used for training by default.
 - 25 Oct 2026: Agent passcode and daily cap, because the public link has no login and AI calls cost money.
+- 26 Oct 2026: Main users are Cerf Collectables staff, with Cerf reviewing referred cases, because our Week 2 research shows the business has 3 part-time and 1 full-time staff. The Yamal story is cited to our Week 4 user story, not the 21 Sept interview, which does not mention it.
+- 26 Oct 2026: Focus on individual sports cards, because buylist software such as SortSwift already applies owner rules to card games with a catalogue price, and individual sports cards have none, so their evidence has to be gathered first.

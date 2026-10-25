@@ -59,5 +59,16 @@ Tool: Claude (instead of Copilot)
 Exact prompt: "Make it agentic (tutor approved). Add a bounded AI agent that reads the offer, owner settings and FM ratings, web searches for sold prices and player news, records sold sales and drafts the five CERF scores with sources and questions for staff. It must not decide, invent prices, count sales or do the maths. Check every sale on the server, keep a trace, cap daily runs, add a team passcode, write AGENT.md with the Design Card and tests, keep the agent's instructions identical to AGENT.md, pre-fill the assess form and let staff confirm before the plain-code rules run."
 Result: kept
 What changed: Added agent_runs table and assessments.agent_run_id (database/004_agent_runs.sql); lib/agent.js (agent loop), lib/agent-instructions.mjs (system prompt, same text as AGENT.md), lib/agent-checks.mjs (sale, source and median checks), lib/agent-runs.js; AI draft panel with passcode on the offer page; pre-filled assess form; AGENT.md; tests evaluation/agent_checks_tests.mjs and evaluation/agent_md_sync_test.mjs. Added @anthropic-ai/sdk. Rewrote SPEC.md in the Build Plan format.
-Validation performed and outcome: Guardrail and sync tests passed. With a fake AI and test database: invented sale link and USD sale rejected, unseen source dropped, server counted 2 sales with median $150, stock left for staff, rules gave Owner review, wrong passcode ran nothing, right passcode ran one draft, no keys or passcode in browser code. [add live test results from AGENT.md]
+Validation performed and outcome: Guardrail and sync tests passed. With a fake AI and test database: invented sale link and USD sale rejected, unseen source dropped, server counted 2 sales with median $150, stock left for staff, rules gave Owner review, wrong passcode ran nothing, right passcode ran one draft, no keys or passcode in browser code. Live site, 25 Oct: Normal 2, Boundary, Escalation and Passcode tests passed (details in AGENT.md). Normal 1 and Normal 3 not yet run: waiting for a real card from the team.
 Commit: Add AI draft agent
+
+## Entry 7
+Date/time: 26 Oct 2026
+Member: Daniel
+Slice: 4 - AI draft (agent), documentation
+Tool: Claude (instead of Copilot)
+Exact prompt: "I have included our group docs infs3605 and it also shows our weekly progress as well"
+Result: changed, then kept
+What changed: AGENT.md Context and Problem now describe Cerf Collectables (owner plus 3 part-time and 1 full-time staff) and cite the Yamal story to our Week 4 user story, because the 21 Sept interview does not mention it. Decision 2 now names the Cerf Collectables staff member as the user. Decision 8 adds why individual sports cards need an agent when catalogue-priced cards do not. SPEC.md "Who uses it" updated, check-in dates added (22 and 25 Oct) and two dated decisions added. Week 07 PoC slides 2 and 6 corrected to match.
+Validation performed and outcome: Checked each change against the group doc (Week 2 business background, 21 Sept interview, Week 4 persona and user story). Agent instructions block unchanged; agent_md_sync_test passed.
+Commit: Docs: AGENT update, check-in dates, prompt log

@@ -8,7 +8,7 @@ Status: v1, 25 Oct 2026. Draft for team review at check-in 1. Change the Design 
 
 1. **Task:** For one saved card offer, gather recent sold prices for that exact card and current information about the player, then draft the five CERF scores, each with a short reason and source links, plus questions for staff.
 
-2. **User:** The person assessing the offer: Cerf, or anyone assessing on his behalf. Cerf owns the rules and makes the final call on anything referred.
+2. **User:** A Cerf Collectables staff member assessing a card offer, or Cerf himself when he assesses. Cerf owns the rules and makes the final call on anything referred.
 
 3. **Goal:** A sourced, checkable draft that cuts the research time for an offer, so the assessor only confirms or corrects it instead of starting from nothing.
 
@@ -29,7 +29,7 @@ Status: v1, 25 Oct 2026. Draft for team review at check-in 1. Change the Design 
 
 7. **Human responsibility:** The assessor checks every draft score and link, enters stock and condition, then submits. The plain-code rules decide. Cerf reviews every Owner review case, including: condition unsure, fewer sold sales than his minimum, price above the staff limit, or a CERF category of speculative, watch or expensive. If the agent is asked to decide or buy, it adds a question saying a person must decide.
 
-8. **Why an agent (design rationale, not an instruction):** The research is multi-step and varies every time. The agent has to choose search terms for each card and player, read results worded differently on every site, decide which listings are true sold comparables, use several tools in an order that depends on what it finds, and judge the player against the owner's scoring guide. A fixed rule cannot read varied listings or news, and a form or a single prompt cannot search, check, record and cite in one flow. The parts that must be exact stay in plain code: the sale checks, the median and the outcome rules.
+8. **Why an agent (design rationale, not an instruction):** The research is multi-step and varies every time. The agent has to choose search terms for each card and player, read results worded differently on every site, decide which listings are true sold comparables, use several tools in an order that depends on what it finds, and judge the player against the owner's scoring guide. A fixed rule cannot read varied listings or news, and a form or a single prompt cannot search, check, record and cite in one flow. The parts that must be exact stay in plain code: the sale checks, the median and the outcome rules. Cards with a catalogue price, such as most Pokémon singles, only need a fixed rule, and buylist software already applies one. Individual sports cards have no catalogue price, so the evidence has to be searched for and checked first.
 
 ## Agent instructions
 The code uses this text word for word (lib/agent-instructions.mjs). {{TODAY}} and {{MAX_SEARCHES}} are filled in by the server.
