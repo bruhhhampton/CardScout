@@ -76,3 +76,4 @@ Next.js server reads and writes Supabase; the browser only receives what it need
 - 25 Oct 2026: Agent passcode and daily cap, because the public link has no login and AI calls cost money.
 - 26 Oct 2026: Main users are Cerf Collectables staff, with Cerf reviewing referred cases, because our Week 2 research shows the business has 3 part-time and 1 full-time staff. The Yamal story is cited to our Week 4 user story, not the 21 Sept interview, which does not mention it.
 - 26 Oct 2026: Focus on individual sports cards, because buylist software such as SortSwift already applies owner rules to card games with a catalogue price, and individual sports cards have none, so their evidence has to be gathered first.
+- 26 Oct 2026: Removed Topps Chrome from the provisional excluded sets, because it is one of the most popular football card lines and the exclusion was the placeholder, not Cerf's confirmed rule. 
