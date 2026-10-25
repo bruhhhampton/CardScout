@@ -36,3 +36,11 @@
 
 ## Agent boundary
 - Optional later tool orchestration. Fixed calculations and policy checks stay in plain code. No automatic purchases.
+
+## AI agent
+- Tutor approved adding the agent before Week 07.
+- Bounded agent drafts evidence and CERF scores with sources; it never decides, buys, counts sales or calculates prices. Design in AGENT.md.
+- Model: Claude via the Anthropic API (ANTHROPIC_MODEL, default claude-sonnet-5-5), chosen over the Gemini free tier for built-in web search, no demo-day quota limits and paid-API privacy. Key kept server-side only.
+- Sold prices come from web search until an approved data source is found. Every sale needs a link the agent actually saw; the server checks and counts them.
+- Staff confirm stock, condition and every draft value before the plain-code rules run.
+- Team passcode and daily cap (default 30) because the link has no login. Web search costs about $10 per 1,000 searches plus tokens.

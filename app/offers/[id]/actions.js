@@ -9,6 +9,9 @@ import { getSettings } from '@/lib/settings';
 import { createAssessment } from '@/lib/assessments';
 import { validateAssessment } from '@/lib/assessment-fields';
 import { assess } from '@/lib/assess.mjs';
+import { runAgent } from '@/lib/agent';
+import { countRunsLastDay, saveRun } from '@/lib/agent-runs';
+import { createHash, timingSafeEqual } from 'node:crypto';
 
 function field(formData, name) {
   const v = formData.get(name);
@@ -58,9 +61,49 @@ export async function assessOffer(_prev, formData) {
   if (!offer) return fail('This offer could not be found.');
   if (sErr) return fail(sErr);
   const result = assess(offer, check.input, settings);
-  const { error } = await createAssessment(offerId, check.input, result, settings);
+  const runId = field(formData, 'agent_run_id');
+  const agentRunId = OFFER_ID_PATTERN.test(runId) ? runId : null;
+  const { error } = await createAssessment(offerId, check.input, result, settings, agentRunId);
   if (error) return fail(error);
   revalidatePath('/');
   revalidatePath(`/offers/${offerId}`);
   return { status: 'success', message: 'Assessment saved.', errors: {}, values, attempt };
+}
+
+
+const DAILY_LIMIT = Number(process.env.AGENT_DAILY_LIMIT || 30);
+
+// Compares passcodes without leaking how many characters matched.
+function passcodeOk(given) {
+  const expected = process.env.AGENT_PASSCODE;
+  if (!expected) return false;
+  const a = createHash('sha256').update(String(given ?? '')).digest();
+  const b = createHash('sha256').update(expected).digest();
+  return timingSafeEqual(a, b);
+}
+
+// Runs the bounded AI agent to prepare a draft. Staff still review and run the assessment.
+export async function prepareDraft(_prev, formData) {
+  const offerId = field(formData, 'offer_id');
+  const notes = (typeof formData.get('staff_notes') === 'string' ? formData.get('staff_notes') : '').slice(0, 4000);
+  const attempt = Date.now();
+  if (!OFFER_ID_PATTERN.test(offerId)) return { status: 'error', message: 'This offer could not be found.', notes, attempt };
+  if (!process.env.AGENT_PASSCODE) {
+    return { status: 'error', message: 'AI drafts are locked: AGENT_PASSCODE is not set on the server.', notes, attempt };
+  }
+  if (!passcodeOk(formData.get('passcode'))) {
+    return { status: 'error', message: 'Wrong passcode. Nothing was run.', notes, attempt };
+  }
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return { status: 'error', message: 'AI drafts are not set up yet: ANTHROPIC_API_KEY is missing on the server.', notes, attempt };
+  }
+  if ((await countRunsLastDay()) >= DAILY_LIMIT) {
+    return { status: 'error', message: `The daily limit of ${DAILY_LIMIT} AI drafts has been reached. Try again tomorrow or enter the evidence by hand.`, notes, attempt };
+  }
+  const run = await runAgent(offerId, notes);
+  const { error } = await saveRun(run);
+  revalidatePath(`/offers/${offerId}`);
+  if (error) return { status: 'error', message: error, notes, attempt };
+  if (run.status !== 'completed') return { status: 'error', message: `The AI draft did not finish: ${run.error}`, notes, attempt };
+  return { status: 'success', message: 'AI draft ready. Check every score and link below before running the assessment.', notes: '', attempt };
 }

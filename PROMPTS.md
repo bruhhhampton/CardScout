@@ -50,3 +50,14 @@ Result: kept
 What changed: Added shop_settings and assessments tables (database/003_settings_assessments.sql), /settings page, assess form and result on the offer page, rules engine lib/assess.mjs with 21 synthetic tests (evaluation/assess_tests.mjs), outcome badges on the list. Updated SPEC.md.
 Validation performed and outcome: 21 synthetic rule checks passed. On the live site, settings loaded and saved. Bukayo Saka offer gave all four outcomes using synthetic sales: Eligible (median $150, ceiling $112.50, CERF 80), Owner review (condition not sure), Counteroffer (median $100, ceiling $75) and Decline (football quality 50, below reject level 60).
 Commit: Add owner settings and assessment
+
+## Entry 6
+Date/time: 25 Oct 2026
+Member: Daniel
+Slice: 4 - AI draft (agent)
+Tool: Claude (instead of Copilot)
+Exact prompt: "Make it agentic (tutor approved). Add a bounded AI agent that reads the offer, owner settings and FM ratings, web searches for sold prices and player news, records sold sales and drafts the five CERF scores with sources and questions for staff. It must not decide, invent prices, count sales or do the maths. Check every sale on the server, keep a trace, cap daily runs, add a team passcode, write AGENT.md with the Design Card and tests, keep the agent's instructions identical to AGENT.md, pre-fill the assess form and let staff confirm before the plain-code rules run."
+Result: kept
+What changed: Added agent_runs table and assessments.agent_run_id (database/004_agent_runs.sql); lib/agent.js (agent loop), lib/agent-instructions.mjs (system prompt, same text as AGENT.md), lib/agent-checks.mjs (sale, source and median checks), lib/agent-runs.js; AI draft panel with passcode on the offer page; pre-filled assess form; AGENT.md; tests evaluation/agent_checks_tests.mjs and evaluation/agent_md_sync_test.mjs. Added @anthropic-ai/sdk. Rewrote SPEC.md in the Build Plan format.
+Validation performed and outcome: Guardrail and sync tests passed. With a fake AI and test database: invented sale link and USD sale rejected, unseen source dropped, server counted 2 sales with median $150, stock left for staff, rules gave Owner review, wrong passcode ran nothing, right passcode ran one draft, no keys or passcode in browser code. [add live test results from AGENT.md]
+Commit: Add AI draft agent

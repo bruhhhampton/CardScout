@@ -8,8 +8,12 @@ import { getSettings } from '@/lib/settings';
 import { OUTCOMES } from '@/lib/assess.mjs';
 import { SCORE_FIELDS } from '@/lib/assessment-fields';
 import AssessForm from './assess-form';
+import AgentPanel from './agent-panel';
+import { getLatestRun } from '@/lib/agent-runs';
 
 export const dynamic = 'force-dynamic';
+// AI drafts can take up to a minute.
+export const maxDuration = 120;
 
 const aud = new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' });
 
@@ -37,12 +41,23 @@ export default async function OfferPage({ params, searchParams }) {
 
   const query = typeof sp?.q === 'string' ? sp.q : offer.player;
   const message = MESSAGES[sp?.msg];
-  const [{ player, error: playerError }, { players: results, error: searchError }, { assessment }, { settings }] = await Promise.all([
+  const [{ player, error: playerError }, { players: results, error: searchError }, { assessment }, { settings }, { run }] = await Promise.all([
     offer.player_id ? getPlayer(offer.player_id) : Promise.resolve({ player: null, error: null }),
     offer.player_id ? Promise.resolve({ players: [], error: null }) : searchPlayers(query),
     getLatestAssessment(offer.id),
     getSettings(),
+    getLatestRun(offer.id),
   ]);
+  const draft = run?.status === 'completed' ? run.draft : null;
+  const usedRun = draft && (!assessment || new Date(run.created_at) > new Date(assessment.created_at)) ? run : null;
+  const initial = usedRun
+    ? {
+        sales_count: String(usedRun.sales_count ?? 0),
+        median_sold_aud: usedRun.median_sold_aud == null ? '' : String(usedRun.median_sold_aud),
+        evidence_source: `AI draft ${new Date(usedRun.created_at).toLocaleDateString('en-AU', { timeZone: 'Australia/Sydney' })}: ${(usedRun.sales ?? []).filter((x) => x.accepted).map((x) => x.url).join(' ')}`.slice(0, 500),
+        ...Object.fromEntries(SCORE_FIELDS.map((f) => [f.name, draft.scores?.[f.key]?.score == null ? '' : String(draft.scores[f.key].score)])),
+      }
+    : {};
 
   return (
     <main>
@@ -65,6 +80,80 @@ export default async function OfferPage({ params, searchParams }) {
       )}
 
 
+
+      <section className="panel" aria-labelledby="agent-heading">
+        <h2 id="agent-heading">AI draft</h2>
+        <p className="notice">
+          The AI searches the web for sold prices and player news and drafts the five scores with sources. It does not
+          decide or buy anything. The server counts the sales and works out the middle price, and the owner&apos;s rules
+          make the decision after you check the draft.
+        </p>
+        {run?.status === 'failed' && <p className="error" role="alert">Last AI draft did not finish: {run.error}</p>}
+        {draft && (
+          <div className="draft">
+            <p className="hint">
+              Drafted {new Date(run.created_at).toLocaleString('en-AU', { timeZone: 'Australia/Sydney' })} · {run.model} · {run.searches} search(es)
+            </p>
+            <h3>Draft scores</h3>
+            <ul className="draft-scores">
+              {SCORE_FIELDS.map((f) => {
+                const sc = draft.scores?.[f.key] ?? {};
+                return (
+                  <li key={f.key}>
+                    <strong>{f.label}: {sc.score ?? '–'}</strong>
+                    {sc.flag && <span className="field-error"> · {sc.flag}</span>}
+                    <div>{sc.reason}</div>
+                    {sc.sources?.length > 0 && (
+                      <div className="hint">
+                        {sc.sources.map((u, i) => (
+                          <a key={i} href={u} target="_blank" rel="noopener noreferrer nofollow">Source {i + 1}</a>
+                        )).reduce((a, b) => [a, ' · ', b])}
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+            <h3>Sold sales the AI found</h3>
+            <p className="hint">
+              Counted by the server: {run.sales_count} accepted
+              {run.median_sold_aud != null ? `, middle price ${aud.format(Number(run.median_sold_aud))}` : ''}. Open each link to check it.
+            </p>
+            {(run.sales ?? []).length === 0 ? <p className="empty">No sold sales recorded.</p> : (
+              <ul className="draft-sales">
+                {run.sales.map((x, i) => (
+                  <li key={i} className={x.accepted ? 'ok' : 'rejected'}>
+                    <span>{x.accepted ? 'Accepted' : 'Not counted'}</span>{' '}
+                    {x.currency} {x.price} · {x.sold_date} ·{' '}
+                    <a href={x.url} target="_blank" rel="noopener noreferrer nofollow">{x.title || 'link'}</a>
+                    {!x.accepted && <div className="hint">{(x.problems ?? []).join('; ')}</div>}
+                  </li>
+                ))}
+              </ul>
+            )}
+            {draft.questions_for_staff?.length > 0 && (
+              <>
+                <h3>The AI needs you to check</h3>
+                <ul>{draft.questions_for_staff.map((q, i) => <li key={i}>{q}</li>)}</ul>
+              </>
+            )}
+            <details>
+              <summary>What the AI did (trace)</summary>
+              <ol className="trace">
+                {(run.trace ?? []).map((t, i) => (
+                  <li key={i}>
+                    {t.type === 'search' && <>Searched: “{t.query}”</>}
+                    {t.type === 'search_results' && <>Got {t.results.length} result(s)</>}
+                    {t.type === 'tool' && <>Used {t.name}{t.name === 'record_sale' ? (t.accepted ? ' (accepted)' : ` (rejected: ${t.problems?.join('; ')})`) : ''}</>}
+                  </li>
+                ))}
+              </ol>
+            </details>
+          </div>
+        )}
+        <AgentPanel offerId={offer.id} />
+      </section>
+
       <section className="panel" aria-labelledby="assess-heading">
         <h2 id="assess-heading">Assessment</h2>
         <p className="hint">
@@ -85,9 +174,10 @@ export default async function OfferPage({ params, searchParams }) {
           </div>
         )}
         {settings ? (
-          <details open={!assessment}>
+          <details open={!assessment || Boolean(usedRun)}>
             <summary>{assessment ? 'Assess again' : 'Enter the evidence'}</summary>
-            <AssessForm offerId={offer.id} salesWindowDays={settings.sales_window_days} />
+            <AssessForm key={usedRun?.id ?? 'manual'} offerId={offer.id} salesWindowDays={settings.sales_window_days}
+              initial={initial} agentRunId={usedRun?.id ?? null} />
           </details>
         ) : (
           <p className="error" role="alert">Owner settings are missing. Run database/003_settings_assessments.sql in Supabase.</p>

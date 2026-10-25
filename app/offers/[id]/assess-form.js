@@ -22,9 +22,9 @@ function Field({ name, label, hint, state, children, inputMode }) {
   );
 }
 
-export default function AssessForm({ offerId, salesWindowDays }) {
+export default function AssessForm({ offerId, salesWindowDays, initial = {}, agentRunId = null }) {
   const [state, formAction, pending] = useActionState(assessOffer, {
-    status: 'idle', message: '', errors: {}, values: {}, attempt: 0,
+    status: 'idle', message: '', errors: {}, values: initial, attempt: 0,
   });
   const formRef = useRef(null);
   const msgRef = useRef(null);
@@ -45,6 +45,10 @@ export default function AssessForm({ offerId, salesWindowDays }) {
       )}
       <form ref={formRef} action={formAction} key={state.attempt} noValidate className="offer-form">
         <input type="hidden" name="offer_id" value={offerId} />
+        {agentRunId && <input type="hidden" name="agent_run_id" value={agentRunId} />}
+        {agentRunId && (
+          <p className="notice">Pre-filled from the AI draft. Check every value, then add stock and condition yourself.</p>
+        )}
         <Field name="stock_count" label="Copies already in stock" hint="Count the shop's copies of this exact card" state={state} inputMode="numeric" />
         <Field name="condition" label="Condition after inspection" state={state}>
           <select id="condition" name="condition" defaultValue={state.values.condition ?? ''}

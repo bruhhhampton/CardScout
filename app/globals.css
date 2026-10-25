@@ -176,9 +176,9 @@ button.secondary {
 .result-outcome { margin: 0 0 6px; font-size: 1.3rem; font-weight: 700; }
 .result ul { margin: 0 0 10px; padding-left: 20px; }
 .result-facts { margin: 0; display: grid; gap: 4px; font-size: 0.9rem; }
-.result-facts div { display: grid; grid-template-columns: 8.5em 1fr; gap: 8px; }
+.result-facts div { display: grid; grid-template-columns: 8.5em minmax(0, 1fr); gap: 8px; }
 .result-facts dt { font-weight: 600; }
-.result-facts dd { margin: 0; }
+.result-facts dd { margin: 0; overflow-wrap: anywhere; min-width: 0; }
 details summary { cursor: pointer; font-weight: 600; margin: 8px 0 14px; min-height: 44px; display: flex; align-items: center; }
 .field select {
   font: inherit; padding: 10px 12px; min-height: 44px; border: 1px solid var(--line);
@@ -187,3 +187,22 @@ details summary { cursor: pointer; font-weight: 600; margin: 8px 0 14px; min-hei
 .field.has-error select { border-color: var(--error-text); }
 .settings-form fieldset { margin: 0 0 16px; }
 .settings-form legend { font-weight: 700; font-size: 1.05rem; padding: 0 4px; }
+
+/* AI draft */
+.agent-form { display: grid; gap: 12px; margin-top: 12px; }
+.agent-form textarea, .agent-form input {
+  font: inherit; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px;
+  background: var(--input-bg); color: var(--text); resize: vertical;
+}
+.agent-form button {
+  font: inherit; font-weight: 600; padding: 12px 16px; min-height: 44px; border: 0; border-radius: 8px;
+  background: var(--accent); color: var(--bg); cursor: pointer;
+}
+.agent-form button:disabled { opacity: 0.6; cursor: wait; }
+.draft h3 { margin: 16px 0 6px; font-size: 1rem; }
+.draft-scores, .draft-sales { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.draft-scores li, .draft-sales li { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+.draft-sales li.ok span:first-child { color: var(--success-text); font-weight: 700; }
+.draft-sales li.rejected span:first-child { color: var(--error-text); font-weight: 700; }
+.draft a { overflow-wrap: anywhere; }
+.trace { margin: 0; padding-left: 20px; font-size: 0.9rem; color: var(--muted); }

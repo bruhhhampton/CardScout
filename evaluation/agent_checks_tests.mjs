@@ -1,0 +1,34 @@
+// Run: node evaluation/agent_checks_tests.mjs   (no AI or network used)
+import assert from 'node:assert/strict';
+import { checkSale, checkDraft, summariseSales, normaliseUrl, urlsInText } from '../lib/agent-checks.mjs';
+
+const known = new Set(['https://www.ebay.com.au/itm/111', 'https://ebay.com.au/itm/222?x=1', 'https://site.com/a'].map(normaliseUrl));
+const ok = { price: '150', currency: 'AUD', sold_date: '2026-10-10', url: 'https://ebay.com.au/itm/111', title: 't', exact_match: true, is_lot: false };
+const today = '2026-10-21';
+const c = (x) => checkSale({ ...ok, ...x }, known, today, 30);
+
+assert.equal(c({}).accepted, true, 'valid sale');
+assert.equal(c({ url: 'https://ebay.com.au/itm/999' }).accepted, false, 'invented link rejected');
+assert.equal(c({ url: 'not a url' }).accepted, false, 'bad link');
+assert.equal(c({ currency: 'USD' }).accepted, false, 'non-AUD');
+assert.equal(c({ price: '12.345' }).accepted, false, '3 decimals');
+assert.equal(c({ price: '-5' }).accepted, false, 'negative');
+assert.equal(c({ price: '0' }).accepted, false, 'zero');
+assert.equal(c({ sold_date: '2026-11-01' }).accepted, false, 'future');
+assert.equal(c({ sold_date: '2026-08-01' }).accepted, false, 'stale');
+assert.equal(c({ sold_date: '10/10/2026' }).accepted, false, 'bad date');
+assert.equal(c({ exact_match: false }).accepted, false, 'not exact');
+assert.equal(c({ is_lot: true }).accepted, false, 'lot');
+assert.equal(c({ url: 'https://EBAY.com.au/itm/222?x=1#frag' }).accepted, true, 'url normalised');
+
+const s = summariseSales([c({ price: '100' }), c({ price: '100' }), c({ url: 'https://site.com/a', price: '200' }), c({ url: 'https://x.com/z', price: '999' })]);
+assert.deepEqual(s, { sales_count: 2, median_sold_aud: 150 }, 'duplicates and rejected sales ignored');
+assert.deepEqual(summariseSales([]), { sales_count: 0, median_sold_aud: null });
+
+const d = checkDraft({ scores: { football: { score: 85, reason: 'r', sources: ['https://site.com/a', 'https://fake.com'] }, career: { score: 101 } }, questions_for_staff: ['Stock?'] }, known);
+assert.deepEqual(d.scores.football.sources, ['https://site.com/a'], 'unseen source dropped');
+assert.equal(d.scores.football.flag, null);
+assert.equal(d.scores.career.score, null, 'out of range score dropped');
+assert.ok(d.scores.collector.flag, 'missing score flagged');
+assert.deepEqual(urlsInText('see https://a.com/x and http://b.com/y.'), ['a.com/x', 'b.com/y'].map((u) => normaliseUrl('https://' + u)));
+console.log('Agent guardrail checks passed (no AI or network used).');
