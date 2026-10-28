@@ -11,7 +11,8 @@ import { validateAssessment } from '@/lib/assessment-fields';
 import { assess } from '@/lib/assess.mjs';
 import { runAgent } from '@/lib/agent';
 import { countRunsLastDay, saveRun } from '@/lib/agent-runs';
-import { createHash, timingSafeEqual } from 'node:crypto';
+import { cookies } from 'next/headers';
+import { AGENT_COOKIE, agentToken, cookieOptions, isRemembered, passcodeOk } from '@/lib/agent-access';
 
 function field(formData, name) {
   const v = formData.get(name);
@@ -29,7 +30,9 @@ export async function linkPlayer(formData) {
   const { error } = await setOfferPlayer(offerId, playerId);
   revalidatePath('/');
   revalidatePath(`/offers/${offerId}`);
-  redirect(`/offers/${offerId}?msg=${error ? 'save-failed' : 'linked'}`);
+  // If the passcode is remembered on this device, start the AI draft straight after linking.
+  const startDraft = !error && field(formData, 'then') === 'draft' && isRemembered(await cookies());
+  redirect(`/offers/${offerId}?msg=${error ? 'save-failed' : 'linked'}${startDraft ? '&draft=1' : ''}`);
 }
 
 export async function unlinkPlayer(formData) {
@@ -43,7 +46,7 @@ export async function unlinkPlayer(formData) {
 
 
 const ASSESS_FIELDS = [
-  'stock_count', 'condition', 'sales_count', 'median_sold_aud', 'evidence_source',
+  'stock_count', 'condition', 'rookie_card', 'first_team', 'sales_count', 'median_sold_aud', 'evidence_source',
   'score_football', 'score_career', 'score_collector', 'score_card', 'score_valuation',
 ];
 
@@ -73,14 +76,6 @@ export async function assessOffer(_prev, formData) {
 
 const DAILY_LIMIT = Number(process.env.AGENT_DAILY_LIMIT || 30);
 
-// Compares passcodes without leaking how many characters matched.
-function passcodeOk(given) {
-  const expected = process.env.AGENT_PASSCODE;
-  if (!expected) return false;
-  const a = createHash('sha256').update(String(given ?? '')).digest();
-  const b = createHash('sha256').update(expected).digest();
-  return timingSafeEqual(a, b);
-}
 
 // Runs the bounded AI agent to prepare a draft. Staff still review and run the assessment.
 export async function prepareDraft(_prev, formData) {
@@ -91,8 +86,13 @@ export async function prepareDraft(_prev, formData) {
   if (!process.env.AGENT_PASSCODE) {
     return { status: 'error', message: 'AI drafts are locked: AGENT_PASSCODE is not set on the server.', notes, attempt };
   }
-  if (!passcodeOk(formData.get('passcode'))) {
-    return { status: 'error', message: 'Wrong passcode. Nothing was run.', notes, attempt };
+  const jar = await cookies();
+  if (!isRemembered(jar)) {
+    if (!passcodeOk(formData.get('passcode'))) {
+      return { status: 'error', message: 'Wrong passcode. Nothing was run.', notes, attempt };
+    }
+    // Remember the passcode on this device only if staff ticked the box.
+    if (formData.get('remember') === 'on') jar.set(AGENT_COOKIE, agentToken(), cookieOptions());
   }
   if (!process.env.ANTHROPIC_API_KEY) {
     return { status: 'error', message: 'AI drafts are not set up yet: ANTHROPIC_API_KEY is missing on the server.', notes, attempt };
@@ -106,4 +106,11 @@ export async function prepareDraft(_prev, formData) {
   if (error) return { status: 'error', message: error, notes, attempt };
   if (run.status !== 'completed') return { status: 'error', message: `The AI draft did not finish: ${run.error}`, notes, attempt };
   return { status: 'success', message: 'AI draft ready. Check every score and link below before running the assessment.', notes: '', attempt };
+}
+
+// Removes the remembered passcode from this device.
+export async function forgetPasscode(formData) {
+  const offerId = field(formData, 'offer_id');
+  (await cookies()).delete(AGENT_COOKIE);
+  redirect(OFFER_ID_PATTERN.test(offerId) ? `/offers/${offerId}` : '/');
 }

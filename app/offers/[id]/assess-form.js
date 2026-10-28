@@ -1,10 +1,10 @@
 'use client';
 
 import { useActionState, useEffect, useRef } from 'react';
-import { SCORE_FIELDS } from '@/lib/assessment-fields';
+import { GATE_FIELDS, SCORE_FIELDS } from '@/lib/assessment-fields';
 import { assessOffer } from './actions';
 
-const ORDER = ['stock_count', 'condition', 'sales_count', 'median_sold_aud', 'evidence_source', ...SCORE_FIELDS.map((f) => f.name)];
+const ORDER = ['stock_count', 'condition', 'rookie_card', 'first_team', 'sales_count', 'median_sold_aud', 'evidence_source', ...SCORE_FIELDS.map((f) => f.name)];
 
 function Field({ name, label, hint, state, children, inputMode }) {
   const err = state.errors[name];
@@ -47,7 +47,7 @@ export default function AssessForm({ offerId, salesWindowDays, initial = {}, age
         <input type="hidden" name="offer_id" value={offerId} />
         {agentRunId && <input type="hidden" name="agent_run_id" value={agentRunId} />}
         {agentRunId && (
-          <p className="notice">Pre-filled from the AI draft. Check every value, then add stock and condition yourself.</p>
+          <p className="notice">Pre-filled from the AI draft. Check every value, then add stock, condition and Cerf&apos;s two checks yourself.</p>
         )}
         <Field name="stock_count" label="Copies already in stock" hint="Count the shop's copies of this exact card" state={state} inputMode="numeric" />
         <Field name="condition" label="Condition after inspection" state={state}>
@@ -59,6 +59,21 @@ export default function AssessForm({ offerId, salesWindowDays, initial = {}, age
             <option value="unsure">Not sure yet</option>
           </select>
         </Field>
+        {GATE_FIELDS.map((g) => {
+          const err = state.errors[g.name];
+          return (
+            <Field key={g.name} name={g.name} label={g.label} hint={g.hint} state={state}>
+              <select id={g.name} name={g.name} defaultValue={state.values[g.name] ?? ''}
+                aria-invalid={err ? 'true' : undefined}
+                aria-describedby={[`${g.name}-hint`, err && `${g.name}-error`].filter(Boolean).join(' ')}>
+                <option value="" disabled>Choose…</option>
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+                <option value="unsure">Not sure</option>
+              </select>
+            </Field>
+          );
+        })}
         <Field name="sales_count" label={`Matching sold sales in the last ${salesWindowDays} days`}
           hint="Same player, set, number, variant and grade. Sold prices only, not asking prices." state={state} inputMode="numeric" />
         <Field name="median_sold_aud" label="Middle sold price (AUD)" hint="The median of those sales. Leave blank if there are none." state={state} inputMode="decimal" />

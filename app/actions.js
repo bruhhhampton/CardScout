@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 import { createOffer } from '@/lib/offers';
 import { readValues, validateOffer } from '@/lib/validate-offer';
 
@@ -18,12 +19,14 @@ export async function saveOffer(_previous, formData) {
     return { status: 'error', message: 'Please fix the highlighted fields.', errors: result.errors, values, attempt };
   }
 
-  const { error } = await createOffer(result.offer);
+  const { id, error } = await createOffer(result.offer);
   if (error) {
     return { status: 'error', message: error, errors: {}, values, attempt };
   }
 
   revalidatePath('/');
+  // Open the new offer so staff can go straight to the player match and the AI draft.
+  if (id) redirect(`/offers/${id}?msg=created`);
   return {
     status: 'success',
     message: `Saved offer for ${result.offer.player}. It is listed below as Not assessed.`,

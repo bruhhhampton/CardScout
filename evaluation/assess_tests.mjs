@@ -11,7 +11,7 @@ const s = {
 };
 const good = { football: 85, career: 80, collector: 80, card: 70, valuation: 75 };
 const offer = { set_name: 'Demo Football Set', asking_price_aud: 120 };
-const input = { stock_count: 0, condition: 'acceptable', sales_count: 3, median_sold_aud: 200, scores: good };
+const input = { stock_count: 0, condition: 'acceptable', rookie_card: 'yes', first_team: 'yes', sales_count: 3, median_sold_aud: 200, scores: good };
 const run = (o = {}, i = {}) => assess({ ...offer, ...o }, { ...input, ...i, scores: { ...good, ...(i.scores || {}) } }, s);
 
 const cases = [
@@ -35,6 +35,12 @@ const cases = [
   ['Counter above staff limit', { asking_price_aud: 250 }, { median_sold_aud: 300 }, 'owner_review', 205],
   ['Exact staff limit', { asking_price_aud: 150 }, { median_sold_aud: 300 }, 'eligible', 205],
   ['Costs too high', {}, { median_sold_aud: 20 }, 'decline'],
+  ['Not a rookie card', {}, { rookie_card: 'no' }, 'decline'],
+  ['No first-team chance', {}, { first_team: 'no' }, 'decline'],
+  ['Rookie card not sure', {}, { rookie_card: 'unsure' }, 'owner_review'],
+  ['First-team not sure', {}, { first_team: 'unsure' }, 'owner_review'],
+  ['Gate beats good scores and price', { asking_price_aud: 100 }, { rookie_card: 'no' }, 'decline'],
+  ['Gate before missing sales', {}, { first_team: 'no', sales_count: 0, median_sold_aud: null }, 'decline'],
   ['Hard rule before missing info', { set_name: 'Topps Chrome' }, { sales_count: 0, median_sold_aud: null }, 'decline'],
 ];
 for (const [label, o, i, outcome, ceiling] of cases) {
