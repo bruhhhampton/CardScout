@@ -20,14 +20,24 @@ export const maxDuration = 120;
 
 // A normal eBay Australia search for this card: sold items, Australian sellers, newest first.
 // It only opens eBay's own search page in a new tab; CardScout does not read eBay.
-function soldSearchUrl(offer) {
+function searchWords(offer) {
   const variant = String(offer.variant ?? '').trim();
   // Short searches find more: sellers shorten set names (for example "Topps Chrome UCC").
   const set = String(offer.set_name ?? '').split(/\s+/).slice(0, 2).join(' ');
   const words = [offer.player, set, offer.card_number,
     /^base\b/i.test(variant) ? '' : variant.replace(/\(.*?\)/g, '')].filter(Boolean).join(' ').replace(/#/g, '').replace(/\s+/g, ' ').trim();
-  const q = new URLSearchParams({ _nkw: words, LH_Sold: '1', LH_Complete: '1', LH_PrefLoc: '1', _sop: '13' });
+  return words;
+}
+
+function soldSearchUrl(offer) {
+  const q = new URLSearchParams({ _nkw: searchWords(offer), LH_Sold: '1', LH_Complete: '1', LH_PrefLoc: '1', _sop: '13' });
   return `https://www.ebay.com.au/sch/i.html?${q}`;
+}
+
+// A normal SportsCardsPro search for this card. Staff open the card's page and copy its sold sales.
+function priceSiteUrl(offer) {
+  const q = new URLSearchParams({ q: searchWords(offer), type: 'prices' });
+  return `https://www.sportscardspro.com/search-products?${q}`;
 }
 
 const GATE_LABEL = { yes: 'Yes', no: 'No', unsure: 'Not sure' };
@@ -310,7 +320,7 @@ export default async function OfferPage({ params, searchParams }) {
             </details>
           </div>
         )}
-        <AgentPanel offerId={offer.id} remembered={remembered} soldSearchUrl={soldSearchUrl(offer)}
+        <AgentPanel offerId={offer.id} remembered={remembered} soldSearchUrl={soldSearchUrl(offer)} priceSiteUrl={priceSiteUrl(offer)}
           initial={assessment ? { stock_count: String(assessment.stock_count ?? ''), condition: assessment.condition ?? '' } : {}} />
       </section>
 

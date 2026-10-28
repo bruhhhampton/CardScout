@@ -7,7 +7,7 @@ const START = { status: 'idle', message: '', errors: {}, notes: '', values: {}, 
 
 // One click prepares the AI draft and the verdict. Staff first enter the two things only a
 // person can know: copies in stock and the card's condition.
-export default function AgentPanel({ offerId, remembered = false, initial = {}, soldSearchUrl = null }) {
+export default function AgentPanel({ offerId, remembered = false, initial = {}, soldSearchUrl = null, priceSiteUrl = null }) {
   const [state, formAction, pending] = useActionState(prepareDraft, { ...START, values: initial });
   const formRef = useRef(null);
   const msgRef = useRef(null);
@@ -51,10 +51,14 @@ export default function AgentPanel({ offerId, remembered = false, initial = {}, 
           <legend>Sales you found (optional)</legend>
           <p className="hint">
             {soldSearchUrl && (
-              <><a href={soldSearchUrl} target="_blank" rel="noopener noreferrer">Find sold sales on eBay Australia ↗</a>{' '}or a price site such as SportsCardsPro. </>
+              <><a href={soldSearchUrl} target="_blank" rel="noopener noreferrer">Find sold sales on eBay Australia ↗</a><br /></>
             )}
-            Paste the page address, pick the currency the prices are shown in, and paste the sale rows as they are.
-            CardScout writes the explanation for the AI.
+            {priceSiteUrl && (
+              <><a href={priceSiteUrl} target="_blank" rel="noopener noreferrer">Find sold sales on SportsCardsPro ↗</a>{' '}
+              (open the exact card, then scroll to its sold listings)<br /></>
+            )}
+            Copy the page address from your browser bar, pick the currency the prices are shown in, and paste the sale rows exactly as copied.
+            You do not need to write anything else: CardScout writes the explanation for the AI.
           </p>
           <div className="two">
             <div className={`field${err.sales_link ? ' has-error' : ''}`}>
