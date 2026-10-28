@@ -221,3 +221,5 @@ details[open] summary::before { content: '▾'; }
 .agent-form .two { display: grid; gap: 12px; }
 @media (min-width: 640px) { .agent-form .two { grid-template-columns: 1fr 1fr; } }
 .verdict-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 12px; }
+.sales-paste { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px 12px; margin: 0; display: grid; gap: 10px; }
+.sales-paste legend { font-weight: 600; padding: 0 4px; }

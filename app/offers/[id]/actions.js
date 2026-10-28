@@ -10,6 +10,7 @@ import { confirmAssessment, createAssessment } from '@/lib/assessments';
 import { validateAssessment } from '@/lib/assessment-fields';
 import { assess, OUTCOMES } from '@/lib/assess.mjs';
 import { fmFit } from '@/lib/fm-fit.mjs';
+import { buildSalesNote } from '@/lib/sales-note.mjs';
 import { runAgent } from '@/lib/agent';
 import { countRunsLastDay, saveRun } from '@/lib/agent-runs';
 import { cookies } from 'next/headers';
@@ -83,11 +84,28 @@ const DAILY_LIMIT = Number(process.env.AGENT_DAILY_LIMIT || 30);
 // "not confirmed" until a person confirms it. Nothing is bought.
 export async function prepareDraft(_prev, formData) {
   const offerId = field(formData, 'offer_id');
-  const notes = (typeof formData.get('staff_notes') === 'string' ? formData.get('staff_notes') : '').slice(0, 4000);
-  const values = { stock_count: field(formData, 'stock_count'), condition: field(formData, 'condition') };
+  const extra = (typeof formData.get('staff_notes') === 'string' ? formData.get('staff_notes') : '').slice(0, 1000);
+  const paste = {
+    link: field(formData, 'sales_link').slice(0, 500),
+    currency: field(formData, 'sales_currency'),
+    rows: (typeof formData.get('sales_rows') === 'string' ? formData.get('sales_rows') : '').slice(0, 3000),
+  };
+  const values = {
+    stock_count: field(formData, 'stock_count'), condition: field(formData, 'condition'),
+    sales_link: paste.link, sales_currency: paste.currency, sales_rows: paste.rows,
+  };
   const attempt = Date.now();
-  const fail = (message, errors = {}) => ({ status: 'error', message, errors, notes, values, attempt });
+  let notes = extra;
+  const fail = (message, errors = {}) => ({ status: 'error', message, errors, notes: extra, values, attempt });
   if (!OFFER_ID_PATTERN.test(offerId)) return fail('This offer could not be found.');
+  if (paste.rows.trim() && !/^https?:\/\//i.test(paste.link)) {
+    return fail('Please fix the highlighted fields.', { sales_link: 'Paste the address of the page the sales came from.' });
+  }
+  if (paste.rows.trim()) {
+    // CardScout writes the explanation for the AI; staff only pasted the link, currency and rows.
+    const { offer: o } = await getOffer(offerId);
+    notes = [buildSalesNote(o, paste), extra && `Other notes from staff: ${extra}`].filter(Boolean).join('\n\n');
+  }
 
   // Check what only a person can know before spending an AI run.
   const errors = {};
@@ -107,7 +125,10 @@ export async function prepareDraft(_prev, formData) {
     return fail(`The daily limit of ${DAILY_LIMIT} AI drafts has been reached. Try again tomorrow or enter the evidence by hand.`);
   }
 
-  const run = await runAgent(offerId, notes);
+  const run = await runAgent(offerId, notes, {
+    stock_count: Number(values.stock_count),
+    condition: { acceptable: 'meets the standard', not_acceptable: 'below the standard', unsure: 'unsure' }[values.condition],
+  });
   const { id: runId, error } = await saveRun(run);
   revalidatePath('/');
   revalidatePath(`/offers/${offerId}`);
@@ -117,7 +138,7 @@ export async function prepareDraft(_prev, formData) {
   // Work out the verdict from the draft, in plain code.
   const scores = Object.fromEntries(['football', 'career', 'collector', 'card', 'valuation'].map((k) => [k, run.draft?.scores?.[k]?.score]));
   const missing = Object.entries(scores).filter(([, v]) => !Number.isInteger(v)).map(([k]) => k);
-  const done = (message) => ({ status: 'success', message, errors: {}, notes: '', values, attempt });
+  const done = (message) => ({ status: 'success', message, errors: {}, notes: '', values: { stock_count: values.stock_count, condition: values.condition }, attempt });
   if (missing.length) {
     return done(`AI draft ready, but it has no ${missing.join(', ')} score, so the verdict was not worked out. Fill it in under Assessment and run it.`);
   }

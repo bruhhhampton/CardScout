@@ -13,7 +13,7 @@ export default function AgentPanel({ offerId, remembered = false, initial = {}, 
   const msgRef = useRef(null);
   useEffect(() => {
     if (state.status === 'error') {
-      const first = ['stock_count', 'condition'].find((n) => state.errors?.[n]);
+      const first = ['stock_count', 'condition', 'sales_link'].find((n) => state.errors?.[n]);
       if (first) formRef.current?.elements[first]?.focus();
       else msgRef.current?.focus();
     } else if (state.message) msgRef.current?.focus();
@@ -47,20 +47,43 @@ export default function AgentPanel({ offerId, remembered = false, initial = {}, 
             {err.condition && <span id="agent_condition-error" className="field-error">{err.condition}</span>}
           </div>
         </div>
+        <fieldset className="sales-paste">
+          <legend>Sales you found (optional)</legend>
+          <p className="hint">
+            {soldSearchUrl && (
+              <><a href={soldSearchUrl} target="_blank" rel="noopener noreferrer">Find sold sales on eBay Australia ↗</a>{' '}or a price site such as SportsCardsPro. </>
+            )}
+            Paste the page address, pick the currency the prices are shown in, and paste the sale rows as they are.
+            CardScout writes the explanation for the AI.
+          </p>
+          <div className="two">
+            <div className={`field${err.sales_link ? ' has-error' : ''}`}>
+              <label htmlFor="sales_link">Page address</label>
+              <input id="sales_link" name="sales_link" type="url" autoComplete="off" placeholder="https://…"
+                defaultValue={state.values?.sales_link ?? ''} aria-invalid={err.sales_link ? 'true' : undefined}
+                aria-describedby={err.sales_link ? 'sales_link-error' : undefined} />
+              {err.sales_link && <span id="sales_link-error" className="field-error">{err.sales_link}</span>}
+            </div>
+            <div className="field">
+              <label htmlFor="sales_currency">Prices are shown in</label>
+              <select id="sales_currency" name="sales_currency" defaultValue={state.values?.sales_currency ?? 'AUD'}>
+                <option value="AUD">AUD (Australian sales)</option>
+                <option value="USD">USD</option>
+                <option value="GBP">GBP</option>
+                <option value="EUR">EUR</option>
+              </select>
+            </div>
+          </div>
+          <div className="field">
+            <label htmlFor="sales_rows">Sale rows</label>
+            <span id="sales_rows-hint" className="hint">Copy 5 to 10 recent rows (date, title, price) and paste them here.</span>
+            <textarea id="sales_rows" name="sales_rows" rows={5} maxLength={3000} defaultValue={state.values?.sales_rows ?? ''}
+              aria-describedby="sales_rows-hint" />
+          </div>
+        </fieldset>
         <div className="field">
-          <label htmlFor="staff_notes">Notes for the AI (optional)</label>
-          <span id="staff_notes-hint" className="hint">
-            Paste any sold listing links you found, or anything the AI should know. It can only use links it found itself or that you paste here.
-          </span>
-          {soldSearchUrl && (
-            <p className="hint">
-              <a href={soldSearchUrl} target="_blank" rel="noopener noreferrer">Find sold sales on eBay Australia ↗</a>{' '}
-              opens eBay already filtered to sold items from Australian sellers, newest first. Copy the links of matching sales here,
-              with the price and date. If nothing shows, shorten the search on eBay.
-            </p>
-          )}
-          <textarea id="staff_notes" name="staff_notes" rows={3} maxLength={4000} defaultValue={state.notes}
-            aria-describedby="staff_notes-hint" />
+          <label htmlFor="staff_notes">Anything else the AI should know (optional)</label>
+          <textarea id="staff_notes" name="staff_notes" rows={2} maxLength={1000} defaultValue={state.notes} />
         </div>
         {!remembered && (
           <div className="field">

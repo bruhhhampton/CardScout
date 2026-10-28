@@ -70,3 +70,16 @@ import('../lib/fx.mjs').then(({ readPerAud, toAudPer, effectiveRates }) => {
   assert.deepEqual(r, { USD: 1.6, GBP: null, EUR: 1.6667 }, "owner's own rate wins, otherwise today's");
   console.log('Exchange rate checks passed.');
 });
+
+// The note CardScout writes for the AI from what staff pasted.
+import('../lib/sales-note.mjs').then(({ buildSalesNote }) => {
+  const offer = { year: 2026, set_name: 'Panini Prizm FIFA World Cup', card_number: '70', player: 'Lamine Yamal', variant: 'Silver Prizm' };
+  const note = buildSalesNote(offer, { link: 'https://www.sportscardspro.com/game/x#completed', currency: 'USD', rows: '2026-10-23  Yamal #70 Silver  $150.00 $160.00' });
+  assert.match(note, /2026 Panini Prizm FIFA World Cup #70 Lamine Yamal Silver Prizm/);
+  assert.match(note, /copied by staff from sportscardspro\.com with prices in USD/);
+  assert.match(note, /first is the sold price/);
+  assert.match(note, /Page: https:\/\/www\.sportscardspro\.com\/game\/x/);
+  assert.equal(buildSalesNote(offer, { link: 'https://x.com', rows: '   ' }), '', 'nothing pasted, no note');
+  assert.match(buildSalesNote(offer, { link: 'https://x.com', currency: 'JPY', rows: 'r' }), /prices in AUD/, 'unknown currency falls back to AUD');
+  console.log('Sales note checks passed.');
+});

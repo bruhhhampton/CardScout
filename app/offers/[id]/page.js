@@ -37,7 +37,7 @@ const MESSAGES = {
   created: { kind: 'success', text: 'Offer saved. Confirm the player, then enter stock and condition and click Prepare draft and assess.' },
   confirmed: { kind: 'success', text: 'Verdict confirmed.' },
   'confirm-failed': { kind: 'error', text: 'The confirmation was not saved. Run database/007_confirm.sql in Supabase, then try again.' },
-  linked: { kind: 'success', text: 'Player linked. The ratings below are context only and do not change the assessment.' },
+  linked: { kind: 'success', text: 'Player linked. CardScout uses these game ratings for 20% of football quality, as role fit. They are unverified, so real-world form counts for the other 80%.' },
   unlinked: { kind: 'success', text: 'Player link removed.' },
   'bad-player': { kind: 'error', text: 'That player could not be found. Search again and pick from the list.' },
   'save-failed': { kind: 'error', text: 'The change was not saved. Try again.' },
