@@ -46,6 +46,15 @@ export default function AgentPanel({ offerId, remembered = false, initial = {}, 
             </select>
             {err.condition && <span id="agent_condition-error" className="field-error">{err.condition}</span>}
           </div>
+          <div className="field">
+            <label htmlFor="agent_rookie">Rookie card?</label>
+            <span id="agent_rookie-hint" className="hint">Look for the RC logo on the card or in the seller&apos;s photos</span>
+            <select id="agent_rookie" name="rookie_card" defaultValue={state.values?.rookie_card ?? ''} aria-describedby="agent_rookie-hint">
+              <option value="">Let the AI check</option>
+              <option value="yes">Yes, it has the RC logo</option>
+              <option value="no">No, it is not a rookie card</option>
+            </select>
+          </div>
         </div>
         <fieldset className="sales-paste">
           <legend>Sales you found (optional)</legend>

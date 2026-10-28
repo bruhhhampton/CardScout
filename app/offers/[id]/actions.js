@@ -92,6 +92,7 @@ export async function prepareDraft(_prev, formData) {
   };
   const values = {
     stock_count: field(formData, 'stock_count'), condition: field(formData, 'condition'),
+    rookie_card: ['yes', 'no'].includes(field(formData, 'rookie_card')) ? field(formData, 'rookie_card') : '',
     sales_link: paste.link, sales_currency: paste.currency, sales_rows: paste.rows,
   };
   const attempt = Date.now();
@@ -128,6 +129,7 @@ export async function prepareDraft(_prev, formData) {
   const run = await runAgent(offerId, notes, {
     stock_count: Number(values.stock_count),
     condition: { acceptable: 'meets the standard', not_acceptable: 'below the standard', unsure: 'unsure' }[values.condition],
+    rookie_card: values.rookie_card || null,
   });
   const { id: runId, error } = await saveRun(run);
   revalidatePath('/');
@@ -138,7 +140,7 @@ export async function prepareDraft(_prev, formData) {
   // Work out the verdict from the draft, in plain code.
   const scores = Object.fromEntries(['football', 'career', 'collector', 'card', 'valuation'].map((k) => [k, run.draft?.scores?.[k]?.score]));
   const missing = Object.entries(scores).filter(([, v]) => !Number.isInteger(v)).map(([k]) => k);
-  const done = (message) => ({ status: 'success', message, errors: {}, notes: '', values: { stock_count: values.stock_count, condition: values.condition }, attempt });
+  const done = (message) => ({ status: 'success', message, errors: {}, notes: '', values: { stock_count: values.stock_count, condition: values.condition, rookie_card: values.rookie_card }, attempt });
   if (missing.length) {
     return done(`AI draft ready, but it has no ${missing.join(', ')} score, so the verdict was not worked out. Fill it in under Assessment and run it.`);
   }
@@ -149,7 +151,8 @@ export async function prepareDraft(_prev, formData) {
   const input = {
     stock_count: Number(values.stock_count),
     condition: values.condition,
-    rookie_card: answer('rookie_card'),
+    // Staff answer from the card itself wins over the AI's web check.
+    rookie_card: values.rookie_card || answer('rookie_card'),
     first_team: answer('first_team'),
     sales_count: run.sales_count ?? 0,
     median_sold_aud: run.median_sold_aud ?? null,
