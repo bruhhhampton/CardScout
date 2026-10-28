@@ -105,3 +105,69 @@ Result: kept
 What changed: After an AI draft, sales, middle price and scores collapse into a one-line summary with Edit; staff fill in only stock, condition and Cerf's two checks. Assess again fills in from the last assessment. The Watch reason names only the condition that failed (it previously read "CERF total 83.3 is below your attractive level of 75, or valuation is below 60").
 Validation performed and outcome: Rule, guardrail and sync tests passed, plus new reason checks. Browser test with a fake AI and test database: summary shown after a draft with hidden fields still submitted; Assess again pre-filled from the last assessment; an error in a hidden field opened the summary and focused the field; a new offer showed all fields; Yamal values gave "Valuation 58 is below your attractive level of 60".
 Commit: Leaner assessment form and clearer Watch reason
+
+## Entry 11
+Date/time: 29 Oct 2026
+Member: Daniel
+Slice: 8 - FM role fit and the agent drafts Cerf's checks
+Tool: Claude (instead of Copilot)
+Exact prompt: "I want to start building it now" (after agreeing FM ratings should count for 20% of football quality, as in Cerf's cerf.py)
+Result: kept
+What changed: Football quality = 80% real-world score from the agent + 20% FM role fit worked out in plain code from Cerf's role profiles (lib/fm-fit.mjs, a port of cerf.py). The agent drafts Cerf's two checks with sources; an unsourced Yes or No is turned into Not sure by the server. database/006_fm_fit.sql run in Supabase.
+Validation performed and outcome: The JavaScript role fit matched Cerf's Python on 3,000 players (Yamal 84.8 as a winger). Rule, guardrail, sync and new FM tests passed. Live, Yamal #64: "91.36 = 80% × 93 real-world + 20% × 84.8 FM role fit (winger)"; both checks answered Yes with sources.
+Commit: FM role fit as 20% of football; agent drafts Cerf's checks
+
+## Entry 12
+Date/time: 29 Oct 2026
+Member: Daniel
+Slice: 9 - One click: draft and verdict
+Tool: Claude (instead of Copilot)
+Exact prompt: "I wish when you do the AI draft itll also run assseesment"
+Result: kept
+What changed: Staff enter stock and condition, then one button prepares the AI draft and works out the verdict with the plain-code rules. The verdict is saved as "Not confirmed yet" until a person clicks Confirm this verdict or changes something (database/007_confirm.sql). Linking the player no longer starts the draft.
+Validation performed and outcome: Tests passed. Live, #70 offer: one click gave the draft and an Owner review verdict marked not confirmed with a Confirm button; Change something gave Counteroffer (rookie card Yes) and Decline (rookie card No). Nothing was bought.
+Commit: One click: AI draft and verdict, then confirm
+
+## Entry 13
+Date/time: 29 Oct 2026
+Member: Daniel
+Slice: 10 - Overseas sales with today's exchange rates
+Tool: Claude (instead of Copilot)
+Exact prompt: "then lets do that" (count US sales, converted to AUD with an owner adjustment), then "alright this is cooked" (about typing exchange rates by hand)
+Result: kept
+What changed: Owner settings: count overseas sales (Yes/No) and an adjustment (85% provisional). Rates come from Frankfurter each day, with optional owner rates. The agent records sales in their own currency; the server converts them (price × rate × adjustment) and labels each one overseas. An eBay Australia sold search link opens on each offer. database/008_overseas.sql run in Supabase.
+Validation performed and outcome: Rate and conversion tests passed. Live, #70 offer: 7 USD sales converted at A$1.4232 and 85% (USD 160.00 became AUD 193.56), "0 Australian, 7 overseas, converted", middle price $152.45, ceiling $114.33. Today's USD rate matched SportsCardsPro's own AUD conversion (about A$1.42).
+Commit: Owner-controlled overseas sales: eBay sold search link; then Overseas sales with automatic exchange rates; eBay sold search link
+
+## Entry 14
+Date/time: 29 Oct 2026
+Member: Daniel
+Slice: 11 - Paste box for sales and fixes from the live test
+Tool: Claude (instead of Copilot)
+Exact prompt: "something like this should be auto generated like the words"
+Result: kept
+What changed: A Sales you found box: staff paste the page address, pick the currency and paste the sale rows as copied; CardScout writes the explanation for the AI (lib/sales-note.mjs). From the live test: the agent is now given the stock and condition staff entered and today's rates, so it stops asking for them. The Player linked message now says FM counts for 20%.
+Validation performed and outcome: Sales note tests passed. Live, #70 offer with 9 pasted rows and no note written: 7 overseas sales accepted, middle price $152.45; the agent no longer asked for a rate; valuation 45 because it now saw the converted prices were under the $160 asking price.
+Commit: Paste box for sales, AI gets stock, condition and today's rates
+
+## Entry 15
+Date/time: 29 Oct 2026
+Member: Daniel
+Slice: 12 - SportsCardsPro link
+Tool: Claude (instead of Copilot)
+Exact prompt: "Also can we have the sportscard pro site below the notes for ai similar to how you have that hyperlink for find sold sales on ebay australia"
+Result: kept
+What changed: A Find sold sales on SportsCardsPro link opens a search for the card, next to the eBay link. CardScout only opens the site's own search page; it does not read the site.
+Validation performed and outcome: Tests and build passed. Live: the link opened a SportsCardsPro search for the card.
+Commit: Add SportCardPro search link
+
+## Entry 16
+Date/time: 29 Oct 2026
+Member: Daniel
+Slice: 13 - Staff answer the rookie card check
+Tool: Claude (instead of Copilot)
+Exact prompt: "but shouldnt that option be bundled with the here" (the rookie card answer next to stock and condition)
+Result: kept
+What changed: An optional Rookie card? question next to stock and condition: Let the AI check (default), Yes it has the RC logo, or No. A staff answer from the card is used for the verdict and passed to the agent, which does not ask again. First-team chance stays with the agent, because the web can answer it and the card cannot.
+Validation performed and outcome: Tests, sync test and build passed. Live, #70 offer with Yes: Counteroffer, Cerf's checks Rookie card: Yes. With Let the AI check: Owner review, as before.
+Commit: Staff can answer the rookie card check from the card
