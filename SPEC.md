@@ -1,5 +1,5 @@
 # CardScout
-Status: Week 07 PoC build. The owner's real spending, stock and pricing limits are provisional until Cerf confirms them. Business value still needs testing with users in Weeks 8 to 9.
+Status: Week 07 PoC, 29 Oct 2026. The owner's real spending, stock and pricing limits are provisional until Cerf confirms them. Business value still needs testing with users in Weeks 8 to 9.
 
 ## Who uses it
 Staff at Cerf Collectables (an Australian online sports card business with 3 part-time and 1 full-time staff) who assess card offers, and Cerf, the owner, who sets the rules and reviews referred cases. Sole traders can use it the same way, as both assessor and owner.
@@ -10,7 +10,7 @@ Buying decisions depend on the owner's judgement and repeated manual research (s
 ## Must-haves
 - Enter a card offer and see saved offers.
 - Owner settings: the owner's limits and CERF weights and thresholds.
-- Assessment: eligible, decline, counteroffer or owner review, with reasons, from plain-code rules.
+- Assessment: eligible, decline, counteroffer or owner review, with reasons, from plain-code rules, including Cerf's rookie card and first-team gates.
 - AI draft: the agent researches sold prices and the player and drafts the CERF scores with sources; a person checks and submits.
 - Should: FM26 player ratings as context on each offer, labelled unverified.
 
@@ -21,6 +21,8 @@ Buying decisions depend on the owner's judgement and repeated manual research (s
 4. AI draft agent · Daniel; agent tests with Leonard
 5. Demo data: one realistic offer per outcome · Vignesh
 6. Owner's real limits entered in settings · Luka and Pat (from Cerf)
+7. Fewer clicks, Cerf's gates and leaner assessment form · Daniel
+8. Owner review list (filter offers waiting for Cerf) · Vignesh, after Week 07
 Agent: research sold prices and player news for one offer and draft the five CERF scores with sources, for a person to check · Daniel builds, the team reviews AGENT.md
 Check-ins: Thursday 22 Oct and Sunday 25 Oct on Teams
 Each person brings: what they finished, a link to their commit, and where they are stuck
@@ -30,32 +32,29 @@ Done:
 1. Enter, save and list offers. Server checks every field; saved offers show newest first.
 2. FM player context. Staff search and confirm the player; 15 ratings shown, labelled "unverified, not price evidence".
 3. Owner settings and assessment. Settings page; assess form; rules in lib/assess.mjs give the four outcomes with reasons; tested live.
+4. AI draft agent. Draft with five sourced scores, server-checked sales and questions for staff; passcode and daily cap; all six AGENT.md tests passed on the live site (25 and 26 Oct).
+5. Fewer clicks. Saving opens the offer; player match first; passcode remembered on a device; confirming the player starts the draft.
+6. Cerf's gates. Rookie card and first-team questions; No gives Decline, Not sure gives Owner review; tested live with the Yamal card.
+7. Leaner assessment form. Draft sales and scores shown as a one-line summary with Edit; Assess again fills in from the last assessment; Watch reason names what failed.
 
-Now: AI draft agent
-Story: The assessor opens an offer and clicks Prepare AI draft so they do not have to research sold prices and the player from scratch.
-Data: reads card_offers, shop_settings and players; writes agent_runs; the assessment links the run (assessments.agent_run_id).
-Rule: the agent never decides or buys; the server checks every sale and calculates the count and median; a person submits.
-Done when:
-1. With the team passcode, Prepare AI draft shows five scores with reasons and sources, the sales it found (accepted or not, and why) and questions for staff.
-2. A wrong passcode runs nothing and saves no agent_runs row.
-3. The assess form is pre-filled from the draft; stock and condition are left for the person.
-4. The five tests in AGENT.md pass on the live site and their results are recorded.
-Not in this slice: logins, an approved sales data feed, owner review queue.
+Now: Week 07 PoC demo (rehearsal, backup recording).
 
 Next:
-5. Demo data, one offer per outcome.
-6. Owner's real limits entered.
-After Week 07: approved sold-sales source, owner review queue, logins and multiple shops, user testing.
+- Owner's real limits entered (from Cerf).
+- Agent drafts Cerf's two gates with sources, so staff only confirm them.
+- Simpler Owner settings: basics first, a worked example, Cerf's model under Advanced.
+- Owner review list for Cerf.
+After Week 07: approved sold-sales source, stock from an inventory list, logins and multiple shops, user testing with Cerf.
 
 ## Data
 - card_offers: id, created_at, player, year, set_name, card_number, variant, grade_condition, asking_price_aud, status (new, assessed, owner_review, closed), player_id, last_outcome.
 - players: FM26 ratings, 34,644 rows, data_status UNVERIFIED_COMMUNITY.
 - shop_settings: one row of owner settings, including provisional (database/003_settings_assessments.sql).
-- assessments: offer_id, stock_count, condition, sales_count, median_sold_aud, evidence_source, five scores, cerf_total, cerf_category, offer_ceiling_aud, outcome, reasons, settings_snapshot, agent_run_id.
+- assessments: offer_id, stock_count, condition, rookie_card, first_team (yes, no, unsure; database/005_gates.sql), sales_count, median_sold_aud, evidence_source, five scores, cerf_total, cerf_category, offer_ceiling_aud, outcome, reasons, settings_snapshot, agent_run_id.
 - agent_runs: offer_id, status, model, staff_notes, draft, sales, sales_count, median_sold_aud, trace, searches, input_tokens, output_tokens, error (database/004_agent_runs.sql).
 
 ## Rules
-- Order: excluded set, failed condition or stock limit gives decline; then unsure condition or too few sales gives owner review; then CERF reject gives decline, speculative or watch gives owner review; then price against the ceiling and the staff limit.
+- Order: excluded set, failed condition, not a recognised rookie card, no first-team chance or stock limit gives decline; unsure rookie card or first-team chance also gives owner review; then unsure condition or too few sales gives owner review; then CERF reject gives decline, speculative or watch gives owner review; then price against the ceiling and the staff limit.
 - Offer ceiling = floor to cents of min(offer share x median, (1 - minimum margin) x median - selling costs).
 - Eligible still needs a person to confirm. Nothing is bought automatically.
 
@@ -76,4 +75,8 @@ Next.js server reads and writes Supabase; the browser only receives what it need
 - 25 Oct 2026: Agent passcode and daily cap, because the public link has no login and AI calls cost money.
 - 26 Oct 2026: Main users are Cerf Collectables staff, with Cerf reviewing referred cases, because our Week 2 research shows the business has 3 part-time and 1 full-time staff. The Yamal story is cited to our Week 4 user story, not the 21 Sept interview, which does not mention it.
 - 26 Oct 2026: Focus on individual sports cards, because buylist software such as SortSwift already applies owner rules to card games with a catalogue price, and individual sports cards have none, so their evidence has to be gathered first.
-- 26 Oct 2026: Removed Topps Chrome from the provisional excluded sets, because it is one of the most popular football card lines and the exclusion was the placeholder, not Cerf's confirmed rule. 
+- 26 Oct 2026: Removed Topps Chrome from the provisional excluded sets, because it is one of the most popular football card lines and the exclusion was a placeholder, not Cerf's confirmed rule. Cerf's own notes value a Chrome /50 card.
+- 28 Oct 2026: Fewer steps per offer: saving an offer opens it, the player match comes before the AI draft, the team passcode can be remembered on a device for 30 days (httpOnly cookie holding a hash, never the passcode) and confirming the player then starts the AI draft. Staff still check the draft and run the assessment themselves, because buying decisions stay with a person.
+- 28 Oct 2026: Added Cerf's two gates from his CERF model (cerf.py): not a recognised rookie card, or no first-team chance, means Decline; Not sure means Owner review. Staff answer both on the assessment. They were previously folded into the card and career scores, which let high scores outweigh them.
+- 29 Oct 2026: Provisional sales window widened from 30 to 90 days, matching the 90-day evidence limit in Cerf's cerf.py, because recent Australian sales of individual sports cards are thin. Minimum stays at 3 sales. Still provisional until Cerf confirms.
+- 29 Oct 2026: Leaner assessment form: sales, middle price and scores from the AI draft are shown as a summary staff can edit, and Assess again fills in from the last assessment, so staff only enter what needs a person (stock, condition, Cerf's two checks) and approve.

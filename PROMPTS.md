@@ -72,3 +72,36 @@ Result: changed, then kept
 What changed: AGENT.md Context and Problem now describe Cerf Collectables (owner plus 3 part-time and 1 full-time staff) and cite the Yamal story to our Week 4 user story, because the 21 Sept interview does not mention it. Decision 2 now names the Cerf Collectables staff member as the user. Decision 8 adds why individual sports cards need an agent when catalogue-priced cards do not. SPEC.md "Who uses it" updated, check-in dates added (22 and 25 Oct) and two dated decisions added. Week 07 PoC slides 2 and 6 corrected to match.
 Validation performed and outcome: Checked each change against the group doc (Week 2 business background, 21 Sept interview, Week 4 persona and user story). Agent instructions block unchanged; agent_md_sync_test passed.
 Commit: Docs: AGENT update, check-in dates, prompt log
+
+## Entry 8
+Date/time: 28 Oct 2026
+Member: Daniel
+Slice: 5 - Fewer clicks per offer
+Tool: Claude (instead of Copilot)
+Exact prompt: "No we're making changes now" / "What I want to do, is presently its too many button pressing"
+Result: kept
+What changed: Saving an offer opens it. Player match shown first until confirmed. Team passcode can be remembered on a device for 30 days (httpOnly cookie holding a hash, never the passcode). Confirming the player starts the AI draft when the passcode is remembered. Trace toggle shows an arrow. New file lib/agent-access.js.
+Validation performed and outcome: Build passed; rule, guardrail and sync tests passed. End-to-end test with a fake AI and test database: saving opened the offer; wrong passcode ran nothing; correct passcode ran one draft and set an httpOnly cookie without the passcode; reload hid the passcode field; linking the player started one draft; reload did not start another; Forget it removed the cookie.
+Commit: Add cerf's rookie card and first-team gates (released together with Entry 9)
+
+## Entry 9
+Date/time: 28 Oct 2026
+Member: Daniel
+Slice: 6 - Cerf's rookie card and first-team gates
+Tool: Claude (instead of Copilot)
+Exact prompt: "Yes please" (to adding the two gates from Cerf's cerf.py: not a recognised rookie card, or no first-team chance, means reject)
+Result: kept
+What changed: Assessment form asks "Is this a recognised rookie card?" and "Does the player have a first-team chance?" (Yes / No / Not sure). No gives Decline, Not sure gives Owner review. Answers saved on assessments (database/005_gates.sql, run in Supabase) and shown as "Cerf's checks". 6 new rule tests (27 in total).
+Validation performed and outcome: 27 rule checks passed; agent and sync tests passed. Browser test with a test database: blank answers rejected; Yes/Yes gave Eligible; No rookie card and No first-team each gave Decline with the reason; Not sure gave Owner review; answers saved. Live site, 29 Oct: Yamal #64 with both answers Yes gave Owner review (2 sales, needs 3) and showed "Cerf's checks: Rookie card: Yes, First-team chance: Yes".
+Commit: Add cerf's rookie card and first-team gates
+
+## Entry 10
+Date/time: 29 Oct 2026
+Member: Daniel
+Slice: 7 - Leaner assessment form
+Tool: Claude (instead of Copilot)
+Exact prompt: "I just want the workflow to be more lean... the assessment requires the user to retype in the football quality, career path, collector appeal, card quality and valuation when it's already generated in that AI agent research. Furthermore, the middle sold price should also be pre filled as well as matching sold sales."
+Result: kept
+What changed: After an AI draft, sales, middle price and scores collapse into a one-line summary with Edit; staff fill in only stock, condition and Cerf's two checks. Assess again fills in from the last assessment. The Watch reason names only the condition that failed (it previously read "CERF total 83.3 is below your attractive level of 75, or valuation is below 60").
+Validation performed and outcome: Rule, guardrail and sync tests passed, plus new reason checks. Browser test with a fake AI and test database: summary shown after a draft with hidden fields still submitted; Assess again pre-filled from the last assessment; an error in a hidden field opened the summary and focused the field; a new offer showed all fields; Yamal values gave "Valuation 58 is below your attractive level of 60".
+Commit: Leaner assessment form and clearer Watch reason
