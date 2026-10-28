@@ -3,28 +3,50 @@
 import { useActionState, useEffect, useRef } from 'react';
 import { forgetPasscode, prepareDraft } from './actions';
 
-export default function AgentPanel({ offerId, remembered = false, autoStart = false }) {
-  const [state, formAction, pending] = useActionState(prepareDraft, { status: 'idle', message: '', notes: '', attempt: 0 });
+const START = { status: 'idle', message: '', errors: {}, notes: '', values: {}, attempt: 0 };
+
+// One click prepares the AI draft and the verdict. Staff first enter the two things only a
+// person can know: copies in stock and the card's condition.
+export default function AgentPanel({ offerId, remembered = false, initial = {} }) {
+  const [state, formAction, pending] = useActionState(prepareDraft, { ...START, values: initial });
   const formRef = useRef(null);
   const msgRef = useRef(null);
-  const started = useRef(false);
-  useEffect(() => { if (state.message) msgRef.current?.focus(); }, [state]);
-
-  // Start the draft once, straight after the player was linked, if the passcode is remembered.
-  // The draft=1 flag is removed from the address first, so a refresh never starts a second paid run.
   useEffect(() => {
-    if (!autoStart || !remembered || started.current) return;
-    started.current = true;
-    const url = new URL(window.location.href);
-    url.searchParams.delete('draft');
-    window.history.replaceState(null, '', url.pathname + url.search);
-    formRef.current?.requestSubmit();
-  }, [autoStart, remembered]);
+    if (state.status === 'error') {
+      const first = ['stock_count', 'condition'].find((n) => state.errors?.[n]);
+      if (first) formRef.current?.elements[first]?.focus();
+      else msgRef.current?.focus();
+    } else if (state.message) msgRef.current?.focus();
+  }, [state]);
+  const err = state.errors ?? {};
 
   return (
     <>
-      <form ref={formRef} action={formAction} key={state.attempt} className="agent-form">
+      <form ref={formRef} action={formAction} key={state.attempt} noValidate className="agent-form">
         <input type="hidden" name="offer_id" value={offerId} />
+        <div className="two">
+          <div className={`field${err.stock_count ? ' has-error' : ''}`}>
+            <label htmlFor="agent_stock">Copies already in stock</label>
+            <span id="agent_stock-hint" className="hint">Count the shop&apos;s copies of this exact card</span>
+            <input id="agent_stock" name="stock_count" type="text" inputMode="numeric" autoComplete="off"
+              defaultValue={state.values?.stock_count ?? ''} aria-invalid={err.stock_count ? 'true' : undefined}
+              aria-describedby={err.stock_count ? 'agent_stock-hint agent_stock-error' : 'agent_stock-hint'} />
+            {err.stock_count && <span id="agent_stock-error" className="field-error">{err.stock_count}</span>}
+          </div>
+          <div className={`field${err.condition ? ' has-error' : ''}`}>
+            <label htmlFor="agent_condition">Condition</label>
+            <span id="agent_condition-hint" className="hint">From the card or the seller&apos;s photos</span>
+            <select id="agent_condition" name="condition" defaultValue={state.values?.condition ?? ''}
+              aria-invalid={err.condition ? 'true' : undefined}
+              aria-describedby={err.condition ? 'agent_condition-hint agent_condition-error' : 'agent_condition-hint'}>
+              <option value="" disabled>Choose…</option>
+              <option value="acceptable">Meets the standard</option>
+              <option value="not_acceptable">Does not meet the standard</option>
+              <option value="unsure">Not sure yet</option>
+            </select>
+            {err.condition && <span id="agent_condition-error" className="field-error">{err.condition}</span>}
+          </div>
+        </div>
         <div className="field">
           <label htmlFor="staff_notes">Notes for the AI (optional)</label>
           <span id="staff_notes-hint" className="hint">
@@ -48,7 +70,7 @@ export default function AgentPanel({ offerId, remembered = false, autoStart = fa
             role={state.status === 'success' ? 'status' : 'alert'}>{state.message}</p>
         )}
         <button type="submit" disabled={pending}>
-          {pending ? 'Preparing AI draft… this can take up to a minute' : 'Prepare AI draft'}
+          {pending ? 'Researching and assessing… this can take up to a minute' : 'Prepare draft and assess'}
         </button>
       </form>
       {remembered && (

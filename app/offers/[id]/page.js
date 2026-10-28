@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getOffer } from '@/lib/offers';
 import { ATTRIBUTE_GROUPS, ATTRIBUTE_LABELS, getPlayer, searchPlayers } from '@/lib/players';
-import { linkPlayer, unlinkPlayer } from './actions';
+import { confirmVerdict, linkPlayer, unlinkPlayer } from './actions';
 import { getLatestAssessment } from '@/lib/assessments';
 import { getSettings } from '@/lib/settings';
 import { OUTCOMES } from '@/lib/assess.mjs';
@@ -22,7 +22,9 @@ const GATE_LABEL = { yes: 'Yes', no: 'No', unsure: 'Not sure' };
 const aud = new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' });
 
 const MESSAGES = {
-  created: { kind: 'success', text: 'Offer saved. Confirm the player below, then prepare the AI draft.' },
+  created: { kind: 'success', text: 'Offer saved. Confirm the player, then enter stock and condition and click Prepare draft and assess.' },
+  confirmed: { kind: 'success', text: 'Verdict confirmed.' },
+  'confirm-failed': { kind: 'error', text: 'The confirmation was not saved. Run database/007_confirm.sql in Supabase, then try again.' },
   linked: { kind: 'success', text: 'Player linked. The ratings below are context only and do not change the assessment.' },
   unlinked: { kind: 'success', text: 'Player link removed.' },
   'bad-player': { kind: 'error', text: 'That player could not be found. Search again and pick from the list.' },
@@ -47,7 +49,6 @@ export default async function OfferPage({ params, searchParams }) {
   const query = typeof sp?.q === 'string' ? sp.q : offer.player;
   const message = MESSAGES[sp?.msg];
   const remembered = isRemembered(await cookies());
-  const autoStart = sp?.draft === '1';
   const [{ player, error: playerError }, { players: results, error: searchError }, { assessment }, { settings }, { run }] = await Promise.all([
     offer.player_id ? getPlayer(offer.player_id) : Promise.resolve({ player: null, error: null }),
     offer.player_id ? Promise.resolve({ players: [], error: null }) : searchPlayers(query),
@@ -164,8 +165,7 @@ export default async function OfferPage({ params, searchParams }) {
                       <form action={linkPlayer}>
                         <input type="hidden" name="offer_id" value={offer.id} />
                         <input type="hidden" name="player_id" value={p.player_id} />
-                        {remembered && <input type="hidden" name="then" value="draft" />}
-                        <button type="submit" className="secondary">{remembered ? 'This is the player · start AI draft' : 'This is the player'}</button>
+                        <button type="submit" className="secondary">This is the player</button>
                       </form>
                     </li>
                   ))}
@@ -295,7 +295,8 @@ export default async function OfferPage({ params, searchParams }) {
             </details>
           </div>
         )}
-        <AgentPanel offerId={offer.id} remembered={remembered} autoStart={autoStart} />
+        <AgentPanel offerId={offer.id} remembered={remembered}
+          initial={assessment ? { stock_count: String(assessment.stock_count ?? ''), condition: assessment.condition ?? '' } : {}} />
       </section>
 
       <section className="panel" aria-labelledby="assess-heading">
@@ -307,6 +308,12 @@ export default async function OfferPage({ params, searchParams }) {
         {assessment && (
           <div className={`result outcome-${assessment.outcome}`} role="status">
             <p className="result-outcome">{OUTCOMES[assessment.outcome]}</p>
+            {assessment.confirmed === false && (
+              <p className="notice">Prepared by CardScout from the AI draft. Not confirmed yet: check the evidence below, then confirm it or change something.</p>
+            )}
+            {assessment.confirmed !== false && assessment.prepared_by === 'cardscout' && assessment.confirmed_at && (
+              <p className="hint">Prepared by CardScout, confirmed {new Date(assessment.confirmed_at).toLocaleString('en-AU', { timeZone: 'Australia/Sydney' })}.</p>
+            )}
             <ul>{(assessment.reasons ?? []).map((r, i) => <li key={i}>{r}</li>)}</ul>
             <dl className="result-facts">
               <div><dt>Offer ceiling</dt><dd>{assessment.offer_ceiling_aud == null ? 'Not enough sales' : aud.format(Number(assessment.offer_ceiling_aud))}</dd></div>
@@ -323,13 +330,21 @@ export default async function OfferPage({ params, searchParams }) {
               <div><dt>Sales evidence</dt><dd>{assessment.sales_count} sale(s){assessment.median_sold_aud != null ? `, median ${aud.format(Number(assessment.median_sold_aud))}` : ''}{assessment.evidence_source ? ` · ${assessment.evidence_source}` : ''}</dd></div>
               <div><dt>Assessed</dt><dd>{new Date(assessment.created_at).toLocaleString('en-AU', { timeZone: 'Australia/Sydney' })}</dd></div>
             </dl>
+            {assessment.confirmed === false && (
+              <form action={confirmVerdict} className="verdict-actions">
+                <input type="hidden" name="offer_id" value={offer.id} />
+                <input type="hidden" name="assessment_id" value={assessment.id} />
+                <button type="submit">Confirm this verdict</button>
+                <span className="hint">Or open Change something below.</span>
+              </form>
+            )}
           </div>
         )}
         {settings ? (
-          <details open={!assessment || Boolean(usedRun)}>
-            <summary>{assessment ? 'Assess again' : 'Enter the evidence'}</summary>
+          <details open={Boolean(usedRun)}>
+            <summary>{assessment ? (assessment.confirmed === false ? 'Change something' : 'Assess again') : 'Or enter the evidence yourself'}</summary>
             <AssessForm key={usedRun?.id ?? 'manual'} offerId={offer.id} salesWindowDays={settings.sales_window_days}
-              initial={initial} agentRunId={usedRun?.id ?? null} fromLast={fromLast} />
+              initial={initial} agentRunId={usedRun?.id ?? null} keepRunId={!usedRun ? assessment?.agent_run_id ?? null : null} fromLast={fromLast} />
           </details>
         ) : (
           <p className="error" role="alert">Owner settings are missing. Run database/003_settings_assessments.sql in Supabase.</p>

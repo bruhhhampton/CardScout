@@ -23,7 +23,7 @@ function Field({ name, label, hint, state, children, inputMode }) {
   );
 }
 
-export default function AssessForm({ offerId, salesWindowDays, initial = {}, agentRunId = null, fromLast = false }) {
+export default function AssessForm({ offerId, salesWindowDays, initial = {}, agentRunId = null, keepRunId = null, fromLast = false }) {
   const [state, formAction, pending] = useActionState(assessOffer, {
     status: 'idle', message: '', errors: {}, values: initial, attempt: 0,
   });
@@ -68,7 +68,7 @@ export default function AssessForm({ offerId, salesWindowDays, initial = {}, age
       )}
       <form ref={formRef} action={formAction} key={state.attempt} noValidate className="offer-form">
         <input type="hidden" name="offer_id" value={offerId} />
-        {agentRunId && <input type="hidden" name="agent_run_id" value={agentRunId} />}
+        {(agentRunId || keepRunId) && <input type="hidden" name="agent_run_id" value={agentRunId || keepRunId} />}
         {agentRunId && (
           <p className="notice">Sales, scores and Cerf&apos;s two checks come from the AI draft above. Confirm the two checks, add stock and condition, then run it.</p>
         )}

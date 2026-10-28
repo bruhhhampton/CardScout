@@ -218,3 +218,6 @@ details[open] summary::before { content: '▾'; }
 .prefill summary { margin: 0; }
 .prefill-fields { display: grid; gap: 14px; padding-bottom: 12px; }
 @media (min-width: 640px) { .prefill-fields { grid-template-columns: 1fr 1fr; } }
+.agent-form .two { display: grid; gap: 12px; }
+@media (min-width: 640px) { .agent-form .two { grid-template-columns: 1fr 1fr; } }
+.verdict-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 12px; }
