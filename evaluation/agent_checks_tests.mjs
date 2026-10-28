@@ -34,7 +34,7 @@ const us = checkSale({ ...ok, currency: 'usd', price: '100' }, known, today, 30,
 assert.equal(us.accepted, true, 'USD counted when on');
 assert.equal(us.price, 127.5, '100 USD x 1.5 x 85% = 127.50 AUD');
 assert.equal(us.overseas, true);
-assert.match(checkSale({ ...ok, currency: 'GBP' }, known, today, 30, on).problems.join(), /no GBP to AUD rate/, 'no rate, not counted');
+assert.match(checkSale({ ...ok, currency: 'GBP' }, known, today, 30, on).problems.join(), /no GBP to AUD rate is available/, 'no rate, not counted');
 assert.equal(checkSale({ ...ok, currency: 'AUD', price: '90' }, known, today, 30, on).price, 90, 'AUD unchanged');
 const mix = summariseSales([checkSale({ ...ok, price: '90' }, known, today, 30, on), us]);
 assert.deepEqual(mix, { sales_count: 2, median_sold_aud: 108.75, australian_count: 1, overseas_count: 1 });
@@ -58,3 +58,15 @@ const none = checkDraft({ scores: {}, checks: { rookie_card: { answer: 'maybe' }
 assert.equal(none.checks.rookie_card.answer, 'unsure');
 assert.equal(none.checks.first_team.answer, 'unsure');
 console.log('Agent guardrail checks passed (no AI or network used).');
+
+// Exchange rates: read whichever shape the rate service returns, and turn "per A$1" into "A$ per 1".
+import('../lib/fx.mjs').then(({ readPerAud, toAudPer, effectiveRates }) => {
+  assert.deepEqual(readPerAud({ base: 'AUD', rates: { USD: 0.65, GBP: 0.5, EUR: 0.6, JPY: 100 } }), { USD: 0.65, GBP: 0.5, EUR: 0.6 });
+  assert.deepEqual(readPerAud([{ base: 'AUD', quote: 'USD', rate: 0.65 }, { quote: 'EUR', rate: 0.6 }]), { USD: 0.65, EUR: 0.6 });
+  assert.deepEqual(readPerAud({ data: [{ currency: 'GBP', value: 0.5 }] }), { GBP: 0.5 });
+  assert.deepEqual(readPerAud({ message: 'error' }), {});
+  assert.deepEqual(toAudPer({ USD: 0.65, GBP: 0.5 }), { USD: 1.5385, GBP: 2 });
+  const r = effectiveRates({ fx_usd_aud: 1.6 }, { rates: { USD: 1.5385, EUR: 1.6667 } });
+  assert.deepEqual(r, { USD: 1.6, GBP: null, EUR: 1.6667 }, "owner's own rate wins, otherwise today's");
+  console.log('Exchange rate checks passed.');
+});

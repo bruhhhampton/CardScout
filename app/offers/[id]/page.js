@@ -283,7 +283,7 @@ export default async function OfferPage({ params, searchParams }) {
                 {run.sales.map((x, i) => (
                   <li key={i} className={x.accepted ? 'ok' : 'rejected'}>
                     <span>{x.accepted ? 'Accepted' : 'Not counted'}</span>{' '}
-                    {x.overseas ? `AUD ${Number(x.price_aud).toFixed(2)} (overseas: ${x.currency} ${x.price}, converted)` : `${x.currency} ${x.price}`} · {x.sold_date} ·{' '}
+                    {x.overseas ? `AUD ${Number(x.price_aud).toFixed(2)} (overseas: ${x.currency} ${x.price}${x.rate ? ` at A$${x.rate}` : ''}, after your adjustment)` : `${x.currency} ${x.price}`} · {x.sold_date} ·{' '}
                     <a href={x.url} target="_blank" rel="noopener noreferrer nofollow">{x.title || 'link'}</a>
                     {!x.accepted && <div className="hint">{(x.problems ?? []).join('; ')}</div>}
                   </li>
