@@ -6,10 +6,11 @@ import { linkPlayer, unlinkPlayer } from './actions';
 import { getLatestAssessment } from '@/lib/assessments';
 import { getSettings } from '@/lib/settings';
 import { OUTCOMES } from '@/lib/assess.mjs';
-import { SCORE_FIELDS } from '@/lib/assessment-fields';
+import { GATE_FIELDS, SCORE_FIELDS } from '@/lib/assessment-fields';
 import AssessForm from './assess-form';
 import AgentPanel from './agent-panel';
 import { getLatestRun } from '@/lib/agent-runs';
+import { combineFootball, fmFit, ROLE_LABEL } from '@/lib/fm-fit.mjs';
 import { cookies } from 'next/headers';
 import { isRemembered } from '@/lib/agent-access';
 
@@ -62,6 +63,8 @@ export default async function OfferPage({ params, searchParams }) {
         median_sold_aud: usedRun.median_sold_aud == null ? '' : String(usedRun.median_sold_aud),
         evidence_source: `AI draft ${new Date(usedRun.created_at).toLocaleDateString('en-AU', { timeZone: 'Australia/Sydney' })}: ${(usedRun.sales ?? []).filter((x) => x.accepted).map((x) => x.url).join(' ')}`.slice(0, 500),
         ...Object.fromEntries(SCORE_FIELDS.map((f) => [f.name, draft.scores?.[f.key]?.score == null ? '' : String(draft.scores[f.key].score)])),
+        // Cerf's two checks, as suggested by the AI (staff confirm or change them).
+        ...Object.fromEntries(GATE_FIELDS.map((g) => [g.name, draft.checks?.[g.name]?.answer ?? ''])),
       }
     : assessment
       ? // No newer AI draft: start "Assess again" from the last assessment, so staff only change what changed.
@@ -74,16 +77,19 @@ export default async function OfferPage({ params, searchParams }) {
           median_sold_aud: assessment.median_sold_aud == null ? '' : String(assessment.median_sold_aud),
           evidence_source: assessment.evidence_source ?? '',
           ...Object.fromEntries(SCORE_FIELDS.map((f) => [f.name, assessment[f.name] == null ? '' : String(assessment[f.name])])),
+          // The form asks for the real-world part; the FM part is added again on submit.
+          ...(assessment.football_real != null ? { score_football: String(assessment.football_real) } : {}),
         }
       : {};
   const fromLast = !usedRun && Boolean(assessment);
+  const fit = player ? fmFit(player) : null;
 
   const fmSection = (
         <section className="panel" aria-labelledby="fm-heading">
           <h2 id="fm-heading">Football Manager player context</h2>
           <p className="notice">
-            Game ratings, unverified, not price evidence. These come from a community Football Manager 26 dataset and
-            are shown for context only. They do not affect whether the card should be bought.
+            Game ratings, unverified, never price evidence. From a community Football Manager 26 dataset. As in Cerf&apos;s
+            model, the player&apos;s FM role fit counts for 20% of football quality; real-world evidence is the other 80%.
           </p>
 
           {playerError && <p className="error" role="alert">{playerError}</p>}
@@ -122,6 +128,11 @@ export default async function OfferPage({ params, searchParams }) {
                   </div>
                 ))}
               </div>
+              <p className={fit ? 'success' : 'hint'}>
+                {fit
+                  ? `FM role fit: ${fit.score} as a ${ROLE_LABEL[fit.role]}. Counts for 20% of football quality in Cerf's model; real-world evidence is the other 80%.`
+                  : "No attacking-role fit for this player in Cerf's model, so football quality uses real-world evidence only."}
+              </p>
               <p className="hint">
                 Club and age are from an undated snapshot. Status: {player.data_status}. Source: {player.source}.
               </p>
@@ -209,7 +220,7 @@ export default async function OfferPage({ params, searchParams }) {
                 const sc = draft.scores?.[f.key] ?? {};
                 return (
                   <li key={f.key}>
-                    <strong>{f.label}: {sc.score ?? '–'}</strong>
+                    <strong>{f.formLabel ?? f.label}: {sc.score ?? '–'}</strong>
                     {sc.flag && <span className="field-error"> · {sc.flag}</span>}
                     <div>{sc.reason}</div>
                     {sc.sources?.length > 0 && (
@@ -223,6 +234,30 @@ export default async function OfferPage({ params, searchParams }) {
                 );
               })}
             </ul>
+            {draft.checks && (
+              <>
+                <h3>Cerf&apos;s checks (AI suggestion, you confirm)</h3>
+                <ul className="draft-scores">
+                  {GATE_FIELDS.map((g) => {
+                    const ch = draft.checks[g.name] ?? {};
+                    return (
+                      <li key={g.name}>
+                        <strong>{g.label} {GATE_LABEL[ch.answer] ?? 'Not sure'}</strong>
+                        {ch.flag && <span className="field-error"> · {ch.flag}</span>}
+                        <div>{ch.reason}</div>
+                        {ch.sources?.length > 0 && (
+                          <div className="hint">
+                            {ch.sources.map((u, i) => (
+                              <a key={i} href={u} target="_blank" rel="noopener noreferrer nofollow">Source {i + 1}</a>
+                            )).reduce((a, b) => [a, ' · ', b])}
+                          </div>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </>
+            )}
             <h3>Sold sales the AI found</h3>
             <p className="hint">
               Counted by the server: {run.sales_count} accepted
@@ -278,6 +313,11 @@ export default async function OfferPage({ params, searchParams }) {
               <div><dt>CERF total</dt><dd>{assessment.cerf_total} / 100 ({assessment.cerf_category?.toLowerCase()})</dd></div>
               {assessment.rookie_card && (
                 <div><dt>Cerf&apos;s checks</dt><dd>Rookie card: {GATE_LABEL[assessment.rookie_card]} · First-team chance: {GATE_LABEL[assessment.first_team]}</dd></div>
+              )}
+              {assessment.football_real != null && (
+                <div><dt>Football quality</dt><dd>{assessment.fm_fit != null
+                  ? `${combineFootball(assessment.football_real, Number(assessment.fm_fit))} = 80% × ${assessment.football_real} real-world + 20% × ${Number(assessment.fm_fit)} FM role fit (${ROLE_LABEL[assessment.fm_role] ?? 'attacking role'})`
+                  : `${assessment.football_real}, real-world only (no FM role fit for this player)`}</dd></div>
               )}
               <div><dt>Scores</dt><dd>{SCORE_FIELDS.map((f) => `${f.label} ${assessment[f.name]}`).join(' · ')}</dd></div>
               <div><dt>Sales evidence</dt><dd>{assessment.sales_count} sale(s){assessment.median_sold_aud != null ? `, median ${aud.format(Number(assessment.median_sold_aud))}` : ''}{assessment.evidence_source ? ` · ${assessment.evidence_source}` : ''}</dd></div>

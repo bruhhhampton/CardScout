@@ -57,7 +57,7 @@ export default function AssessForm({ offerId, salesWindowDays, initial = {}, age
       <Field name="median_sold_aud" label="Middle sold price (AUD)" hint="The median of those sales. Leave blank if there are none." state={state} inputMode="decimal" />
       <Field name="evidence_source" label="Where the sales came from" hint="Links or a short note, so the owner can check" state={state} />
       {SCORE_FIELDS.map((f) => (
-        <Field key={f.name} name={f.name} label={`${f.label} (0 to 100)`} hint={f.hint} state={state} inputMode="numeric" />
+        <Field key={f.name} name={f.name} label={`${f.formLabel ?? f.label} (0 to 100)`} hint={f.hint} state={state} inputMode="numeric" />
       ))}
     </>
   );
@@ -70,7 +70,7 @@ export default function AssessForm({ offerId, salesWindowDays, initial = {}, age
         <input type="hidden" name="offer_id" value={offerId} />
         {agentRunId && <input type="hidden" name="agent_run_id" value={agentRunId} />}
         {agentRunId && (
-          <p className="notice">Sales and scores come from the AI draft above. Add stock, condition and Cerf&apos;s two checks, then run it.</p>
+          <p className="notice">Sales, scores and Cerf&apos;s two checks come from the AI draft above. Confirm the two checks, add stock and condition, then run it.</p>
         )}
         {fromLast && (
           <p className="notice">Filled in from the last assessment. Change anything that has changed, then run it again.</p>

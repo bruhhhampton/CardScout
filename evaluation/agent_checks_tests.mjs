@@ -31,4 +31,16 @@ assert.equal(d.scores.football.flag, null);
 assert.equal(d.scores.career.score, null, 'out of range score dropped');
 assert.ok(d.scores.collector.flag, 'missing score flagged');
 assert.deepEqual(urlsInText('see https://a.com/x and http://b.com/y.'), ['a.com/x', 'b.com/y'].map((u) => normaliseUrl('https://' + u)));
+// Cerf's two checks: a sourced answer is kept; an unsourced yes/no becomes unsure; a missing or bad answer is unsure.
+const ck = checkDraft({ scores: {}, checks: {
+  rookie_card: { answer: 'yes', reason: 'RC logo on the card', sources: ['https://site.com/a'] },
+  first_team: { answer: 'no', reason: 'No minutes', sources: ['https://made-up.example/x'] },
+} }, known);
+assert.equal(ck.checks.rookie_card.answer, 'yes');
+assert.equal(ck.checks.rookie_card.flag, null);
+assert.equal(ck.checks.first_team.answer, 'unsure');
+assert.match(ck.checks.first_team.flag, /No checkable source/);
+const none = checkDraft({ scores: {}, checks: { rookie_card: { answer: 'maybe' } } }, known);
+assert.equal(none.checks.rookie_card.answer, 'unsure');
+assert.equal(none.checks.first_team.answer, 'unsure');
 console.log('Agent guardrail checks passed (no AI or network used).');

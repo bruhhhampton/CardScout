@@ -9,6 +9,7 @@ import { getSettings } from '@/lib/settings';
 import { createAssessment } from '@/lib/assessments';
 import { validateAssessment } from '@/lib/assessment-fields';
 import { assess } from '@/lib/assess.mjs';
+import { fmFit } from '@/lib/fm-fit.mjs';
 import { runAgent } from '@/lib/agent';
 import { countRunsLastDay, saveRun } from '@/lib/agent-runs';
 import { cookies } from 'next/headers';
@@ -63,7 +64,9 @@ export async function assessOffer(_prev, formData) {
   const [{ offer }, { settings, error: sErr }] = await Promise.all([getOffer(offerId), getSettings()]);
   if (!offer) return fail('This offer could not be found.');
   if (sErr) return fail(sErr);
-  const result = assess(offer, check.input, settings);
+  // Cerf's FM role fit (20% of football quality), worked out in plain code from the linked player.
+  const fit = offer.player_id ? fmFit((await getPlayer(offer.player_id)).player) : null;
+  const result = assess(offer, { ...check.input, fm_fit: fit?.score ?? null, fm_role: fit?.role ?? null }, settings);
   const runId = field(formData, 'agent_run_id');
   const agentRunId = OFFER_ID_PATTERN.test(runId) ? runId : null;
   const { error } = await createAssessment(offerId, check.input, result, settings, agentRunId);

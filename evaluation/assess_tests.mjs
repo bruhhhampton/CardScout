@@ -60,4 +60,17 @@ assert.equal(low.category, 'WATCH');
 assert.match(low.reason, /^CERF total \d+\.\d is below your attractive level of 75$/);
 const both = cerf({ football: 70, career: 60, collector: 50, card: 50, valuation: 45 }, s);
 assert.match(both.reason, /CERF total .* below .*; Valuation 45 is below/);
+// FM role fit counts for 20% of football quality (cerf.py); real-world is the other 80%.
+const yamal = assess(offer, { ...input, scores: { football: 92, career: 88, collector: 90, card: 68, valuation: 58 }, fm_fit: 84.8, fm_role: 'WINGER' }, s);
+assert.equal(yamal.football, 90.56);
+assert.equal(yamal.football_real, 92);
+assert.equal(yamal.cerf_total, Math.round(((90.56 * 35 + 88 * 20 + 90 * 20 + 68 * 10 + 58 * 15) / 100) * 10) / 10);
+const noFm = assess(offer, { ...input, fm_fit: null }, s);
+assert.equal(noFm.football, good.football);
+// "Speculative" uses the real-world part, as in cerf.py: a strong FM fit cannot hide weak real-world evidence.
+const fmHeavy = cerf({ ...good, football: 70.4 }, s, 63);
+assert.equal(fmHeavy.category, 'SPECULATIVE');
+// "Reject" uses the combined score, as in cerf.py: real 55 + FM 80 = 60, which is not below 60.
+assert.notEqual(assess(offer, { ...input, scores: { ...good, football: 55 }, fm_fit: 80 }, s).cerf_category, 'REJECT');
+assert.equal(assess(offer, { ...input, scores: { ...good, football: 55 }, fm_fit: null }, s).cerf_category, 'REJECT');
 console.log(`${cases.length} synthetic assessment checks passed. Real owner rules and live data not tested.`);
