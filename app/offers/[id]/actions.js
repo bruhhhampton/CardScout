@@ -132,7 +132,7 @@ export async function prepareDraft(_prev, formData) {
     first_team: answer('first_team'),
     sales_count: run.sales_count ?? 0,
     median_sold_aud: run.median_sold_aud ?? null,
-    evidence_source: `AI draft ${new Date().toLocaleDateString('en-AU', { timeZone: 'Australia/Sydney' })}: ${accepted.map((x) => x.url).join(' ')}`.slice(0, 500),
+    evidence_source: `AI draft ${new Date().toLocaleDateString('en-AU', { timeZone: 'Australia/Sydney' })}${accepted.some((x) => x.overseas) ? ` (${accepted.filter((x) => !x.overseas).length} Australian, ${accepted.filter((x) => x.overseas).length} overseas, converted)` : ''}: ${[...new Set(accepted.map((x) => x.url))].join(' ')}`.slice(0, 500),
     scores,
   };
   const fit = offer.player_id ? fmFit((await getPlayer(offer.player_id)).player) : null;

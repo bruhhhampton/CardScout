@@ -36,10 +36,19 @@ export default function SettingsForm({ initial }) {
                   <div key={f.name} className={`field${err ? ' has-error' : ''}`}>
                     <label htmlFor={f.name}>{f.label}</label>
                     {f.hint && <span id={`${f.name}-hint`} className="hint">{f.hint}</span>}
-                    <input id={f.name} name={f.name} type="text" defaultValue={state.values[f.name] ?? ''}
-                      inputMode={f.kind === 'text' ? undefined : 'decimal'} autoComplete="off"
-                      aria-invalid={err ? 'true' : undefined}
-                      aria-describedby={[f.hint && `${f.name}-hint`, err && `${f.name}-error`].filter(Boolean).join(' ') || undefined} />
+                    {f.kind === 'yesno' ? (
+                      <select id={f.name} name={f.name} defaultValue={state.values[f.name] ?? 'no'}
+                        aria-invalid={err ? 'true' : undefined}
+                        aria-describedby={[f.hint && `${f.name}-hint`, err && `${f.name}-error`].filter(Boolean).join(' ') || undefined}>
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                      </select>
+                    ) : (
+                      <input id={f.name} name={f.name} type="text" defaultValue={state.values[f.name] ?? ''}
+                        inputMode={f.kind === 'text' ? undefined : 'decimal'} autoComplete="off"
+                        aria-invalid={err ? 'true' : undefined}
+                        aria-describedby={[f.hint && `${f.name}-hint`, err && `${f.name}-error`].filter(Boolean).join(' ') || undefined} />
+                    )}
                     {err && <span id={`${f.name}-error`} className="field-error">{err}</span>}
                   </div>
                 );

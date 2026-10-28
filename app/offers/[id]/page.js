@@ -18,6 +18,18 @@ export const dynamic = 'force-dynamic';
 // AI drafts can take up to a minute.
 export const maxDuration = 120;
 
+// A normal eBay Australia search for this card: sold items, Australian sellers, newest first.
+// It only opens eBay's own search page in a new tab; CardScout does not read eBay.
+function soldSearchUrl(offer) {
+  const variant = String(offer.variant ?? '').trim();
+  // Short searches find more: sellers shorten set names (for example "Topps Chrome UCC").
+  const set = String(offer.set_name ?? '').split(/\s+/).slice(0, 2).join(' ');
+  const words = [offer.player, set, offer.card_number,
+    /^base\b/i.test(variant) ? '' : variant.replace(/\(.*?\)/g, '')].filter(Boolean).join(' ').replace(/#/g, '').replace(/\s+/g, ' ').trim();
+  const q = new URLSearchParams({ _nkw: words, LH_Sold: '1', LH_Complete: '1', LH_PrefLoc: '1', _sop: '13' });
+  return `https://www.ebay.com.au/sch/i.html?${q}`;
+}
+
 const GATE_LABEL = { yes: 'Yes', no: 'No', unsure: 'Not sure' };
 const aud = new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' });
 
@@ -261,6 +273,9 @@ export default async function OfferPage({ params, searchParams }) {
             <h3>Sold sales the AI found</h3>
             <p className="hint">
               Counted by the server: {run.sales_count} accepted
+              {(run.sales ?? []).some((x) => x.accepted && x.overseas)
+                ? ` (${(run.sales ?? []).filter((x) => x.accepted && !x.overseas).length} Australian, ${(run.sales ?? []).filter((x) => x.accepted && x.overseas).length} overseas, converted)`
+                : ''}
               {run.median_sold_aud != null ? `, middle price ${aud.format(Number(run.median_sold_aud))}` : ''}. Open each link to check it.
             </p>
             {(run.sales ?? []).length === 0 ? <p className="empty">No sold sales recorded.</p> : (
@@ -268,7 +283,7 @@ export default async function OfferPage({ params, searchParams }) {
                 {run.sales.map((x, i) => (
                   <li key={i} className={x.accepted ? 'ok' : 'rejected'}>
                     <span>{x.accepted ? 'Accepted' : 'Not counted'}</span>{' '}
-                    {x.currency} {x.price} · {x.sold_date} ·{' '}
+                    {x.overseas ? `AUD ${Number(x.price_aud).toFixed(2)} (overseas: ${x.currency} ${x.price}, converted)` : `${x.currency} ${x.price}`} · {x.sold_date} ·{' '}
                     <a href={x.url} target="_blank" rel="noopener noreferrer nofollow">{x.title || 'link'}</a>
                     {!x.accepted && <div className="hint">{(x.problems ?? []).join('; ')}</div>}
                   </li>
@@ -295,7 +310,7 @@ export default async function OfferPage({ params, searchParams }) {
             </details>
           </div>
         )}
-        <AgentPanel offerId={offer.id} remembered={remembered}
+        <AgentPanel offerId={offer.id} remembered={remembered} soldSearchUrl={soldSearchUrl(offer)}
           initial={assessment ? { stock_count: String(assessment.stock_count ?? ''), condition: assessment.condition ?? '' } : {}} />
       </section>
 

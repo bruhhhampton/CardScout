@@ -7,7 +7,7 @@ const START = { status: 'idle', message: '', errors: {}, notes: '', values: {}, 
 
 // One click prepares the AI draft and the verdict. Staff first enter the two things only a
 // person can know: copies in stock and the card's condition.
-export default function AgentPanel({ offerId, remembered = false, initial = {} }) {
+export default function AgentPanel({ offerId, remembered = false, initial = {}, soldSearchUrl = null }) {
   const [state, formAction, pending] = useActionState(prepareDraft, { ...START, values: initial });
   const formRef = useRef(null);
   const msgRef = useRef(null);
@@ -52,6 +52,13 @@ export default function AgentPanel({ offerId, remembered = false, initial = {} }
           <span id="staff_notes-hint" className="hint">
             Paste any sold listing links you found, or anything the AI should know. It can only use links it found itself or that you paste here.
           </span>
+          {soldSearchUrl && (
+            <p className="hint">
+              <a href={soldSearchUrl} target="_blank" rel="noopener noreferrer">Find sold sales on eBay Australia ↗</a>{' '}
+              opens eBay already filtered to sold items from Australian sellers, newest first. Copy the links of matching sales here,
+              with the price and date. If nothing shows, shorten the search on eBay.
+            </p>
+          )}
           <textarea id="staff_notes" name="staff_notes" rows={3} maxLength={4000} defaultValue={state.notes}
             aria-describedby="staff_notes-hint" />
         </div>

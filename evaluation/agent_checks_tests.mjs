@@ -22,8 +22,22 @@ assert.equal(c({ is_lot: true }).accepted, false, 'lot');
 assert.equal(c({ url: 'https://EBAY.com.au/itm/222?x=1#frag' }).accepted, true, 'url normalised');
 
 const s = summariseSales([c({ price: '100' }), c({ price: '100' }), c({ url: 'https://site.com/a', price: '200' }), c({ url: 'https://x.com/z', price: '999' })]);
-assert.deepEqual(s, { sales_count: 2, median_sold_aud: 150 }, 'duplicates and rejected sales ignored');
-assert.deepEqual(summariseSales([]), { sales_count: 0, median_sold_aud: null });
+assert.deepEqual(s, { sales_count: 2, median_sold_aud: 150, australian_count: 2, overseas_count: 0 }, 'duplicates and rejected sales ignored');
+assert.deepEqual(summariseSales([]), { sales_count: 0, median_sold_aud: null, australian_count: 0, overseas_count: 0 });
+
+// Overseas sales: only when the owner turns them on and enters a rate; converted and adjusted in plain code.
+const off = { on: false, adjust: 1, rates: { USD: 1.5 } };
+const on = { on: true, adjust: 0.85, rates: { USD: 1.5, GBP: null } };
+assert.match(c({ currency: 'USD' }).problems.join(), /switched off/, 'overseas off by default');
+assert.equal(checkSale({ ...ok, currency: 'USD' }, known, today, 30, off).accepted, false, 'owner turned overseas off');
+const us = checkSale({ ...ok, currency: 'usd', price: '100' }, known, today, 30, on);
+assert.equal(us.accepted, true, 'USD counted when on');
+assert.equal(us.price, 127.5, '100 USD x 1.5 x 85% = 127.50 AUD');
+assert.equal(us.overseas, true);
+assert.match(checkSale({ ...ok, currency: 'GBP' }, known, today, 30, on).problems.join(), /no GBP to AUD rate/, 'no rate, not counted');
+assert.equal(checkSale({ ...ok, currency: 'AUD', price: '90' }, known, today, 30, on).price, 90, 'AUD unchanged');
+const mix = summariseSales([checkSale({ ...ok, price: '90' }, known, today, 30, on), us]);
+assert.deepEqual(mix, { sales_count: 2, median_sold_aud: 108.75, australian_count: 1, overseas_count: 1 });
 
 const d = checkDraft({ scores: { football: { score: 85, reason: 'r', sources: ['https://site.com/a', 'https://fake.com'] }, career: { score: 101 } }, questions_for_staff: ['Stock?'] }, known);
 assert.deepEqual(d.scores.football.sources, ['https://site.com/a'], 'unseen source dropped');
