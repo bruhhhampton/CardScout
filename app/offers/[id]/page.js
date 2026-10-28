@@ -63,7 +63,20 @@ export default async function OfferPage({ params, searchParams }) {
         evidence_source: `AI draft ${new Date(usedRun.created_at).toLocaleDateString('en-AU', { timeZone: 'Australia/Sydney' })}: ${(usedRun.sales ?? []).filter((x) => x.accepted).map((x) => x.url).join(' ')}`.slice(0, 500),
         ...Object.fromEntries(SCORE_FIELDS.map((f) => [f.name, draft.scores?.[f.key]?.score == null ? '' : String(draft.scores[f.key].score)])),
       }
-    : {};
+    : assessment
+      ? // No newer AI draft: start "Assess again" from the last assessment, so staff only change what changed.
+        {
+          stock_count: String(assessment.stock_count ?? ''),
+          condition: assessment.condition ?? '',
+          rookie_card: assessment.rookie_card ?? '',
+          first_team: assessment.first_team ?? '',
+          sales_count: String(assessment.sales_count ?? ''),
+          median_sold_aud: assessment.median_sold_aud == null ? '' : String(assessment.median_sold_aud),
+          evidence_source: assessment.evidence_source ?? '',
+          ...Object.fromEntries(SCORE_FIELDS.map((f) => [f.name, assessment[f.name] == null ? '' : String(assessment[f.name])])),
+        }
+      : {};
+  const fromLast = !usedRun && Boolean(assessment);
 
   const fmSection = (
         <section className="panel" aria-labelledby="fm-heading">
@@ -276,7 +289,7 @@ export default async function OfferPage({ params, searchParams }) {
           <details open={!assessment || Boolean(usedRun)}>
             <summary>{assessment ? 'Assess again' : 'Enter the evidence'}</summary>
             <AssessForm key={usedRun?.id ?? 'manual'} offerId={offer.id} salesWindowDays={settings.sales_window_days}
-              initial={initial} agentRunId={usedRun?.id ?? null} />
+              initial={initial} agentRunId={usedRun?.id ?? null} fromLast={fromLast} />
           </details>
         ) : (
           <p className="error" role="alert">Owner settings are missing. Run database/003_settings_assessments.sql in Supabase.</p>

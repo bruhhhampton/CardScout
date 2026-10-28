@@ -51,4 +51,13 @@ for (const [label, o, i, outcome, ceiling] of cases) {
 }
 assert.equal(cerf(good, s).total, 80);
 assert.equal(cerf(good, s).category, 'ATTRACTIVE');
+// The Watch reason names only what failed (the Yamal case: total 83.3 is fine, valuation 58 is not).
+const yam = cerf({ football: 92, career: 88, collector: 90, card: 68, valuation: 58 }, s);
+assert.equal(yam.category, 'WATCH');
+assert.equal(yam.reason, 'Valuation 58 is below your attractive level of 60');
+const low = cerf({ football: 70, career: 60, collector: 50, card: 50, valuation: 65 }, s);
+assert.equal(low.category, 'WATCH');
+assert.match(low.reason, /^CERF total \d+\.\d is below your attractive level of 75$/);
+const both = cerf({ football: 70, career: 60, collector: 50, card: 50, valuation: 45 }, s);
+assert.match(both.reason, /CERF total .* below .*; Valuation 45 is below/);
 console.log(`${cases.length} synthetic assessment checks passed. Real owner rules and live data not tested.`);

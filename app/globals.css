@@ -213,3 +213,8 @@ details summary { cursor: pointer; font-weight: 600; margin: 8px 0 14px; min-hei
 .linkbtn { background: none; border: 0; padding: 0; color: var(--accent); text-decoration: underline; cursor: pointer; font: inherit; }
 details summary::before { content: '▸'; margin-right: 8px; }
 details[open] summary::before { content: '▾'; }
+.offer-form .prefill, .offer-form .notice { grid-column: 1 / -1; }
+.prefill { border: 1px solid var(--line); border-radius: 8px; padding: 0 12px; }
+.prefill summary { margin: 0; }
+.prefill-fields { display: grid; gap: 14px; padding-bottom: 12px; }
+@media (min-width: 640px) { .prefill-fields { grid-template-columns: 1fr 1fr; } }
