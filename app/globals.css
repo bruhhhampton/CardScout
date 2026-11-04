@@ -231,3 +231,8 @@ details[open] summary::before { content: '▾'; }
 /* SportsCardsPro price guide on the AI draft. */
 .price-guide { margin: 0.5rem 0 1rem; }
 .price-guide p { margin: 0.25rem 0; }
+
+/* Optional extras on the AI draft form, folded away by default. */
+.extra { margin: 0.75rem 0; }
+.extra > summary { cursor: pointer; font-weight: 600; }
+.extra[open] > summary { margin-bottom: 0.5rem; }

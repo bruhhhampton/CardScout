@@ -229,9 +229,8 @@ export default async function OfferPage({ params, searchParams }) {
       <section className="panel" aria-labelledby="agent-heading">
         <h2 id="agent-heading">AI draft</h2>
         <p className="notice">
-          The AI searches the web for sold prices and player news and drafts the five scores with sources. It does not
-          decide or buy anything. The server counts the sales and works out the middle price, and the owner&apos;s rules
-          make the decision after you check the draft.
+          CardScout looks up the card&apos;s price and the AI researches the player, with sources. The owner&apos;s rules
+          make the decision; nothing is bought.
         </p>
         {run?.status === 'failed' && <p className="error" role="alert">Last AI draft did not finish: {run.error}</p>}
         {run?.status === 'running' && !running && (

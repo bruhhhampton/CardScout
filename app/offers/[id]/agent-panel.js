@@ -56,7 +56,10 @@ export default function AgentPanel({ offerId, remembered = false, initial = {}, 
             </select>
           </div>
         </div>
-        <fieldset className="sales-paste">
+        {/* Optional: the price guide and the AI find prices on their own. */}
+        <details className="extra" open={Boolean(err.sales_link || state.values?.sales_rows || state.notes) || undefined}>
+          <summary>Add sales you found or a note for the AI (optional)</summary>
+          <fieldset className="sales-paste">
           <legend>Sales you found (optional)</legend>
           <p className="hint">
             {soldSearchUrl && (
@@ -98,6 +101,7 @@ export default function AgentPanel({ offerId, remembered = false, initial = {}, 
           <label htmlFor="staff_notes">Anything else the AI should know (optional)</label>
           <textarea id="staff_notes" name="staff_notes" rows={2} maxLength={1000} defaultValue={state.notes} />
         </div>
+        </details>
         {!remembered && (
           <div className="field">
             <label htmlFor="passcode">Team passcode</label>

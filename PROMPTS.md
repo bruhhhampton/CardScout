@@ -193,3 +193,14 @@ Result: kept
 What changed: The server looks up the exact card on the SportsCardsPro Prices API (player, number, first three set words, variant) and picks the product with the same player, number, year and parallel. It saves the value for the grade, their suggested shop buy and sell prices and sales per year, converted to AUD with today's rate and the owner's overseas share. The agent gets a get_price_guide tool and compares it with real sales. The offer page shows a price guide box and flags a gap of more than 15% from real sales. New Owner settings (off by default): use the price guide when there are too few sales, only for cards up to a value Cerf picks. The API only switches on when SPORTSCARDSPRO_TOKEN is set on the server; it stays off on the live site until SportsCardsPro answers our licence email (their data is licensed for internal use only). New files lib/price-guide.mjs, lib/price-guide.js, evaluation/price_guide_tests.mjs, database/011_price_guide.sql.
 Validation performed and outcome: Live API tests from the Codespace (5 Nov): sportscardspro.com search found Lamine Yamal #64 (base) and Lamine Yamal [Silver] #70 first; pricecharting.com searched Funko Pops instead. Values: #64 ungraded US$40.00 (real sales about US$48 to 50), Silver #70 US$127.50 (real sales about US$123); suggested shop buy prices US$17.60 and US$70.00; about 2.5 s per card. New price guide and rule tests passed. Browser test with a fake API: two calls 1.1 s apart, base #64 picked over the Refractor, value and suggested buy shown, the 15% gap flagged, and the guide value set the ceiling when there were too few sales.
 Commit: SportsCardsPro price guide (off until the token is set)
+
+## Entry 19
+Date/time: 5 Nov 2026
+Member: Daniel
+Slice: 16 - Fewer searches and a shorter form now that the price guide works
+Tool: Claude (instead of Copilot)
+Exact prompt: "Why does it still take one minute with the api" and "this is kinda redundant now that we have the api"
+Result: kept
+What changed: When the price guide has the card, the agent no longer searches for sold sales and gets 2 searches for the player. A new get_recent_player_research tool gives it this player's football, career and collector research from any assessment in the last 24 hours, so a second card of the same player gets 1 search to check for news. The sales paste box and the note box fold away under "Add sales you found or a note for the AI (optional)", leaving stock, condition, rookie card and one button. AGENT.md v1.7.
+Validation performed and outcome: Rule, guardrail, sync, FM and price guide tests passed; build passed. Browser test with a fake AI and fake price API: the optional box was folded and opened on click; the first Yamal card was given 2 searches with the price guide and research tools offered; a second Yamal card the same day was given 1 search.
+Commit: Fewer searches with the price guide, reuse player research, shorter form
