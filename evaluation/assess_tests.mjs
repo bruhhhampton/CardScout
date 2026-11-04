@@ -43,18 +43,20 @@ const cases = [
   ['Gate before missing sales', {}, { first_team: 'no', sales_count: 0, median_sold_aud: null }, 'decline'],
   ['Hard rule before missing info', { set_name: 'Topps Chrome' }, { sales_count: 0, median_sold_aud: null }, 'decline'],
 ];
-// The price guide stands in for sales only when the owner allows it and the card is cheap enough.
+// With the owner's setting on, the price guide is the card's value whenever it has one (up to the limit).
 const guideOn = { ...s, price_guide_as_evidence: true, price_guide_limit_aud: 250 };
 const fewSales = { ...input, sales_count: 1, median_sold_aud: 150, price_guide_aud: 200 };
 assert.equal(assess(offer, fewSales, s).outcome, 'owner_review', 'Price guide off: too few sales goes to the owner');
 const g = assess(offer, fewSales, guideOn);
 assert.equal(g.outcome, 'eligible', 'Price guide on: judged on the guide value');
 assert.equal(g.price_basis, 'price_guide'); assert.equal(g.market_value_aud, 200);
-assert.ok(g.reasons.some((r) => r.includes('price guide')), 'says the price guide was used');
+assert.ok(g.reasons.some((r) => r.startsWith('Market value from the SportsCardsPro price guide')), 'says the price guide was used');
 assert.equal(assess(offer, fewSales, { ...guideOn, price_guide_limit_aud: 100 }).outcome, 'owner_review', 'Guide value over the limit: still needs sales');
-const enough = assess(offer, { ...input, price_guide_aud: 500 }, guideOn);
-assert.equal(enough.price_basis, 'sales', 'Enough sales: real sales are used, not the guide');
-assert.equal(enough.market_value_aud, 200);
+const always = assess(offer, { ...input, price_guide_aud: 180 }, guideOn);
+assert.equal(always.price_basis, 'price_guide', 'Setting on: the guide is used even with enough sales');
+assert.equal(always.market_value_aud, 180);
+const noGuide = assess(offer, { ...input, price_guide_aud: null }, guideOn);
+assert.equal(noGuide.price_basis, 'sales', 'No guide value: real sales are used');
 // The rookie card rule can be switched off by the owner.
 const sNoRookie = { ...s, rookie_only: false };
 assert.equal(assess(offer, { ...input, rookie_card: 'no' }, sNoRookie).outcome, 'eligible', 'Rookie rule off: a non-rookie card is judged on scores and price');

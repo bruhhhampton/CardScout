@@ -204,3 +204,36 @@ Result: kept
 What changed: When the price guide has the card, the agent no longer searches for sold sales and gets 2 searches for the player. A new get_recent_player_research tool gives it this player's football, career and collector research from any assessment in the last 24 hours, so a second card of the same player gets 1 search to check for news. The sales paste box and the note box fold away under "Add sales you found or a note for the AI (optional)", leaving stock, condition, rookie card and one button. AGENT.md v1.7.
 Validation performed and outcome: Rule, guardrail, sync, FM and price guide tests passed; build passed. Browser test with a fake AI and fake price API: the optional box was folded and opened on click; the first Yamal card was given 2 searches with the price guide and research tools offered; a second Yamal card the same day was given 1 search.
 Commit: Fewer searches with the price guide, reuse player research, shorter form
+
+## Entry 20
+Date/time: 5 Nov 2026
+Member: Daniel
+Slice: 17 - Fixes from the first live price guide run
+Tool: Claude (instead of Copilot)
+Exact prompt: "is this supposed to be the case" (live Yamal #64 run: price guide worked, but card quality and valuation flagged "No checkable source" and the rookie check went from Yes to Not sure)
+Result: kept
+What changed: The price guide's own page now counts as a source the agent may cite, and the instructions tell it to cite it. Reused player research now includes the rookie card answer when it came from the same card (same year and card number). The "Offer saved… Next: check stock and condition" message no longer stays on the page once a draft or verdict exists.
+Validation performed and outcome: Sync, rule and price guide tests passed; build passed. Browser test with a fake AI and fake price API: 2 searches with the price guide, 1 when research was reused, rookie answer Yes carried over on the same card; with the price API stopped, the run finished normally and said "The price guide could not be reached".
+Commit: Price guide counts as a source; reuse rookie answer for the same card
+
+## Entry 21
+Date/time: 5 Nov 2026
+Member: Daniel
+Slice: 18 - Verdict-first offer page (Week 7 feedback: too much on screen, explain the decision)
+Tool: Claude (instead of Copilot)
+Exact prompt: "we need to make this more simplified... our thing is too fucked in terms of how much is in that one column"
+Result: kept
+What changed: The offer page now opens with one verdict card: the verdict as an action ("Offer up to $45.45", "Ask Cerf first"), a price line with the most Cerf pays, the asking price and what the card is worth, the reasons it is not a simple yes in plain words, four short lines on the player, card, demand and price using Cerf's own scales, and "What to tell the seller" (never shows Cerf's margin, scores or the price guide figure). Everything else folds away: how CardScout worked it out, run it again, change an answer, Football Manager ratings. Stock, condition and rookie card collapse into one line ("0 in stock · meets the standard · rookie card checked by the AI") and the button says "Assess this card". The agent is told to keep each reason to one sentence of at most 25 words. If today's exchange rate cannot be loaded, the price guide says so and is not used. New file lib/explain.mjs (plain code, no AI) with evaluation/explain_tests.mjs.
+Validation performed and outcome: All test files passed; build passed. Browser test on a phone-sized screen, light and dark, with a fake AI and fake price API and the price guide allowed for cards up to $150: a Yamal #64 offer at $48 gave "Offer up to $45.45", worth $60.61 from the price guide, four plain reason lines, four folded sections, no sideways scrolling.
+Commit: Verdict-first offer page with plain-English reasons
+
+## Entry 22
+Date/time: 5 Nov 2026
+Member: Daniel
+Slice: 19 - Always use the price guide when the owner turns it on
+Tool: Claude (instead of Copilot)
+Exact prompt: "I want sportscardspro always used"
+Result: kept
+What changed: With "Use the SportsCardsPro price guide as the card's value?" set to Yes, the price guide value is the market value for every card it has (up to the owner's limit), even when there are enough real sales; real sales are shown as a check. With no price guide value, real sales are used as before. The verdict says "Market value from the SportsCardsPro price guide" instead of listing it as a problem.
+Validation performed and outcome: Rule tests updated and passed (guide used with few sales, with enough sales, not over the limit, sales used when there is no guide value); explanation and price guide tests passed; build passed.
+Commit: Always use the price guide when the owner turns it on

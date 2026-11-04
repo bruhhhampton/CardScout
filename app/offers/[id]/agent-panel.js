@@ -3,6 +3,8 @@
 import { useActionState, useEffect, useRef } from 'react';
 import { forgetPasscode, prepareDraft } from './actions';
 
+const CONDITION_LABEL = { acceptable: 'meets the standard', not_acceptable: 'below the standard', unsure: 'condition not checked' };
+
 const START = { status: 'idle', message: '', errors: {}, notes: '', values: {}, attempt: 0 };
 
 // One click prepares the AI draft and the verdict. Staff first enter the two things only a
@@ -24,7 +26,10 @@ export default function AgentPanel({ offerId, remembered = false, initial = {}, 
     <>
       <form ref={formRef} action={formAction} key={state.attempt} noValidate className="agent-form">
         <input type="hidden" name="offer_id" value={offerId} />
-        <div className="two">
+        {/* Usual answers are already filled in, so most cards need no typing at all. */}
+        <details className="extra" open={Boolean(err.stock_count || err.condition) || undefined}>
+          <summary>{`${state.values?.stock_count || '0'} in stock · ${CONDITION_LABEL[state.values?.condition || 'acceptable']} · rookie card checked by ${state.values?.rookie_card ? 'you' : 'the AI'}`} <span className="change">Change</span></summary>
+          <div className="two">
           <div className={`field${err.stock_count ? ' has-error' : ''}`}>
             <label htmlFor="agent_stock">Copies already in stock</label>
             <span id="agent_stock-hint" className="hint">Count the shop&apos;s copies of this exact card</span>
@@ -56,9 +61,10 @@ export default function AgentPanel({ offerId, remembered = false, initial = {}, 
             </select>
           </div>
         </div>
+        </details>
         {/* Optional: the price guide and the AI find prices on their own. */}
         <details className="extra" open={Boolean(err.sales_link || state.values?.sales_rows || state.notes) || undefined}>
-          <summary>Add sales you found or a note for the AI (optional)</summary>
+          <summary>Add sales you found or a note (optional)</summary>
           <fieldset className="sales-paste">
           <legend>Sales you found (optional)</legend>
           <p className="hint">
@@ -117,7 +123,7 @@ export default function AgentPanel({ offerId, remembered = false, initial = {}, 
             role={state.status === 'success' ? 'status' : 'alert'}>{state.message}</p>
         )}
         <button type="submit" disabled={pending}>
-          {pending ? 'Starting…' : 'Prepare draft and assess'}
+          {pending ? 'Starting…' : 'Assess this card'}
         </button>
       </form>
       {remembered && (

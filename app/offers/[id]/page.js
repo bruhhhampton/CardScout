@@ -12,6 +12,7 @@ import AgentPanel from './agent-panel';
 import { getLatestRun, isRunning } from '@/lib/agent-runs';
 import RunWatcher from './run-watcher';
 import { combineFootball, fmFit, ROLE_LABEL } from '@/lib/fm-fit.mjs';
+import { headline, holdUps, ladder, sellerWords, whyLines } from '@/lib/explain.mjs';
 import { cookies } from 'next/headers';
 import { isRemembered } from '@/lib/agent-access';
 
@@ -201,50 +202,93 @@ export default async function OfferPage({ params, searchParams }) {
         </section>
   );
 
+  const asking = Number(offer.asking_price_aud);
+  const head = assessment ? headline(assessment, asking) : null;
+  const scale = assessment ? ladder(assessment, run, asking) : null;
+  const why = assessment ? whyLines(assessment, offer, run) : [];
+  const holds = assessment ? holdUps(assessment) : [];
+  const agentPanel = (
+    <AgentPanel offerId={offer.id} remembered={remembered} soldSearchUrl={soldSearchUrl(offer)} priceSiteUrl={priceSiteUrl(offer)}
+      initial={assessment ? { stock_count: String(assessment.stock_count ?? ''), condition: assessment.condition ?? '' } : {}} />
+  );
+
   return (
     <main>
       <p><Link href="/">← All offers</Link></p>
 
-      <section className="panel" aria-labelledby="offer-heading">
-        <div className="row">
-          <h1 id="offer-heading" className="offer-title">{offer.player}</h1>
-          <span className={`badge outcome-${offer.last_outcome ?? 'none'}`}>
-            {offer.last_outcome ? OUTCOMES[offer.last_outcome] : 'Not assessed'}
-          </span>
-        </div>
-        <p className="card">{offer.year} {offer.set_name} #{offer.card_number} · {offer.variant}</p>
-        <p className="condition">{offer.grade_condition}</p>
-        <p className="price">Asking {aud.format(Number(offer.asking_price_aud))}</p>
+      <section className="card-label" aria-labelledby="offer-heading">
+        <p className="card-line">{offer.year} {offer.set_name} #{String(offer.card_number).replace(/^#/, '')} · {offer.variant} · {offer.grade_condition}</p>
+        <h1 id="offer-heading" className="offer-title">{offer.player}</h1>
+        <p className="price">Seller asks {aud.format(asking)}</p>
       </section>
 
-      {message && (
+      {message && !(['created', 'created-linked'].includes(sp?.msg) && (run || assessment)) && (
         <p className={message.kind} role={message.kind === 'success' ? 'status' : 'alert'}>{message.text}</p>
       )}
+      {run?.status === 'failed' && <p className="error" role="alert">The last assessment did not finish: {run.error}</p>}
+      {run?.status === 'running' && !running && (
+        <p className="error" role="alert">The last assessment stopped without finishing. Run it again.</p>
+      )}
 
+      {running ? (
+        <section className="panel working" role="status">
+          <p><strong>Working on it.</strong> Started {new Date(run.created_at).toLocaleTimeString('en-AU', { timeZone: 'Australia/Sydney' })}, usually under a minute.</p>
+          <p className="hint">You can start the next card; the verdict appears here on its own.</p>
+          <RunWatcher startedAt={run.created_at} />
+        </section>
+      ) : assessment ? (
+        <section className={`verdict tone-${head.tone}`} aria-labelledby="verdict-heading">
+          <p className="verdict-kicker">{assessment.confirmed === false ? 'CardScout suggests' : 'Confirmed verdict'}</p>
+          <h2 id="verdict-heading" className="verdict-title">{head.title}</h2>
+          {scale && (
+            <div className="ladder" aria-label="Price comparison">
+              <div className="ladder-line" aria-hidden="true">
+                {scale.points.map((p) => <span key={p.key} className={`ladder-dot dot-${p.key}`} style={{ left: `${p.at}%` }} />)}
+              </div>
+              <dl className="ladder-points">
+                {scale.points.map((p) => (
+                  <div key={p.key} className={`pt-${p.key}`}><dt>{p.label}</dt><dd>{p.text}</dd></div>
+                ))}
+              </dl>
+              {scale.worthFrom && <p className="hint">Worth is the {scale.worthFrom}.</p>}
+            </div>
+          )}
+          {holds.length > 0 && (
+            <div className="holdups">
+              <h3>{assessment.outcome === 'counteroffer' ? 'Why not the asking price' : assessment.outcome === 'decline' ? 'Why not' : 'What Cerf needs to decide'}</h3>
+              <ul>{holds.map((h, i) => <li key={i}>{h}</li>)}</ul>
+            </div>
+          )}
+          <h3>What makes this card worth it (or not)</h3>
+          <dl className="why">
+            {why.map((w) => <div key={w.label}><dt>{w.label}</dt><dd>{w.text}</dd></div>)}
+          </dl>
+          <details className="seller">
+            <summary>What to tell the seller</summary>
+            <p>&ldquo;{sellerWords(assessment, asking)}&rdquo;</p>
+          </details>
+          {assessment.confirmed === false && (
+            <form action={confirmVerdict} className="verdict-actions">
+              <input type="hidden" name="offer_id" value={offer.id} />
+              <input type="hidden" name="assessment_id" value={assessment.id} />
+              <button type="submit">Confirm</button>
+              <span className="hint">Nothing is bought. Confirming records the decision.</span>
+            </form>
+          )}
+        </section>
+      ) : (
+        <section className="panel" aria-labelledby="ready-heading">
+          <h2 id="ready-heading">Assess this card</h2>
+          <p className="hint">CardScout finds the price, researches the player and applies Cerf&apos;s rules. Nothing is bought.</p>
+          {agentPanel}
+        </section>
+      )}
 
-
-      {/* Before linking, the player match comes first so staff confirm it before the AI draft. */}
-      {!player && fmSection}
-
-      <section className="panel" aria-labelledby="agent-heading">
-        <h2 id="agent-heading">AI draft</h2>
-        <p className="notice">
-          CardScout looks up the card&apos;s price and the AI researches the player, with sources. The owner&apos;s rules
-          make the decision; nothing is bought.
-        </p>
-        {run?.status === 'failed' && <p className="error" role="alert">Last AI draft did not finish: {run.error}</p>}
-        {run?.status === 'running' && !running && (
-          <p className="error" role="alert">The last AI draft stopped without finishing. Run it again.</p>
-        )}
-        {running && (
-          <div className="working" role="status">
-            <p><strong>Working on it.</strong> The AI started at {new Date(run.created_at).toLocaleTimeString('en-AU', { timeZone: 'Australia/Sydney' })} and usually takes about a minute.</p>
-            <p className="hint">You can start the next card and come back: the draft and verdict will appear here on their own.</p>
-            <RunWatcher startedAt={run.created_at} />
-          </div>
-        )}
+      <div className="more">
         {draft && (
-          <div className="draft">
+          <details className="fold">
+            <summary>How CardScout worked this out</summary>
+            <div className="draft">
             <p className="hint">
               Drafted {new Date(run.created_at).toLocaleString('en-AU', { timeZone: 'Australia/Sydney' })} · {run.model} · {run.searches} search(es)
             </p>
@@ -316,6 +360,7 @@ export default async function OfferPage({ params, searchParams }) {
                         ({aud.format(run.price_guide.value_aud)} vs {aud.format(Number(run.median_sold_aud))}). Check which is more current.
                       </p>
                     )}
+                    {run.price_guide.note && <p className="field-error">{run.price_guide.note}</p>}
                     <p className="hint">An estimate, not a sale. Converted at A${run.price_guide.rate} per US$ and your {Math.round((run.price_guide.adjust ?? 1) * 100)}% overseas share.</p>
                   </div>
                 ) : (
@@ -367,66 +412,34 @@ export default async function OfferPage({ params, searchParams }) {
               </ol>
             </details>
           </div>
+          </details>
         )}
-        {!running && <AgentPanel offerId={offer.id} remembered={remembered} soldSearchUrl={soldSearchUrl(offer)} priceSiteUrl={priceSiteUrl(offer)}
-          initial={assessment ? { stock_count: String(assessment.stock_count ?? ''), condition: assessment.condition ?? '' } : {}} />}
-      </section>
-
-      <section className="panel" aria-labelledby="assess-heading">
-        <h2 id="assess-heading">Assessment</h2>
-        <p className="hint">
-          Uses the owner&apos;s rules from <Link href="/settings">Owner settings</Link>
-          {settings?.provisional ? ' (provisional values)' : ''}. Plain calculation, no AI. Nothing is bought automatically.
-        </p>
-        {assessment && (
-          <div className={`result outcome-${assessment.outcome}`} role="status">
-            <p className="result-outcome">{OUTCOMES[assessment.outcome]}</p>
-            {assessment.confirmed === false && (
-              <p className="notice">Prepared by CardScout from the AI draft. Not confirmed yet: check the evidence below, then confirm it or change something.</p>
-            )}
-            {assessment.confirmed !== false && assessment.prepared_by === 'cardscout' && assessment.confirmed_at && (
-              <p className="hint">Prepared by CardScout, confirmed {new Date(assessment.confirmed_at).toLocaleString('en-AU', { timeZone: 'Australia/Sydney' })}.</p>
-            )}
-            <ul>{(assessment.reasons ?? []).map((r, i) => <li key={i}>{r}</li>)}</ul>
-            <dl className="result-facts">
-              <div><dt>Offer ceiling</dt><dd>{assessment.offer_ceiling_aud == null ? 'Not enough sales' : aud.format(Number(assessment.offer_ceiling_aud))}</dd></div>
-              <div><dt>CERF total</dt><dd>{assessment.cerf_total} / 100 ({assessment.cerf_category?.toLowerCase()})</dd></div>
-              {assessment.rookie_card && (
-                <div><dt>Cerf&apos;s checks</dt><dd>Rookie card: {GATE_LABEL[assessment.rookie_card]} · First-team chance: {GATE_LABEL[assessment.first_team]}</dd></div>
-              )}
-              {assessment.football_real != null && (
-                <div><dt>Football quality</dt><dd>{assessment.fm_fit != null
-                  ? `${combineFootball(assessment.football_real, Number(assessment.fm_fit))} = 80% × ${assessment.football_real} real-world + 20% × ${Number(assessment.fm_fit)} FM role fit (${ROLE_LABEL[assessment.fm_role] ?? 'attacking role'})`
-                  : `${assessment.football_real}, real-world only (no FM role fit for this player)`}</dd></div>
-              )}
-              <div><dt>Scores</dt><dd>{SCORE_FIELDS.map((f) => `${f.label} ${assessment[f.name]}`).join(' · ')}</dd></div>
-              <div><dt>Sales evidence</dt><dd>{assessment.sales_count} sale(s){assessment.median_sold_aud != null ? `, median ${aud.format(Number(assessment.median_sold_aud))}` : ''}{assessment.evidence_source ? ` · ${assessment.evidence_source}` : ''}</dd></div>
-              <div><dt>Assessed</dt><dd>{new Date(assessment.created_at).toLocaleString('en-AU', { timeZone: 'Australia/Sydney' })}</dd></div>
-            </dl>
-            {assessment.confirmed === false && (
-              <form action={confirmVerdict} className="verdict-actions">
-                <input type="hidden" name="offer_id" value={offer.id} />
-                <input type="hidden" name="assessment_id" value={assessment.id} />
-                <button type="submit">Confirm this verdict</button>
-                <span className="hint">Or open Change something below.</span>
-              </form>
-            )}
-          </div>
+        {assessment && !running && (
+          <details className="fold">
+            <summary>Run it again</summary>
+            {agentPanel}
+          </details>
         )}
         {settings ? (
-          <details open={Boolean(usedRun)}>
-            <summary>{assessment ? (assessment.confirmed === false ? 'Change something' : 'Assess again') : 'Or enter the evidence yourself'}</summary>
+          <details className="fold" open={false}>
+            <summary>{assessment ? 'Change an answer or score' : 'Enter the evidence yourself'}</summary>
+            <p className="hint">
+              Uses the owner&apos;s rules from <Link href="/settings">Owner settings</Link>
+              {settings?.provisional ? ' (provisional values)' : ''}.
+            </p>
             <AssessForm key={usedRun?.id ?? 'manual'} offerId={offer.id} salesWindowDays={settings.sales_window_days}
               initial={initial} agentRunId={usedRun?.id ?? null} keepRunId={!usedRun ? assessment?.agent_run_id ?? null : null} fromLast={fromLast} />
           </details>
         ) : (
           <p className="error" role="alert">Owner settings are missing. Run database/003_settings_assessments.sql in Supabase.</p>
         )}
-      </section>
+        <details className="fold">
+          <summary>{player ? `Football Manager ratings: ${player.name}` : 'Football Manager player: not linked'}</summary>
+          {fmSection}
+        </details>
+      </div>
 
-      {player && fmSection}
-
-      <footer>Development data is invented. CardScout never buys cards automatically.</footer>
+      <footer>CardScout never buys cards automatically.</footer>
     </main>
   );
 }
