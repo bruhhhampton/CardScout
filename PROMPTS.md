@@ -171,3 +171,25 @@ Result: kept
 What changed: An optional Rookie card? question next to stock and condition: Let the AI check (default), Yes it has the RC logo, or No. A staff answer from the card is used for the verdict and passed to the agent, which does not ask again. First-team chance stays with the agent, because the web can answer it and the card cannot.
 Validation performed and outcome: Tests, sync test and build passed. Live, #70 offer with Yes: Counteroffer, Cerf's checks Rookie card: Yes. With Let the AI check: Owner review, as before.
 Commit: Staff can answer the rookie card check from the card
+
+## Entry 17
+Date/time: 4 Nov 2026
+Member: Daniel
+Slice: 14 - Faster offers (Week 7 feedback: too slow, too many clicks)
+Tool: Claude (instead of Copilot)
+Exact prompt: "Now that we have laid out the plan, Let's get started"
+Result: kept
+What changed: Saving an offer links the Football Manager player automatically when exactly one name matches. Stock and condition start as 0 and Meets the standard. With sales pasted, the agent gets 3 web searches instead of 5, because it only needs to research the player. The AI now runs in the background: staff click once, see "Working on it", can start the next card, and the draft and verdict appear on the offer page by themselves. New file app/offers/[id]/run-watcher.js; database/010_background_runs.sql adds a "running" status. Until that SQL is run, CardScout waits for the AI as before.
+Validation performed and outcome: Rule, guardrail, sync and FM tests passed; build passed. Browser test with a fake AI and test database: a new Lamine Yamal offer linked itself to the FM player (role fit 84.8 shown); defaults were 0 and Meets the standard; "Working on it" showed in 0.1 s with the form hidden; leaving and returning kept it; the draft and an Owner review verdict appeared by themselves after about 10 s; the AI was offered 3 searches; with the "running" status blocked, it fell back to waiting and still gave a verdict; no auto-link for a player with no FM match; no sideways scrolling on a phone.
+Commit: Faster offers: auto-link player, defaults, background AI runs
+
+## Entry 18
+Date/time: 5 Nov 2026
+Member: Daniel
+Slice: 15 - SportsCardsPro price guide (Week 7 feedback: credible market data)
+Tool: Claude (instead of Copilot)
+Exact prompt: "aOLRGITH I JUST PAID FOR IT" (Legendary subscription, US$49/month), then the live API tests
+Result: kept
+What changed: The server looks up the exact card on the SportsCardsPro Prices API (player, number, first three set words, variant) and picks the product with the same player, number, year and parallel. It saves the value for the grade, their suggested shop buy and sell prices and sales per year, converted to AUD with today's rate and the owner's overseas share. The agent gets a get_price_guide tool and compares it with real sales. The offer page shows a price guide box and flags a gap of more than 15% from real sales. New Owner settings (off by default): use the price guide when there are too few sales, only for cards up to a value Cerf picks. The API only switches on when SPORTSCARDSPRO_TOKEN is set on the server; it stays off on the live site until SportsCardsPro answers our licence email (their data is licensed for internal use only). New files lib/price-guide.mjs, lib/price-guide.js, evaluation/price_guide_tests.mjs, database/011_price_guide.sql.
+Validation performed and outcome: Live API tests from the Codespace (5 Nov): sportscardspro.com search found Lamine Yamal #64 (base) and Lamine Yamal [Silver] #70 first; pricecharting.com searched Funko Pops instead. Values: #64 ungraded US$40.00 (real sales about US$48 to 50), Silver #70 US$127.50 (real sales about US$123); suggested shop buy prices US$17.60 and US$70.00; about 2.5 s per card. New price guide and rule tests passed. Browser test with a fake API: two calls 1.1 s apart, base #64 picked over the Refractor, value and suggested buy shown, the 15% gap flagged, and the guide value set the ceiling when there were too few sales.
+Commit: SportsCardsPro price guide (off until the token is set)

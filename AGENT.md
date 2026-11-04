@@ -1,5 +1,5 @@
 # AGENT.md
-Status: v1.5, 29 Oct 2026. The agent is given the stock, condition and any rookie card answer staff entered, and today's exchange rates, so it no longer asks for them; a staff rookie card answer from the card wins over the agent's web check. v1.4: The agent records overseas sales in their own currency; the owner decides whether they count. v1.3: One click now prepares the draft and the verdict; a person confirms it. Earlier (v1.2): The agent now drafts Cerf's two checks and scores football on real-world evidence only (the server adds the FM part). The two v1.2 tests passed on the live site on 29 Oct. Change the Design Card first, then the instructions, then the code.
+Status: v1.6, 5 Nov 2026. The agent can read the SportsCardsPro price guide (an estimate, not a sale) when the server has a token, and gets 3 searches when staff pasted sales. v1.5, 29 Oct 2026: The agent is given the stock, condition and any rookie card answer staff entered, and today's exchange rates, so it no longer asks for them; a staff rookie card answer from the card wins over the agent's web check. v1.4: The agent records overseas sales in their own currency; the owner decides whether they count. v1.3: One click now prepares the draft and the verdict; a person confirms it. Earlier (v1.2): The agent now drafts Cerf's two checks and scores football on real-world evidence only (the server adds the FM part). The two v1.2 tests passed on the live site on 29 Oct. Change the Design Card first, then the instructions, then the code.
 
 ## Design Card
 **Context:** Cerf Collectables is an Australian online sports card business: the owner, Cerf, plus 3 part-time and 1 full-time staff. Cerf personally manages purchasing and sourcing (interview, 21 Sept) and decides on each card himself, using his own CERF model: football quality, career path, collector appeal, card quality and valuation. Today each assessment means searching recent sold listings, checking player news and comparing prices by hand. Anyone helping him cannot make these calls without asking him.
@@ -40,7 +40,7 @@ You prepare evidence for a football card purchasing assessment for a small card 
 Your job: gather evidence, draft five CERF scores (0 to 100) and answer Cerf's two checks. You do NOT decide whether to buy. Plain-code rules and a person decide after you.
 
 Steps:
-1. Call get_offer, get_owner_settings and get_fm_player.
+1. Call get_offer, get_owner_settings and get_fm_player, and get_price_guide if it is offered.
 2. Use web_search (at most {{MAX_SEARCHES}} searches) to find (a) recent SOLD prices for this exact card and (b) the player's current real-world form, role and career situation.
 3. Call record_sale once for each genuine sold comparable you find, Australian or overseas. Skip anything that is an asking price, a different variant, grade, number or year, or a lot. Record the price in the currency the sale was made in (for example USD for a US sale shown in AUD), and never convert prices yourself: the server converts overseas sales only if the owner allows them, using today's exchange rates. Never ask staff for an exchange rate.
 4. Call submit_draft once with scores, reasons and sources, Cerf's two checks, and questions for staff.
@@ -50,7 +50,7 @@ Scoring guide (same as the owner's CERF model):
 - career: first-team chance, competition, exposure, credible next move. Do not reward a big club automatically.
 - collector: real buyer demand and following. Do not score on nationality.
 - card: recognised set, rookie card status, numbering, scarcity, reported condition.
-- valuation: is the asking price fair against the sold comparables you recorded? If you found none, score 50 and say so.
+- valuation: is the asking price fair against the sold comparables you recorded? If get_price_guide found the card, compare with its value too and say if the two differ by more than about 15%. If you found no sold sales, judge against the price guide value and say so; if there is neither, score 50 and say so. The price guide is an estimate, never a sale: never record it with record_sale.
 
 Cerf's two checks (answer yes, no or unsure, each with a short reason and sources):
 - rookie_card: is this exact card a recognised rookie card (RC logo, or the player's first-year card in a recognised set)?
@@ -72,7 +72,8 @@ Hard rules:
 | get_offer | Reads the offer being assessed | Decision 4 |
 | get_owner_settings | Reads the owner's limits and CERF weights | Decision 4 |
 | get_fm_player | Reads linked FM26 ratings, labelled unverified | Decision 4 |
-| web_search | Searches the web, max 5 per run | Decision 4 |
+| get_price_guide | Reads SportsCardsPro's estimated value, suggested shop buy and sell prices and sales per year for the exact card and grade, in AUD. Only offered when the server has a SportsCardsPro token. An estimate, never recorded as a sale | Decision 4 |
+| web_search | Searches the web, max 5 per run (3 when staff pasted sales) | Decision 4 |
 | record_sale | Records one sold comparable; the server checks it | Decision 5 |
 | submit_draft | Submits scores, reasons, sources and questions | Decision 5 |
 

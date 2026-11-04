@@ -29,14 +29,14 @@ export default function AgentPanel({ offerId, remembered = false, initial = {}, 
             <label htmlFor="agent_stock">Copies already in stock</label>
             <span id="agent_stock-hint" className="hint">Count the shop&apos;s copies of this exact card</span>
             <input id="agent_stock" name="stock_count" type="text" inputMode="numeric" autoComplete="off"
-              defaultValue={state.values?.stock_count ?? ''} aria-invalid={err.stock_count ? 'true' : undefined}
+              defaultValue={state.values?.stock_count || '0'} aria-invalid={err.stock_count ? 'true' : undefined}
               aria-describedby={err.stock_count ? 'agent_stock-hint agent_stock-error' : 'agent_stock-hint'} />
             {err.stock_count && <span id="agent_stock-error" className="field-error">{err.stock_count}</span>}
           </div>
           <div className={`field${err.condition ? ' has-error' : ''}`}>
             <label htmlFor="agent_condition">Condition</label>
-            <span id="agent_condition-hint" className="hint">From the card or the seller&apos;s photos</span>
-            <select id="agent_condition" name="condition" defaultValue={state.values?.condition ?? ''}
+            <span id="agent_condition-hint" className="hint">From the card or the seller&apos;s photos. Change it if you see flaws.</span>
+            <select id="agent_condition" name="condition" defaultValue={state.values?.condition || 'acceptable'}
               aria-invalid={err.condition ? 'true' : undefined}
               aria-describedby={err.condition ? 'agent_condition-hint agent_condition-error' : 'agent_condition-hint'}>
               <option value="" disabled>Choose…</option>
@@ -113,7 +113,7 @@ export default function AgentPanel({ offerId, remembered = false, initial = {}, 
             role={state.status === 'success' ? 'status' : 'alert'}>{state.message}</p>
         )}
         <button type="submit" disabled={pending}>
-          {pending ? 'Researching and assessing… this can take up to a minute' : 'Prepare draft and assess'}
+          {pending ? 'Starting…' : 'Prepare draft and assess'}
         </button>
       </form>
       {remembered && (

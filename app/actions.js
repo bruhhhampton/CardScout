@@ -2,7 +2,8 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { createOffer } from '@/lib/offers';
+import { createOffer, setOfferPlayer } from '@/lib/offers';
+import { findExactPlayer } from '@/lib/players';
 import { readValues, validateOffer } from '@/lib/validate-offer';
 
 const EMPTY = {
@@ -24,9 +25,15 @@ export async function saveOffer(_previous, formData) {
     return { status: 'error', message: error, errors: {}, values, attempt };
   }
 
+  // Link the Football Manager player straight away when exactly one name matches, so staff skip that step.
+  let linked = false;
+  if (id) {
+    const match = await findExactPlayer(result.offer.player);
+    if (match) linked = !(await setOfferPlayer(id, match.player_id)).error;
+  }
   revalidatePath('/');
-  // Open the new offer so staff can go straight to the player match and the AI draft.
-  if (id) redirect(`/offers/${id}?msg=created`);
+  // Open the new offer so staff can go straight to the AI draft.
+  if (id) redirect(`/offers/${id}?msg=${linked ? 'created-linked' : 'created'}`);
   return {
     status: 'success',
     message: `Saved offer for ${result.offer.player}. It is listed below as Not assessed.`,

@@ -9,7 +9,8 @@ import { OUTCOMES } from '@/lib/assess.mjs';
 import { GATE_FIELDS, SCORE_FIELDS } from '@/lib/assessment-fields';
 import AssessForm from './assess-form';
 import AgentPanel from './agent-panel';
-import { getLatestRun } from '@/lib/agent-runs';
+import { getLatestRun, isRunning } from '@/lib/agent-runs';
+import RunWatcher from './run-watcher';
 import { combineFootball, fmFit, ROLE_LABEL } from '@/lib/fm-fit.mjs';
 import { cookies } from 'next/headers';
 import { isRemembered } from '@/lib/agent-access';
@@ -45,6 +46,7 @@ const aud = new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' 
 
 const MESSAGES = {
   created: { kind: 'success', text: 'Offer saved. Confirm the player, then enter stock and condition and click Prepare draft and assess.' },
+  'created-linked': { kind: 'success', text: 'Offer saved and matched to its Football Manager player automatically. If it is the wrong player, click Remove link. Next: check stock and condition, then click Prepare draft and assess.' },
   confirmed: { kind: 'success', text: 'Verdict confirmed.' },
   'confirm-failed': { kind: 'error', text: 'The confirmation was not saved. Run database/007_confirm.sql in Supabase, then try again.' },
   linked: { kind: 'success', text: 'Player linked. CardScout uses these game ratings for 20% of football quality, as role fit. They are unverified, so real-world form counts for the other 80%.' },
@@ -78,6 +80,7 @@ export default async function OfferPage({ params, searchParams }) {
     getSettings(),
     getLatestRun(offer.id),
   ]);
+  const running = isRunning(run);
   const draft = run?.status === 'completed' ? run.draft : null;
   const usedRun = draft && (!assessment || new Date(run.created_at) > new Date(assessment.created_at)) ? run : null;
   const initial = usedRun
@@ -231,6 +234,16 @@ export default async function OfferPage({ params, searchParams }) {
           make the decision after you check the draft.
         </p>
         {run?.status === 'failed' && <p className="error" role="alert">Last AI draft did not finish: {run.error}</p>}
+        {run?.status === 'running' && !running && (
+          <p className="error" role="alert">The last AI draft stopped without finishing. Run it again.</p>
+        )}
+        {running && (
+          <div className="working" role="status">
+            <p><strong>Working on it.</strong> The AI started at {new Date(run.created_at).toLocaleTimeString('en-AU', { timeZone: 'Australia/Sydney' })} and usually takes about a minute.</p>
+            <p className="hint">You can start the next card and come back: the draft and verdict will appear here on their own.</p>
+            <RunWatcher startedAt={run.created_at} />
+          </div>
+        )}
         {draft && (
           <div className="draft">
             <p className="hint">
@@ -280,6 +293,42 @@ export default async function OfferPage({ params, searchParams }) {
                 </ul>
               </>
             )}
+            {run.price_guide && (
+              <>
+                <h3>Price guide (SportsCardsPro)</h3>
+                {run.price_guide.found ? (
+                  <div className="price-guide">
+                    <p>
+                      <a href={run.price_guide.link} target="_blank" rel="noopener noreferrer nofollow">{run.price_guide.name}</a>, {run.price_guide.set}, {run.price_guide.grade}
+                    </p>
+                    <dl className="result-facts">
+                      <div><dt>Estimated value</dt><dd>{run.price_guide.value_aud != null ? aud.format(run.price_guide.value_aud) : '–'} (US${run.price_guide.value_usd?.toFixed(2)})</dd></div>
+                      {run.price_guide.suggested_buy_aud != null && (
+                        <div><dt>Their suggested shop buy price</dt><dd>{aud.format(run.price_guide.suggested_buy_aud)}</dd></div>
+                      )}
+                      {run.price_guide.sales_per_year != null && (
+                        <div><dt>Sales per year</dt><dd>{run.price_guide.sales_per_year}</dd></div>
+                      )}
+                    </dl>
+                    {run.median_sold_aud != null && run.price_guide.value_aud != null
+                      && Math.abs(run.price_guide.value_aud - Number(run.median_sold_aud)) / Number(run.median_sold_aud) > 0.15 && (
+                      <p className="field-error">
+                        The price guide and the middle of the real sales differ by more than 15%
+                        ({aud.format(run.price_guide.value_aud)} vs {aud.format(Number(run.median_sold_aud))}). Check which is more current.
+                      </p>
+                    )}
+                    <p className="hint">An estimate, not a sale. Converted at A${run.price_guide.rate} per US$ and your {Math.round((run.price_guide.adjust ?? 1) * 100)}% overseas share.</p>
+                  </div>
+                ) : (
+                  <div className="price-guide">
+                    <p>{run.price_guide.reason}</p>
+                    {run.price_guide.candidates?.length > 0 && (
+                      <p className="hint">Closest cards it found: {run.price_guide.candidates.join('; ')}</p>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
             <h3>Sold sales the AI found</h3>
             <p className="hint">
               Counted by the server: {run.sales_count} accepted
@@ -320,8 +369,8 @@ export default async function OfferPage({ params, searchParams }) {
             </details>
           </div>
         )}
-        <AgentPanel offerId={offer.id} remembered={remembered} soldSearchUrl={soldSearchUrl(offer)} priceSiteUrl={priceSiteUrl(offer)}
-          initial={assessment ? { stock_count: String(assessment.stock_count ?? ''), condition: assessment.condition ?? '' } : {}} />
+        {!running && <AgentPanel offerId={offer.id} remembered={remembered} soldSearchUrl={soldSearchUrl(offer)} priceSiteUrl={priceSiteUrl(offer)}
+          initial={assessment ? { stock_count: String(assessment.stock_count ?? ''), condition: assessment.condition ?? '' } : {}} />}
       </section>
 
       <section className="panel" aria-labelledby="assess-heading">

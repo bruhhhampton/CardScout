@@ -223,3 +223,11 @@ details[open] summary::before { content: '▾'; }
 .verdict-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 12px; }
 .sales-paste { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px 12px; margin: 0; display: grid; gap: 10px; }
 .sales-paste legend { font-weight: 600; padding: 0 4px; }
+
+/* The AI is working in the background. */
+.working { border-left: 4px solid currentColor; padding: 0.5rem 0.75rem; margin: 0.75rem 0; }
+.working p { margin: 0.25rem 0; }
+
+/* SportsCardsPro price guide on the AI draft. */
+.price-guide { margin: 0.5rem 0 1rem; }
+.price-guide p { margin: 0.25rem 0; }
