@@ -46,8 +46,9 @@ const GATE_LABEL = { yes: 'Yes', no: 'No', unsure: 'Not sure' };
 const aud = new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' });
 
 const MESSAGES = {
-  created: { kind: 'success', text: 'Offer saved. Confirm the player, then enter stock and condition and click Prepare draft and assess.' },
-  'created-linked': { kind: 'success', text: 'Offer saved and matched to its Football Manager player automatically. If it is the wrong player, click Remove link. Next: check stock and condition, then click Prepare draft and assess.' },
+  created: { kind: 'success', text: 'Offer saved. Check stock and condition, then click Assess this card.' },
+  'created-linked': { kind: 'success', text: 'Offer saved. Check stock and condition, then click Assess this card.' },
+  'created-started': { kind: 'success', text: 'Offer saved. CardScout started assessing it with 0 in stock and condition meeting the standard. If either is wrong, change it under Run it again.' },
   confirmed: { kind: 'success', text: 'Verdict confirmed.' },
   'confirm-failed': { kind: 'error', text: 'The confirmation was not saved. Run database/007_confirm.sql in Supabase, then try again.' },
   linked: { kind: 'success', text: 'Player linked. CardScout uses these game ratings for 20% of football quality, as role fit. They are unverified, so real-world form counts for the other 80%.' },

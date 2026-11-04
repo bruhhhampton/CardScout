@@ -11,9 +11,9 @@ import { validateAssessment } from '@/lib/assessment-fields';
 import { assess, OUTCOMES } from '@/lib/assess.mjs';
 import { fmFit } from '@/lib/fm-fit.mjs';
 import { buildSalesNote } from '@/lib/sales-note.mjs';
-import { MODEL, runAgent, SEARCHES_WITH_SALES } from '@/lib/agent';
-import { after } from 'next/server';
-import { countRunsLastDay, finishRun, getLatestRun, saveRun, startRun } from '@/lib/agent-runs';
+import { runAgent, SEARCHES_WITH_SALES } from '@/lib/agent';
+import { countRunsLastDay, getLatestRun, saveRun } from '@/lib/agent-runs';
+import { DAILY_LIMIT, startInBackground, verdictFromRun } from '@/lib/auto-assess';
 import { cookies } from 'next/headers';
 import { AGENT_COOKIE, agentToken, cookieOptions, isRemembered, passcodeOk } from '@/lib/agent-access';
 
@@ -80,7 +80,6 @@ export async function assessOffer(_prev, formData) {
 }
 
 
-const DAILY_LIMIT = Number(process.env.AGENT_DAILY_LIMIT || 30);
 
 
 // One click: the bounded AI agent prepares the draft, then the owner's plain-code rules work out
@@ -141,13 +140,8 @@ export async function prepareDraft(_prev, formData) {
 
   // Background: save a "running" row, answer straight away, and let the AI work after the response.
   // Staff can move to the next card; the offer page updates itself when the verdict is ready.
-  const started = await startRun({ offer_id: offerId, model: MODEL, staff_notes: notes });
+  const started = await startInBackground(offerId, notes, facts, values, options);
   if (started.id) {
-    after(async () => {
-      const run = await runAgent(offerId, notes, facts, options);
-      const { error: saveErr } = await finishRun(started.id, run);
-      if (!saveErr && run.status === 'completed') await verdictFromRun(offerId, run, started.id, values);
-    });
     revalidatePath('/');
     revalidatePath(`/offers/${offerId}`);
     return done('Working on it. This takes about a minute: you can start the next card and come back.', 'running');
@@ -162,44 +156,6 @@ export async function prepareDraft(_prev, formData) {
   if (error) return fail(error);
   if (run.status !== 'completed') return fail(`The AI draft did not finish: ${run.error}`);
   return done(await verdictFromRun(offerId, run, runId, values));
-}
-
-// Works out the verdict from a finished draft, in plain code, and saves it as "not confirmed".
-// Returns a message for staff.
-async function verdictFromRun(offerId, run, runId, values) {
-  const scores = Object.fromEntries(['football', 'career', 'collector', 'card', 'valuation'].map((k) => [k, run.draft?.scores?.[k]?.score]));
-  const missing = Object.entries(scores).filter(([, v]) => !Number.isInteger(v)).map(([k]) => k);
-  if (missing.length) {
-    return `AI draft ready, but it has no ${missing.join(', ')} score, so the verdict was not worked out. Fill it in under Assessment and run it.`;
-  }
-  const [{ offer }, { settings, error: sErr }] = await Promise.all([getOffer(offerId), getSettings()]);
-  if (!offer || sErr) return 'AI draft ready, but the owner settings could not be loaded, so the verdict was not worked out. Run the assessment below.';
-  const answer = (k) => (['yes', 'no', 'unsure'].includes(run.draft?.checks?.[k]?.answer) ? run.draft.checks[k].answer : 'unsure');
-  const accepted = (run.sales ?? []).filter((x) => x.accepted);
-  const input = {
-    stock_count: Number(values.stock_count),
-    condition: values.condition,
-    // Staff answer from the card itself wins over the AI's web check.
-    rookie_card: values.rookie_card || answer('rookie_card'),
-    first_team: answer('first_team'),
-    sales_count: run.sales_count ?? 0,
-    median_sold_aud: run.median_sold_aud ?? null,
-    price_guide_aud: run.price_guide?.found ? run.price_guide.value_aud : null,
-    evidence_source: `AI draft ${new Date().toLocaleDateString('en-AU', { timeZone: 'Australia/Sydney' })}${accepted.some((x) => x.overseas) ? ` (${accepted.filter((x) => !x.overseas).length} Australian, ${accepted.filter((x) => x.overseas).length} overseas, converted)` : ''}: ${[...new Set(accepted.map((x) => x.url))].join(' ')}`.slice(0, 500),
-    scores,
-  };
-  const fit = offer.player_id ? fmFit((await getPlayer(offer.player_id)).player) : null;
-  const result = assess(offer, { ...input, fm_fit: fit?.score ?? null, fm_role: fit?.role ?? null }, settings);
-  if (result.price_basis === 'price_guide') {
-    input.evidence_source = `${input.evidence_source} | Market value from the SportsCardsPro price guide: ${run.price_guide.name}, ${run.price_guide.grade}`.slice(0, 500);
-  }
-  const { error: aErr } = await createAssessment(offerId, input, result, settings, runId, { auto: true });
-  try {
-    revalidatePath('/');
-    revalidatePath(`/offers/${offerId}`);
-  } catch { /* after the response the page refreshes itself */ }
-  if (aErr) return `AI draft ready, but the verdict could not be saved (${aErr}). Run the assessment below.`;
-  return `Draft and verdict ready: ${OUTCOMES[result.outcome]}. Check the evidence, then confirm it or change something.`;
 }
 
 // A person confirms the verdict CardScout prepared.

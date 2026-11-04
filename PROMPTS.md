@@ -237,3 +237,14 @@ Result: kept
 What changed: With "Use the SportsCardsPro price guide as the card's value?" set to Yes, the price guide value is the market value for every card it has (up to the owner's limit), even when there are enough real sales; real sales are shown as a check. With no price guide value, real sales are used as before. The verdict says "Market value from the SportsCardsPro price guide" instead of listing it as a problem.
 Validation performed and outcome: Rule tests updated and passed (guide used with few sales, with enough sales, not over the limit, sales used when there is no guide value); explanation and price guide tests passed; build passed.
 Commit: Always use the price guide when the owner turns it on
+
+## Entry 23
+Date/time: 5 Nov 2026
+Member: Daniel
+Slice: 20 - Start the assessment as soon as the offer is saved
+Tool: Claude (instead of Copilot)
+Exact prompt: "it shouldnt have to click on assess this card it should already be going started"
+Result: kept
+What changed: On a device that remembers the team passcode, saving an offer starts the assessment straight away in the background, with 0 in stock and condition meeting the standard. The offer page opens on "Working on it" and shows the verdict when ready. Staff can change stock or condition and run it again. A device without the remembered passcode still shows the Assess this card button, so the AI credit stays protected. The background run code moved into lib/auto-assess.js so both paths share it.
+Validation performed and outcome: Browser test with mock services: first offer without a remembered passcode showed the button; after assessing with Remember ticked, the next offer started on its own and reached a verdict. Rule, explanation and price guide tests passed; build passed.
+Commit: Start the assessment as soon as the offer is saved
