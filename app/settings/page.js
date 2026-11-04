@@ -10,8 +10,7 @@ export default async function SettingsPage() {
   const [{ settings, error }, fx] = await Promise.all([getSettings(), getAudRates()]);
   return (
     <main>
-      <p><Link href="/">← All offers</Link></p>
-      <header>
+      <header className="appbar">
         <h1>Owner settings</h1>
         <p className="sub">Your buying rules. Every assessment uses these, so staff apply your judgement the same way each time.</p>
       </header>

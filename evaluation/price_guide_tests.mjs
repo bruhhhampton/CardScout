@@ -1,6 +1,6 @@
 // Run: node evaluation/price_guide_tests.mjs   (no network; product names in the format the API returned on 5 Nov 2026, prices invented)
 import assert from 'node:assert/strict';
-import { buildQuery, gradeField, parseProductName, pickProduct, summariseProduct } from '../lib/price-guide.mjs';
+import { buildQuery, gradeField, parseProductName, pickProduct, summariseProduct, variantsFor } from '../lib/price-guide.mjs';
 
 const base64 = { player: 'Lamine Yamal', year: 2023, set_name: 'Topps Chrome UEFA Club Competitions', card_number: '64', variant: 'Base', grade_condition: 'Ungraded' };
 const silver70 = { player: 'Lamine Yamal', year: 2026, set_name: 'Panini Prizm FIFA World Cup', card_number: '#70', variant: 'Silver Prizm', grade_condition: 'Ungraded' };
@@ -40,5 +40,16 @@ assert.equal(s.suggested_buy_aud, 63.75); assert.equal(s.sales_per_year, 300);
 assert.equal(s.link, 'https://www.pricecharting.com/game/8');
 const graded = summariseProduct({ id: '8', 'manual-only-price': 50000 }, { ...silver70, grade_condition: 'PSA 10' }, { rate: 1.5 });
 assert.equal(graded.value_aud, 750); assert.equal(graded.suggested_buy_aud, null, 'no suggested buy price for PSA 10');
+
+// Scanning: the versions of the same card, Base first, other players and numbers left out.
+const vs = variantsFor([
+  { 'product-name': 'Lamine Yamal [Silver] #64', 'console-name': 'Soccer Cards 2023 Topps Chrome UEFA Club' },
+  { 'product-name': 'Lamine Yamal #64', 'console-name': 'Soccer Cards 2023 Topps Chrome UEFA Club' },
+  { 'product-name': 'Lamine Yamal [Gold] #64', 'console-name': 'Soccer Cards 2023 Topps Chrome UEFA Club' },
+  { 'product-name': 'Lamine Yamal #70', 'console-name': 'Soccer Cards 2023 Topps Chrome UEFA Club' },
+  { 'product-name': 'Pedri #64', 'console-name': 'Soccer Cards 2023 Topps Chrome UEFA Club' },
+  { 'product-name': 'Lamine Yamal #64', 'console-name': 'Soccer Cards 2024 Topps Chrome UEFA Club' },
+], { player: 'Lamine Yamal', card_number: '64', year: '2023' });
+assert.deepEqual(vs.map((v) => v.variant), ['Base', 'Gold', 'Silver']);
 
 console.log('Price guide checks passed (no network used).');

@@ -259,3 +259,14 @@ Result: kept
 What changed: The background run now saves the verdict before marking the run finished. Before, a page refresh in that gap saw a finished run with no verdict and showed the Assess button again. "How CardScout worked this out" is now four numbered steps, the same questions Cerf asks: can he buy this kind of card, what is it worth, is the player worth backing, and what is the most he pays. Each step shows a pass, needs-a-look or stop chip, what CardScout found with sources, the actual sums (exchange rate, weighted score, offer ceiling) and one line on why Cerf cares. The AI's questions become "Check before you confirm". Sales and the AI trace moved into a fold.
 Validation performed and outcome: Browser test with mock services, light and dark, phone width: the offer started on its own, the Assess button never appeared while waiting, a verdict appeared, four steps rendered with no sideways scrolling. New walkthrough checks (sums match the rules, too few sales marks step 2, a "no" stops at step 1) passed with the rule, explanation and price guide tests; build passed.
 Commit: Verdict before finish; four-step walkthrough for staff to learn from
+
+## Entry 25
+Date/time: 5 Nov 2026
+Member: Daniel
+Slice: 22 - Phone app layout and card scanning
+Tool: Claude (instead of Copilot)
+Exact prompt: "there has been criticisms of the layout being confusing ... we're going to aim for an app because we're going to want to incorporate that scanning feature" then "how about like a website for the phone" then "yes please and also we gotta incorporate a scanning feature"
+Result: kept
+What changed: CardScout is laid out for a phone with a tab bar: Offers, Scan (the main button), For Cerf and Settings. Each screen does one job. It can be added to the home screen and opens full screen with its own icon. The Scan tab takes a photo of the front and, optionally, the back. The photo is shrunk on the phone, then Claude reads only what is printed (player, year, set, number, version, slab grade). Fields it is unsure of are marked "Check this". SportsCardsPro lists every version of that card so staff tap the right one. Staff type the asking price and save, and the assessment starts on its own. Scanning needs the team passcode like the assessment, and photos are not saved.
+Validation performed and outcome: Browser test at phone width, light and dark, with mock services: four tabs, no sideways scrolling, Read button disabled until a photo is taken, fields filled from the scan, version chips shown and tappable, save started the assessment and reached a verdict, the card appeared under For Cerf. New version-list test passed with the rule, explanation and walkthrough tests; build passed. Not yet tested with a real card photo.
+Commit: Phone app layout with tabs and card scanning

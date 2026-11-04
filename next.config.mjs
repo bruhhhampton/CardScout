@@ -1,12 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    serverActions: {
-      // In development, the Codespace forwards the app through *.app.github.dev.
-      // Trust that address only in development. The published site keeps the strict check.
-      allowedOrigins:
-        process.env.NODE_ENV === 'development' ? ['*.app.github.dev', 'localhost:3000'] : [],
-    },
-  },
+  // Card photos are shrunk on the phone to about 300 KB each before upload; this leaves room for two.
+  experimental: { serverActions: { bodySizeLimit: '4mb' } },
 };
 export default nextConfig;

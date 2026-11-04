@@ -65,7 +65,7 @@ export default async function OfferPage({ params, searchParams }) {
   if (error) {
     return (
       <main>
-        <p><Link href="/">← All offers</Link></p>
+        <p className="back"><Link href="/">← Offers</Link></p>
         <p className="error" role="alert">{error}</p>
       </main>
     );
@@ -217,7 +217,7 @@ export default async function OfferPage({ params, searchParams }) {
 
   return (
     <main>
-      <p><Link href="/">← All offers</Link></p>
+      <p className="back"><Link href="/">← Offers</Link></p>
 
       <section className="card-label" aria-labelledby="offer-heading">
         <p className="card-line">{offer.year} {offer.set_name} #{String(offer.card_number).replace(/^#/, '')} · {offer.variant} · {offer.grade_condition}</p>

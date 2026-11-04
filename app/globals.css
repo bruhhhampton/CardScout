@@ -318,3 +318,70 @@ details[open] summary::before { content: '▾'; }
 .before-confirm { margin: 16px 0 8px; padding: 12px 16px; border-radius: 10px; background: var(--badge-bg); color: var(--badge-text); }
 .before-confirm h3 { margin: 0 0 6px; font-size: 1rem; }
 .before-confirm ul { margin: 0; padding-left: 1.2em; }
+
+/* ---------- Phone app shell: top bar, bottom tabs, big touch targets ---------- */
+main { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+.appbar { margin: 0 0 16px; }
+.appbar h1 { font-size: 1.6rem; }
+.appbar .sub { margin: 4px 0 0; }
+.back { margin: 0 0 8px; }
+.back a { display: inline-flex; min-height: 44px; align-items: center; font-weight: 600; }
+
+.tabbar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  background: var(--surface); border-top: 1px solid var(--line);
+  padding: 6px max(8px, env(safe-area-inset-left)) calc(6px + env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-right));
+}
+.tab {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  min-height: 52px; color: var(--muted); text-decoration: none; font-size: 0.75rem; font-weight: 600; border-radius: 10px;
+}
+.tab.on { color: var(--accent); }
+.tab-scan svg { width: 44px; height: 44px; padding: 9px; border-radius: 50%; background: var(--accent); color: var(--surface); margin-top: -18px; box-shadow: 0 2px 8px rgb(0 0 0 / 0.25); }
+.tab-scan.on { color: var(--accent); }
+@media (min-width: 720px) { .tabbar { left: 50%; right: auto; width: 720px; transform: translateX(-50%); border: 1px solid var(--line); border-bottom: 0; border-radius: 14px 14px 0 0; } }
+
+.cta {
+  display: flex; align-items: center; justify-content: center; min-height: 56px; margin: 0 0 16px;
+  border-radius: 12px; background: var(--accent); color: var(--surface); font-weight: 700; font-size: 1.1rem; text-decoration: none;
+}
+
+.offer-rows { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+.offer-main { flex: 1 1 auto; }
+.offer-row {
+  display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 64px;
+  padding: 12px 14px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line);
+  color: var(--text); text-decoration: none;
+}
+.offer-row .badge { background: var(--o-bg, var(--badge-bg)); color: var(--o-text, var(--badge-text)); }
+.offer-main, .offer-side { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.offer-main strong { font-size: 1.05rem; }
+.offer-main .hint { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.offer-side { align-items: flex-end; flex: none; text-align: right; }
+
+/* Scan screen */
+.scan-form { display: grid; gap: 12px; }
+.photo {
+  display: flex; align-items: center; gap: 14px; min-height: 84px; padding: 12px 14px; cursor: pointer;
+  border: 2px dashed var(--line); border-radius: 12px; background: var(--bg);
+}
+.photo.has-photo { border-style: solid; border-color: var(--accent); }
+.photo img { width: 56px; height: 76px; object-fit: cover; border-radius: 6px; flex: none; }
+.photo-icon { font-size: 2rem; width: 56px; text-align: center; flex: none; }
+.photo-text { display: flex; flex-direction: column; gap: 2px; }
+.photo:focus-within { outline: 3px solid var(--focus); outline-offset: 2px; }
+button.primary, .scan-form button {
+  font: inherit; font-weight: 700; min-height: 52px; border: 0; border-radius: 12px;
+  background: var(--accent); color: var(--surface); cursor: pointer;
+}
+.scan-form button:disabled { opacity: 0.45; cursor: not-allowed; }
+button.wide { width: 100%; }
+.check-tag { margin-left: 8px; font-size: 0.75rem; font-weight: 700; padding: 1px 8px; border-radius: 999px; background: var(--badge-bg); color: var(--badge-text); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 6px; }
+.chips .hint { flex-basis: 100%; }
+.offer-form .chip, .chip {
+  font: inherit; font-weight: 600; flex: none; width: auto; font-size: 0.9rem; min-height: 40px; padding: 6px 12px; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--accent); background: transparent; color: var(--accent);
+}
+.offer-form .chip[aria-pressed='true'] { background: var(--accent); color: var(--surface); }
