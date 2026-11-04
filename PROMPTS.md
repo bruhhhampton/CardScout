@@ -248,3 +248,14 @@ Result: kept
 What changed: On a device that remembers the team passcode, saving an offer starts the assessment straight away in the background, with 0 in stock and condition meeting the standard. The offer page opens on "Working on it" and shows the verdict when ready. Staff can change stock or condition and run it again. A device without the remembered passcode still shows the Assess this card button, so the AI credit stays protected. The background run code moved into lib/auto-assess.js so both paths share it.
 Validation performed and outcome: Browser test with mock services: first offer without a remembered passcode showed the button; after assessing with Remember ticked, the next offer started on its own and reached a verdict. Rule, explanation and price guide tests passed; build passed.
 Commit: Start the assessment as soon as the offer is saved
+
+## Entry 24
+Date/time: 5 Nov 2026
+Member: Daniel
+Slice: 21 - Fix the Assess button coming back, and turn "How CardScout worked this out" into a lesson
+Tool: Claude (instead of Copilot)
+Exact prompt: "When it says working on it you still have to press assess. Furthermore, we need to polish the how card scout worked this out. It needs to be more polished so that a staff could actually learn, right now its just a blob"
+Result: kept
+What changed: The background run now saves the verdict before marking the run finished. Before, a page refresh in that gap saw a finished run with no verdict and showed the Assess button again. "How CardScout worked this out" is now four numbered steps, the same questions Cerf asks: can he buy this kind of card, what is it worth, is the player worth backing, and what is the most he pays. Each step shows a pass, needs-a-look or stop chip, what CardScout found with sources, the actual sums (exchange rate, weighted score, offer ceiling) and one line on why Cerf cares. The AI's questions become "Check before you confirm". Sales and the AI trace moved into a fold.
+Validation performed and outcome: Browser test with mock services, light and dark, phone width: the offer started on its own, the Assess button never appeared while waiting, a verdict appeared, four steps rendered with no sideways scrolling. New walkthrough checks (sums match the rules, too few sales marks step 2, a "no" stops at step 1) passed with the rule, explanation and price guide tests; build passed.
+Commit: Verdict before finish; four-step walkthrough for staff to learn from

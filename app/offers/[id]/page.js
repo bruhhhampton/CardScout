@@ -12,7 +12,7 @@ import AgentPanel from './agent-panel';
 import { getLatestRun, isRunning } from '@/lib/agent-runs';
 import RunWatcher from './run-watcher';
 import { combineFootball, fmFit, ROLE_LABEL } from '@/lib/fm-fit.mjs';
-import { headline, holdUps, ladder, sellerWords, whyLines } from '@/lib/explain.mjs';
+import { headline, holdUps, ladder, sellerWords, STATUS_WORDS, walkthrough, whyLines } from '@/lib/explain.mjs';
 import { cookies } from 'next/headers';
 import { isRemembered } from '@/lib/agent-access';
 
@@ -208,6 +208,8 @@ export default async function OfferPage({ params, searchParams }) {
   const scale = assessment ? ladder(assessment, run, asking) : null;
   const why = assessment ? whyLines(assessment, offer, run) : [];
   const holds = assessment ? holdUps(assessment) : [];
+  // The four questions Cerf asks, with the sums, for staff to learn from.
+  const steps = assessment && !running ? walkthrough(assessment, run, offer, settings ?? {}) : [];
   const agentPanel = (
     <AgentPanel offerId={offer.id} remembered={remembered} soldSearchUrl={soldSearchUrl(offer)} priceSiteUrl={priceSiteUrl(offer)}
       initial={assessment ? { stock_count: String(assessment.stock_count ?? ''), condition: assessment.condition ?? '' } : {}} />
@@ -288,11 +290,64 @@ export default async function OfferPage({ params, searchParams }) {
       <div className="more">
         {draft && (
           <details className="fold">
-            <summary>How CardScout worked this out</summary>
+            <summary>How CardScout worked this out{steps.length > 0 ? ': 4 steps, about a minute to read' : ''}</summary>
             <div className="draft">
             <p className="hint">
               Drafted {new Date(run.created_at).toLocaleString('en-AU', { timeZone: 'Australia/Sydney' })} · {run.model} · {run.searches} search(es)
             </p>
+            {steps.length > 0 ? (
+              <ol className="steps">
+                {steps.map((st) => (
+                  <li key={st.key} className={`step step-${st.status}`}>
+                    <div className="step-head">
+                      <span className="step-n" aria-hidden="true">{st.n}</span>
+                      <h3>{st.title}</h3>
+                      <span className="step-chip">{STATUS_WORDS[st.status]}</span>
+                    </div>
+                    {st.afterStop && <p className="hint">The card already stopped at step {st.afterStop}. This is shown so you can see the whole method.</p>}
+                    {st.rows.length > 0 && (
+                      <ul className="step-rows">
+                        {st.rows.map((r) => (
+                          <li key={r.label} className={`row-${r.status}`}>
+                            <span className="row-mark" aria-hidden="true">{{ pass: '✓', stop: '✕', check: '?', info: '·', score: '' }[r.status]}</span>
+                            <div>
+                              {r.status === 'score' ? (
+                                <>
+                                  <div className="score-line">
+                                    <strong>{r.label}</strong>
+                                    <span className="score-num">{r.score}</span>
+                                    <span className="hint">counts {r.weight}%</span>
+                                  </div>
+                                  <div className="score-bar" aria-hidden="true"><span style={{ width: `${Math.max(0, Math.min(100, r.score))}%` }} /></div>
+                                </>
+                              ) : (
+                                <strong>{r.label}</strong>
+                              )}
+                              {r.text && <p>{r.text}</p>}
+                              {r.sources?.length > 0 && (
+                                <p className="hint">
+                                  {r.sources.map((u, i) => (
+                                    <a key={i} href={u} target="_blank" rel="noopener noreferrer nofollow">Source {i + 1}</a>
+                                  )).reduce((x, y) => [x, ' · ', y])}
+                                </p>
+                              )}
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    {st.maths?.length > 0 && (
+                      <div className="maths" aria-label="The sum">
+                        {st.maths.map((m, i) => <p key={i}>{m}</p>)}
+                      </div>
+                    )}
+                    {st.result && <p className="step-result">{st.result}</p>}
+                    <p className="lesson"><strong>Why Cerf cares:</strong> {st.lesson}</p>
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <>
             <h3>Draft scores</h3>
             <ul className="draft-scores">
               {SCORE_FIELDS.map((f) => {
@@ -374,6 +429,16 @@ export default async function OfferPage({ params, searchParams }) {
                 )}
               </>
             )}
+              </>
+            )}
+            {draft.questions_for_staff?.length > 0 && (
+              <div className="before-confirm">
+                <h3>Check before you confirm</h3>
+                <ul>{draft.questions_for_staff.map((q, i) => <li key={i}>{q}</li>)}</ul>
+              </div>
+            )}
+            <details>
+              <summary>All the evidence the AI looked at</summary>
             <h3>Sold sales the AI found</h3>
             <p className="hint">
               Counted by the server: {run.sales_count} accepted
@@ -394,14 +459,10 @@ export default async function OfferPage({ params, searchParams }) {
                 ))}
               </ul>
             )}
-            {draft.questions_for_staff?.length > 0 && (
-              <>
-                <h3>The AI needs you to check</h3>
-                <ul>{draft.questions_for_staff.map((q, i) => <li key={i}>{q}</li>)}</ul>
-              </>
-            )}
-            <details>
-              <summary>What the AI did (trace)</summary>
+              {steps.length > 0 && run.price_guide && !run.price_guide.found && run.price_guide.candidates?.length > 0 && (
+                <p className="hint">Closest cards SportsCardsPro found: {run.price_guide.candidates.join('; ')}</p>
+              )}
+              <h4>What the AI did, step by step</h4>
               <ol className="trace">
                 {(run.trace ?? []).map((t, i) => (
                   <li key={i}>
