@@ -27,7 +27,7 @@ function PhotoButton({ label, hint, value, onChange }) {
   const [busy, setBusy] = useState(false);
   return (
     <label className={`photo${value ? ' has-photo' : ''}`}>
-      <input type="file" accept="image/*" capture="environment" className="sr-only"
+      <input type="file" accept="image/*" className="sr-only"
         onChange={async (e) => {
           const file = e.target.files?.[0];
           if (!file) return;
@@ -75,7 +75,7 @@ export default function ScanFlow({ remembered }) {
     <>
       <section className="panel scan" aria-labelledby="scan-heading">
         <h2 id="scan-heading">Scan a card</h2>
-        <p className="sub">Lay the card flat in good light and fill the photo with it. The photo is only used to read the card and is not saved.</p>
+        <p className="sub">Take a photo, or choose one you saved or screenshotted from a listing. Fill the photo with the card. The photo is only used to read the card and is not saved.</p>
         {state.status === 'error' && <p className="error" role="alert">{state.message}</p>}
         <form action={formAction} className="scan-form" onSubmit={() => setAgain(false)}>
           <PhotoButton label="Photo of the front" value={front} onChange={setFront} />
