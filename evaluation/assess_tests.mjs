@@ -1,6 +1,6 @@
 // Run: node evaluation/assess_tests.mjs   (synthetic cases only)
 import assert from 'node:assert/strict';
-import { assess, cerf } from '../lib/assess.mjs';
+import { assess, cerf, isBase, makerOf } from '../lib/assess.mjs';
 
 const s = {
   staff_limit_aud: 150, max_copies: 2, excluded_sets: 'Topps Chrome, Panini Prizm', offer_fraction: 0.8,
@@ -93,4 +93,37 @@ assert.equal(fmHeavy.category, 'SPECULATIVE');
 // "Reject" uses the combined score, as in cerf.py: real 55 + FM 80 = 60, which is not below 60.
 assert.notEqual(assess(offer, { ...input, scores: { ...good, football: 55 }, fm_fit: 80 }, s).cerf_category, 'REJECT');
 assert.equal(assess(offer, { ...input, scores: { ...good, football: 55 }, fm_fit: null }, s).cerf_category, 'REJECT');
+// Shop visit rules (7 Nov 2026): Cerf picks allow, ask or decline for each.
+{
+  const ask = { ...s, base_rule: 'ask', maker_rule: 'ask', allowed_brands: 'Panini, Topps, Upper Deck', price_rule: 'ask', max_price_aud: 300, slow_rule: 'ask', min_sales_per_year: 10, defect_rule: 'ask' };
+  const no = { ...ask, base_rule: 'decline', maker_rule: 'decline', price_rule: 'decline', slow_rule: 'decline', defect_rule: 'decline' };
+  const allow = { ...ask, base_rule: 'allow', maker_rule: 'allow', price_rule: 'allow', slow_rule: 'allow', defect_rule: 'allow' };
+  const topps = { set_name: 'Topps Chrome UEFA Club Competitions', variant: 'Green Wave', asking_price_aud: 120 };
+  assert.equal(makerOf('Panini Prizm World Cup'), 'Panini');
+  assert.equal(makerOf('Prizm World Cup'), 'Panini');
+  assert.equal(makerOf('Topps Chrome UEFA'), 'Topps');
+  assert.equal(makerOf('Futera Unique'), 'Futera');
+  assert.equal(makerOf('Demo Football Set'), null);
+  assert.ok(isBase('Base') && isBase('') && !isBase('Green Wave'));
+  // A card no rule applies to is unchanged whatever the settings.
+  for (const set of [ask, no, allow]) assert.equal(assess(topps, input, set).outcome, assess(topps, input, s).outcome);
+  // Missing settings (database/012 not run) change nothing.
+  assert.equal(assess({ ...topps, variant: 'Base' }, input, s).outcome, assess(topps, input, s).outcome);
+  const cases2 = [
+    ['base', { ...topps, variant: 'Base' }, input],
+    ['other maker', { ...topps, set_name: 'Futera Unique' }, input],
+    ['expensive', { ...topps, asking_price_aud: 350 }, { ...input, median_sold_aud: 900 }],
+    ['slow seller', topps, { ...input, sales_per_year: 4 }],
+    ['defect', topps, { ...input, condition: 'defect' }],
+  ];
+  for (const [name, o, i] of cases2) {
+    assert.equal(assess(o, i, ask).outcome, 'owner_review', `${name}: ask`);
+    assert.equal(assess(o, i, no).outcome, 'decline', `${name}: decline`);
+    assert.notEqual(assess(o, i, allow).outcome, 'decline', `${name}: allow`);
+  }
+  // An unknown maker is never declined on a guess: it goes to Cerf even when set to decline.
+  assert.equal(assess({ ...topps, set_name: 'Demo Football Set' }, input, no).outcome, 'owner_review');
+  assert.notEqual(assess(topps, { ...input, sales_per_year: 40 }, ask).outcome, 'owner_review');
+  console.log('Shop rule checks passed.');
+}
 console.log(`${cases.length} synthetic assessment checks passed. Real owner rules and live data not tested.`);

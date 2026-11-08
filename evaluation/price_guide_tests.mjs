@@ -51,5 +51,24 @@ const vs = variantsFor([
   { 'product-name': 'Lamine Yamal #64', 'console-name': 'Soccer Cards 2024 Topps Chrome UEFA Club' },
 ], { player: 'Lamine Yamal', card_number: '64', year: '2023' });
 assert.deepEqual(vs.map((v) => v.variant), ['Base', 'Gold', 'Silver']);
+assert.ok(vs.every((v) => 'id' in v));
+
+// Long scanned versions still find the card: serials, "numbered", "parallel" and "RC logo" are ignored,
+// and a single close version ("Green Wave" vs "Green Wave Refractor") is accepted and flagged.
+const brunner = [
+  { id: 1, 'product-name': 'Paris Brunner #44', 'console-name': 'Soccer Cards 2024 Topps Chrome UEFA Club' },
+  { id: 2, 'product-name': 'Paris Brunner [Green Wave] #44', 'console-name': 'Soccer Cards 2024 Topps Chrome UEFA Club' },
+  { id: 3, 'product-name': 'Paris Brunner [Gold] #44', 'console-name': 'Soccer Cards 2024 Topps Chrome UEFA Club' },
+];
+const long = pickProduct(brunner, { player: 'Paris Brunner', card_number: '44', year: '2024', variant: 'Green wave parallel, numbered 218/399 (RC logo)' });
+assert.equal(long.product.id, 2);
+assert.equal(long.exact, true);
+// A similar version ("Green Wave" vs "Green Wave Refractor") is never used for the price, only suggested.
+const similar = pickProduct([{ id: 9, 'product-name': 'Paris Brunner [Green Wave Refractor] #44', 'console-name': 'Soccer Cards 2024 Topps Chrome UEFA Club' }], { player: 'Paris Brunner', card_number: '44', year: '2024', variant: 'Green Wave' });
+assert.equal(similar.product, null);
+assert.match(similar.similar[0], /Green Wave Refractor/);
+// Another player's or number's card is not suggested.
+const other = pickProduct([{ id: 11, 'product-name': 'Pedri [Green Wave Refractor] #44', 'console-name': 'Soccer Cards 2024 Topps Chrome UEFA Club' }], { player: 'Paris Brunner', card_number: '44', year: '2024', variant: 'Green Wave' });
+assert.equal(other.similar, undefined);
 
 console.log('Price guide checks passed (no network used).');

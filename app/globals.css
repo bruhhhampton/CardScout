@@ -385,3 +385,10 @@ button.wide { width: 100%; }
   border: 1px solid var(--accent); background: transparent; color: var(--accent);
 }
 .offer-form .chip[aria-pressed='true'] { background: var(--accent); color: var(--surface); }
+
+
+/* Pick the version from SportsCardsPro's list */
+.pick-version { margin: 16px 0; padding: 12px 14px; border-radius: 10px; background: var(--bg); border: 1px solid var(--line); }
+.pick-version h3 { margin: 0 0 4px; font-size: 1rem; }
+.pick-version .chip { font: inherit; font-weight: 600; min-height: 44px; padding: 6px 14px; border-radius: 999px; cursor: pointer; border: 1px solid var(--accent); background: transparent; color: var(--accent); }
+.pick-version .chip:hover { background: var(--accent); color: var(--surface); }

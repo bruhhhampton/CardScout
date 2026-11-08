@@ -2,7 +2,10 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { getOffer, OFFER_ID_PATTERN } from '@/lib/offers';
+import { getOffer, OFFER_ID_PATTERN, setOfferVariant } from '@/lib/offers';
+import { priceForPick } from '@/lib/price-guide';
+import { effectiveRates, getAudRates } from '@/lib/fx.mjs';
+import { getLatestAssessment } from '@/lib/assessments';
 
 import { getSettings } from '@/lib/settings';
 import { confirmAssessment, createAssessment } from '@/lib/assessments';
@@ -10,7 +13,7 @@ import { validateAssessment } from '@/lib/assessment-fields';
 import { assess, OUTCOMES } from '@/lib/assess.mjs';
 import { buildSalesNote } from '@/lib/sales-note.mjs';
 import { runAgent, SEARCHES_WITH_SALES } from '@/lib/agent';
-import { countRunsLastDay, getLatestRun, saveRun } from '@/lib/agent-runs';
+import { countRunsLastDay, getLatestRun, saveRun, setRunPriceGuide } from '@/lib/agent-runs';
 import { DAILY_LIMIT, startInBackground, verdictFromRun } from '@/lib/auto-assess';
 import { cookies } from 'next/headers';
 import { AGENT_COOKIE, agentToken, cookieOptions, isRemembered, passcodeOk } from '@/lib/agent-access';
@@ -41,7 +44,8 @@ export async function assessOffer(_prev, formData) {
   // Keep using the price guide value from the latest AI draft, if there is one.
   const { run: latest } = await getLatestRun(offerId);
   const guide = latest?.status === 'completed' && latest.price_guide?.found ? latest.price_guide.value_aud : null;
-  const result = assess(offer, { ...check.input, price_guide_aud: guide }, settings);
+  const perYear = latest?.status === 'completed' && latest.price_guide?.found ? latest.price_guide.sales_per_year ?? null : null;
+  const result = assess(offer, { ...check.input, price_guide_aud: guide, sales_per_year: perYear }, settings);
   const runId = field(formData, 'agent_run_id');
   const agentRunId = OFFER_ID_PATTERN.test(runId) ? runId : null;
   const { error } = await createAssessment(offerId, check.input, result, settings, agentRunId);
@@ -86,7 +90,7 @@ export async function prepareDraft(_prev, formData) {
   // Check what only a person can know before spending an AI run.
   const errors = {};
   if (!/^\d+$/.test(values.stock_count) || Number(values.stock_count) > 1000) errors.stock_count = 'Enter the number of copies in stock (0 if none).';
-  if (!['acceptable', 'not_acceptable', 'unsure'].includes(values.condition)) errors.condition = 'Choose a condition.';
+  if (!['acceptable', 'not_acceptable', 'defect', 'unsure'].includes(values.condition)) errors.condition = 'Choose a condition.';
   if (Object.keys(errors).length) return fail('Please fix the highlighted fields.', errors);
 
   if (!process.env.AGENT_PASSCODE) return fail('AI drafts are locked: AGENT_PASSCODE is not set on the server.');
@@ -103,7 +107,7 @@ export async function prepareDraft(_prev, formData) {
 
   const facts = {
     stock_count: Number(values.stock_count),
-    condition: { acceptable: 'meets the standard', not_acceptable: 'below the standard', unsure: 'unsure' }[values.condition],
+    condition: { acceptable: 'meets the standard', not_acceptable: 'below the standard', defect: 'has a defect', unsure: 'unsure' }[values.condition],
     rookie_card: values.rookie_card || null,
   };
   // Prices are already pasted, so the agent only needs to research the player.
@@ -146,4 +150,33 @@ export async function forgetPasscode(formData) {
   const offerId = field(formData, 'offer_id');
   (await cookies()).delete(AGENT_COOKIE);
   redirect(OFFER_ID_PATTERN.test(offerId) ? `/offers/${offerId}` : '/');
+}
+
+// Staff tap the version on the card from SportsCardsPro's list. CardScout saves that version, gets its
+// price and works out the verdict again from the same AI research. No new AI run, nothing to retype.
+export async function pickVersion(formData) {
+  const offerId = field(formData, 'offer_id');
+  const productId = field(formData, 'product_id');
+  if (!OFFER_ID_PATTERN.test(offerId)) redirect('/');
+  const back = (msg) => redirect(`/offers/${offerId}?msg=${msg}`);
+  if (!isRemembered(await cookies())) back('pick-locked');
+  const [{ offer }, { settings }, { run }, { assessment }] = await Promise.all([getOffer(offerId), getSettings(), getLatestRun(offerId), getLatestAssessment(offerId)]);
+  const option = run?.price_guide?.options?.find((o) => o.id === productId);
+  if (!offer || !settings || run?.status !== 'completed' || !option) back('pick-failed');
+  const rates = effectiveRates(settings, await getAudRates());
+  const guide = await priceForPick(productId, { ...offer, variant: option.variant }, { rate: rates?.USD ?? null, adjust: Number(settings.overseas_adjust ?? 1) || 1 });
+  const [{ error: vErr }, { error: gErr }] = await Promise.all([
+    setOfferVariant(offerId, option.variant),
+    setRunPriceGuide(run.id, { ...guide, options: run.price_guide.options }),
+  ]);
+  if (vErr || gErr) back('pick-failed');
+  const values = {
+    stock_count: String(assessment?.stock_count ?? 0),
+    condition: assessment?.condition ?? 'acceptable',
+    // Keep the earlier rookie answer (staff's or the AI's); it does not depend on the version.
+    rookie_card: ['yes', 'no'].includes(assessment?.rookie_card) ? assessment.rookie_card : '',
+  };
+  await verdictFromRun(offerId, { ...run, price_guide: { ...guide, options: run.price_guide.options } }, run.id, values);
+  revalidatePath('/');
+  back(guide.found ? 'picked' : 'picked-no-price');
 }

@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getOffer } from '@/lib/offers';
-import { confirmVerdict } from './actions';
+import { confirmVerdict, pickVersion } from './actions';
 import { getLatestAssessment } from '@/lib/assessments';
 import { getSettings } from '@/lib/settings';
 import { OUTCOMES } from '@/lib/assess.mjs';
@@ -48,6 +48,10 @@ const MESSAGES = {
   'created-linked': { kind: 'success', text: 'Offer saved. Check stock and condition, then click Assess this card.' },
   'created-started': { kind: 'success', text: 'Offer saved. CardScout started assessing it with 0 in stock and condition meeting the standard. If either is wrong, change it under Run it again.' },
   confirmed: { kind: 'success', text: 'Verdict confirmed.' },
+  picked: { kind: 'success', text: 'Version saved. CardScout used its SportsCardsPro price and worked out the verdict again.' },
+  'picked-no-price': { kind: 'error', text: 'Version saved, but SportsCardsPro has no price for this grade, so the verdict uses real sales instead.' },
+  'pick-locked': { kind: 'error', text: 'Enter the team passcode once on this device (Assess this card) before picking a version.' },
+  'pick-failed': { kind: 'error', text: 'That version could not be saved. Try again.' },
   'confirm-failed': { kind: 'error', text: 'The confirmation was not saved. Run database/007_confirm.sql in Supabase, then try again.' },
   'save-failed': { kind: 'error', text: 'The change was not saved. Try again.' },
 };
@@ -155,6 +159,18 @@ export default async function OfferPage({ params, searchParams }) {
               {scale.worthFrom && <p className="hint">Worth is the {scale.worthFrom}.</p>}
             </div>
           )}
+          {run?.status === 'completed' && !run.price_guide?.found && run.price_guide?.options?.length > 0 && (
+            <div className="pick-version">
+              <h3>Which version is the card?</h3>
+              <p className="hint">SportsCardsPro lists these for {offer.player} #{String(offer.card_number).replace(/^#/, '')}. Tap the one in your hand to get its price. CardScout does not guess, because versions can have very different prices.</p>
+              <form action={pickVersion} className="chips">
+                <input type="hidden" name="offer_id" value={offer.id} />
+                {run.price_guide.options.map((o) => (
+                  <button key={o.id} type="submit" name="product_id" value={o.id} className="chip">{o.variant}</button>
+                ))}
+              </form>
+            </div>
+          )}
           {holds.length > 0 && (
             <div className="holdups">
               <h3>{assessment.outcome === 'counteroffer' ? 'Why not the asking price' : assessment.outcome === 'decline' ? 'Why not' : 'What Cerf needs to decide'}</h3>
@@ -191,6 +207,7 @@ export default async function OfferPage({ params, searchParams }) {
           <details className="fold">
             <summary>How CardScout worked this out{steps.length > 0 ? ': 4 steps, about a minute to read' : ''}</summary>
             <div className="draft">
+
             <p className="hint">
               Drafted {new Date(run.created_at).toLocaleString('en-AU', { timeZone: 'Australia/Sydney' })} · {run.model} · {run.searches} search(es)
             </p>
@@ -241,7 +258,7 @@ export default async function OfferPage({ params, searchParams }) {
                       </div>
                     )}
                     {st.result && <p className="step-result">{st.result}</p>}
-                    <p className="lesson"><strong>Why Cerf cares:</strong> {st.lesson}</p>
+                    {st.lesson && <p className="lesson"><strong>Why Cerf cares:</strong> {st.lesson}</p>}
                   </li>
                 ))}
               </ol>

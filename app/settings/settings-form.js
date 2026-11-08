@@ -29,6 +29,7 @@ export default function SettingsForm({ initial }) {
         {SETTINGS_SECTIONS.map((sec) => (
           <fieldset key={sec.title} className="panel">
             <legend>{sec.title}</legend>
+            {sec.intro && <p className="hint">{sec.intro}</p>}
             <div className="offer-form">
               {sec.fields.map((f) => {
                 const err = state.errors[f.name];
@@ -36,7 +37,15 @@ export default function SettingsForm({ initial }) {
                   <div key={f.name} className={`field${err ? ' has-error' : ''}`}>
                     <label htmlFor={f.name}>{f.label}</label>
                     {f.hint && <span id={`${f.name}-hint`} className="hint">{f.hint}</span>}
-                    {f.kind === 'yesno' ? (
+                    {f.kind === 'rule' ? (
+                      <select id={f.name} name={f.name} defaultValue={state.values[f.name] ?? 'ask'}
+                        aria-invalid={err ? 'true' : undefined}
+                        aria-describedby={[f.hint && `${f.name}-hint`, err && `${f.name}-error`].filter(Boolean).join(' ') || undefined}>
+                        <option value="allow">Allow</option>
+                        <option value="ask">Ask me</option>
+                        <option value="decline">Don&apos;t buy</option>
+                      </select>
+                    ) : f.kind === 'yesno' ? (
                       <select id={f.name} name={f.name} defaultValue={state.values[f.name] ?? 'no'}
                         aria-invalid={err ? 'true' : undefined}
                         aria-describedby={[f.hint && `${f.name}-hint`, err && `${f.name}-error`].filter(Boolean).join(' ') || undefined}>
