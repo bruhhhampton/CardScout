@@ -1,6 +1,6 @@
 // Run: node evaluation/price_guide_tests.mjs   (no network; product names in the format the API returned on 5 Nov 2026, prices invented)
 import assert from 'node:assert/strict';
-import { buildQuery, gradeField, parseProductName, pickProduct, summariseProduct, variantsFor } from '../lib/price-guide.mjs';
+import { buildQuery, gradeField, parseProductName, pickProduct, summariseProduct, variantsFor, versionLabels } from '../lib/price-guide.mjs';
 
 const base64 = { player: 'Lamine Yamal', year: 2023, set_name: 'Topps Chrome UEFA Club Competitions', card_number: '64', variant: 'Base', grade_condition: 'Ungraded' };
 const silver70 = { player: 'Lamine Yamal', year: 2026, set_name: 'Panini Prizm FIFA World Cup', card_number: '#70', variant: 'Silver Prizm', grade_condition: 'Ungraded' };
@@ -77,5 +77,12 @@ assert.equal(other.similar, undefined);
   assert.deepEqual(sum.grades.map((g) => g.label), ['Ungraded', 'Grade 9', 'PSA 10']);
   assert.equal(sum.grades[2].aud, 315);
 }
+
+// Two versions with the same name get the part of the set name that differs.
+assert.deepEqual(versionLabels([
+  { variant: 'Base', set: 'Soccer Cards 2023 Topps Chrome UEFA Club' },
+  { variant: 'Base', set: 'Soccer Cards 2023 Topps Chrome UEFA Club Sapphire' },
+  { variant: 'Gold', set: 'Soccer Cards 2023 Topps Chrome UEFA Club' },
+]), ['Base (standard)', 'Base (Sapphire)', 'Gold']);
 
 console.log('Price guide checks passed (no network used).');

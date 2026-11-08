@@ -336,3 +336,25 @@ Result: kept
 What changed: Each card now has "The player": age, club, league, position and this season's appearances, starts, minutes, goals, assists and international caps, each linked to the page it came from, plus Prospect or Established. The AI records these from the pages it already reads; the server drops any fact whose page the AI did not actually find, and a missing fact shows "Not found", never a guess. Research from the last 24 hours is reused. "The market" shows SportsCardsPro's value for every grade (so staff see what grading would be worth), sales a year, suggested shop buy and sell prices and the other versions of the card, with a reminder never to show these figures to a seller. No extra AI or price guide calls. AGENT.md v1.9.
 Validation performed and outcome: New tests: facts kept only with a found source, invented source dropped, empty stays empty, older drafts still work; box summaries; every grade kept. Browser test with mock services in light and dark at phone width: both sections render, "Not found" shown for a missing fact, no sideways scrolling. Build passed. Not yet tested with the live AI.
 Commit: Player and market sections
+
+## Entry 32
+Date/time: 9 Nov 2026
+Member: Daniel
+Slice: 27 - Version picker labels and list wording
+Tool: Claude (instead of Copilot)
+Exact prompt: (screenshot of the version picker for Paris Brunner #CA-PB showing "Base" twice)
+Result: kept
+What changed: When two versions share a name (the same card in two sets, such as Topps Chrome and its Sapphire edition), the button adds the part of the set name that differs, for example "Base (standard)" and "Base (Sapphire)". The Offers list now uses the card page's words: "OK to buy", "Don't buy", "Counteroffer", "Ask the owner".
+Validation performed and outcome: New label test passed; other tests and build passed.
+Commit: Clearer version buttons and list labels
+
+## Entry 33
+Date/time: 9 Nov 2026
+Member: Daniel
+Slice: 28 - Fewer dropdowns, no repeated information
+Tool: Claude (instead of Copilot)
+Exact prompt: "how congested it is now ... you've introduced two more boxes of the player and the market ... the user having to click more buttons" then "I take it back, the how CardScout worked this out is great information ... how do we counter people saying it's too verbose" then "there's too many drop downs now, and the solution isn't simply just opening them all up" then "we're getting redundant information here"
+Result: kept. A first attempt that shortened the walkthrough was dropped before delivery because Daniel wanted its detail kept.
+What changed: The card page went from 7 dropdowns to 2 ("How CardScout worked this out" and "Change something"). The separate "The player" and "The market" boxes repeated the walkthrough, so the player facts are now one line at the top of step 3 (with Prospect or Established and sources) and the graded values and versions are one line in step 2. The seller message is a copy button instead of a dropdown. The full evidence (price guide detail, every sale found, the AI's steps) moved to its own page, linked at the end of the walkthrough. "Run it again" and "Change an answer or score" are one "Change something". Also: when staff pick a version after the AI has run, step 3 says the price fairness score was scored before the pick and how to update it.
+Validation performed and outcome: New tests for the facts line, the market line and the stale-score note; browser test: two dropdowns, copy button copies the seller message, evidence page opens with three sections, no sideways scrolling. All tests and build passed.
+Commit: Fewer dropdowns, facts inside the steps

@@ -165,9 +165,11 @@ export async function pickVersion(formData) {
   if (!offer || !settings || run?.status !== 'completed' || !option) back('pick-failed');
   const rates = effectiveRates(settings, await getAudRates());
   const guide = await priceForPick(productId, { ...offer, variant: option.variant }, { rate: rates?.USD ?? null, adjust: Number(settings.overseas_adjust ?? 1) || 1 });
+  // Keep the list of versions for the market line, and the options in case staff need to pick again.
+  const saved = { ...guide, versions: [...new Set(run.price_guide.options.map((o) => o.variant))], options: run.price_guide.options };
   const [{ error: vErr }, { error: gErr }] = await Promise.all([
     setOfferVariant(offerId, option.variant),
-    setRunPriceGuide(run.id, { ...guide, options: run.price_guide.options }),
+    setRunPriceGuide(run.id, saved),
   ]);
   if (vErr || gErr) back('pick-failed');
   const values = {
@@ -176,7 +178,7 @@ export async function pickVersion(formData) {
     // Keep the earlier rookie answer (staff's or the AI's); it does not depend on the version.
     rookie_card: ['yes', 'no'].includes(assessment?.rookie_card) ? assessment.rookie_card : '',
   };
-  await verdictFromRun(offerId, { ...run, price_guide: { ...guide, options: run.price_guide.options } }, run.id, values);
+  await verdictFromRun(offerId, { ...run, price_guide: saved }, run.id, values);
   revalidatePath('/');
   back(guide.found ? 'picked' : 'picked-no-price');
 }

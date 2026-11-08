@@ -6,7 +6,8 @@ const time = new Intl.DateTimeFormat('en-AU', { timeStyle: 'short', timeZone: 'A
 const date = new Intl.DateTimeFormat('en-AU', { day: 'numeric', month: 'short', timeZone: 'Australia/Sydney' });
 const dayKey = (d) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Australia/Sydney' }).format(d);
 
-const LABEL = { ...OUTCOMES, owner_review: 'Ask the owner', counteroffer: 'Counteroffer' };
+// Same words as the card page.
+const LABEL = { ...OUTCOMES, eligible: 'OK to buy', decline: "Don't buy", owner_review: 'Ask the owner', counteroffer: 'Counteroffer' };
 
 // One tappable row per offer: who, which card, the asking price and the verdict.
 export default function OfferList({ offers, empty }) {

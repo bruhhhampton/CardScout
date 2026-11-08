@@ -73,3 +73,18 @@ console.log('Explanation checks passed.');
   assert.equal(marketBox({ price_guide: { found: false } }, {}), null);
   console.log('Player and market box checks passed.');
 }
+
+// Player facts sit in step 3 and graded values in step 2, not in separate boxes.
+{
+  const { walkthrough } = await import('../lib/explain.mjs');
+  const snap = { excluded_sets: '', max_copies: 2, offer_fraction: 0.8, min_margin: 0.25, selling_costs_aud: 2, staff_limit_aud: 150, min_sales: 3, sales_window_days: 90, w_football: 35, w_career: 20, w_collector: 20, w_card: 10, w_valuation: 15, attractive_total_min: 75, attractive_valuation_min: 60 };
+  const a = { outcome: 'owner_review', condition: 'acceptable', rookie_card: 'yes', first_team: 'yes', stock_count: 0, score_football: 68, score_career: 75, score_collector: 65, score_card: 62, score_valuation: 35, cerf_total: 63.3, cerf_category: 'EXPENSIVE', offer_ceiling_aud: 16.39, reasons: ['Market value from the SportsCardsPro price guide: $24.53'], settings_snapshot: snap };
+  const run = { status: 'completed', sales_count: 0, price_guide: { found: true, picked_by_staff: true, grade: 'Ungraded', value_usd: 17, value_aud: 24.53, rate: 1.44, adjust: 0.85, link: 'https://x.test', versions: ['Base', 'Gold'], grades: [{ label: 'Ungraded', usd: 17, aud: 24.53 }, { label: 'PSA 10', usd: 80, aud: 98 }] }, draft: { player_facts: { stage: 'prospect', age: { value: '20', source: 'https://f.test' }, club: { value: 'AS Monaco', source: 'https://f.test' }, appearances: { value: '12', source: 'https://f.test' }, goals: { value: '8', source: 'https://f.test' } } } };
+  const w = walkthrough(a, run, { set_name: 'Topps Chrome UEFA', variant: 'Gold', asking_price_aud: 50 }, {});
+  assert.equal(w[2].facts.line, 'Age 20 · AS Monaco · 12 appearances · 8 goals');
+  assert.equal(w[2].facts.stage, 'Prospect');
+  assert.match(w[2].note, /scored before the version was picked/);
+  assert.match(w[1].rows.find((r) => r.label === 'Market').text, /PSA 10 \$98\.00.*Versions listed: Base, Gold/);
+  assert.equal(walkthrough(a, { ...run, draft: {} }, { set_name: 'X', asking_price_aud: 50 }, {})[2].facts, null);
+  console.log('Facts in steps checks passed.');
+}

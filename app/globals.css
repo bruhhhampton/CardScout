@@ -409,3 +409,13 @@ button.wide { width: 100%; }
 .grades th, .grades td { padding: 6px 0; border-bottom: 1px solid var(--line); text-align: left; font-weight: 400; }
 .grades td { text-align: right; font-weight: 600; }
 .grades tr.mine th, .grades tr.mine td { color: var(--accent); font-weight: 700; }
+
+/* Fewer dropdowns: facts line in step 3, seller copy button, evidence link */
+.facts-line { margin: 10px 0 4px; font-weight: 600; line-height: 1.5; }
+.facts-line .hint { font-weight: 400; }
+.stage-tag { display: inline-block; margin-right: 8px; padding: 1px 10px; border-radius: 999px; font-size: 0.8rem; font-weight: 700; background: var(--badge-bg); color: var(--badge-text); }
+.seller-line { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 14px 0 4px; }
+.seller-line .hint { margin: 0; flex: 1 1 16em; }
+.copy-btn { font: inherit; font-weight: 600; min-height: 44px; padding: 8px 14px; border-radius: 10px; cursor: pointer; border: 1px solid var(--line); background: var(--surface); color: var(--text); }
+.evidence-link { margin: 16px 0 4px; font-weight: 600; }
+.sub-h { margin: 16px 0 4px; font-size: 1rem; }

@@ -10,8 +10,10 @@ import AssessForm from './assess-form';
 import AgentPanel from './agent-panel';
 import { getLatestRun, isRunning } from '@/lib/agent-runs';
 import RunWatcher from './run-watcher';
-import { headline, holdUps, ladder, marketBox, playerBox, sellerWords, STATUS_WORDS, walkthrough, whyLines } from '@/lib/explain.mjs';
+import { headline, holdUps, ladder, sellerWords, STATUS_WORDS, walkthrough, whyLines } from '@/lib/explain.mjs';
+import CopyButton from './copy-button';
 import { cookies } from 'next/headers';
+import { versionLabels } from '@/lib/price-guide.mjs';
 import { isRemembered } from '@/lib/agent-access';
 
 export const dynamic = 'force-dynamic';
@@ -113,9 +115,6 @@ export default async function OfferPage({ params, searchParams }) {
   const holds = assessment ? holdUps(assessment) : [];
   // The four questions Cerf asks, with the sums, for staff to learn from.
   const steps = assessment && !running ? walkthrough(assessment, run, offer, settings ?? {}) : [];
-  // Research the shop cannot do itself: the player's real numbers and the card's market.
-  const player = !running ? playerBox(run) : null;
-  const market = !running ? marketBox(run, offer) : null;
   const agentPanel = (
     <AgentPanel offerId={offer.id} remembered={remembered} soldSearchUrl={soldSearchUrl(offer)} priceSiteUrl={priceSiteUrl(offer)}
       initial={assessment ? { stock_count: String(assessment.stock_count ?? ''), condition: assessment.condition ?? '' } : {}} />
@@ -168,9 +167,12 @@ export default async function OfferPage({ params, searchParams }) {
               <p className="hint">SportsCardsPro lists these for {offer.player} #{String(offer.card_number).replace(/^#/, '')}. Tap the one in your hand to get its price. CardScout does not guess, because versions can have very different prices.</p>
               <form action={pickVersion} className="chips">
                 <input type="hidden" name="offer_id" value={offer.id} />
-                {run.price_guide.options.map((o) => (
-                  <button key={o.id} type="submit" name="product_id" value={o.id} className="chip">{o.variant}</button>
-                ))}
+                {(() => {
+                  const labels = versionLabels(run.price_guide.options);
+                  return run.price_guide.options.map((o, i) => (
+                    <button key={o.id} type="submit" name="product_id" value={o.id} className="chip">{labels[i]}</button>
+                  ));
+                })()}
               </form>
             </div>
           )}
@@ -184,10 +186,10 @@ export default async function OfferPage({ params, searchParams }) {
           <dl className="why">
             {why.map((w) => <div key={w.label}><dt>{w.label}</dt><dd>{w.text}</dd></div>)}
           </dl>
-          <details className="seller">
-            <summary>What to tell the seller</summary>
-            <p>&ldquo;{sellerWords(assessment, asking)}&rdquo;</p>
-          </details>
+          <div className="seller-line">
+            <p className="hint">For the seller: &ldquo;{sellerWords(assessment, asking)}&rdquo;</p>
+            <CopyButton text={sellerWords(assessment, asking)} />
+          </div>
           {assessment.confirmed === false && (
             <form action={confirmVerdict} className="verdict-actions">
               <input type="hidden" name="offer_id" value={offer.id} />
@@ -203,54 +205,6 @@ export default async function OfferPage({ params, searchParams }) {
           <p className="hint">CardScout finds the price, researches the player and applies the owner&apos;s rules. Nothing is bought.</p>
           {agentPanel}
         </section>
-      )}
-
-      {(player || market) && (
-        <div className="research">
-          {player && (
-            <details className="fold research-box" open>
-              <summary><span className="research-title">The player</span>{player.summary && <span className="hint"> {player.summary}</span>}</summary>
-              {player.stage && <p className="stage">{player.stage}</p>}
-              <dl className="facts">
-                {player.rows.map((r) => (
-                  <div key={r.key} className={r.value ? '' : 'missing'}>
-                    <dt>{r.label}</dt>
-                    <dd>
-                      {r.value ?? 'Not found'}
-                      {r.source && <> <a href={r.source} target="_blank" rel="noopener noreferrer nofollow" className="src">source</a></>}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
-              <p className="hint">{player.season ? `Season ${player.season}. ` : ''}Every number links to the page it came from. &quot;Not found&quot; means CardScout found no source, so it did not guess.</p>
-            </details>
-          )}
-          {market && (
-            <details className="fold research-box">
-              <summary><span className="research-title">The market</span>{market.summary && <span className="hint"> {market.summary}</span>}</summary>
-              {market.grades.length > 0 && (
-                <table className="grades">
-                  <caption className="hint">Value by grade, from SportsCardsPro, in AUD</caption>
-                  <tbody>
-                    {market.grades.map((g) => (
-                      <tr key={g.label} className={g.mine ? 'mine' : ''}>
-                        <th scope="row">{g.label}{g.mine ? ' (this card)' : ''}</th>
-                        <td>{g.aud != null ? `$${g.aud.toFixed(2)}` : `US$${g.usd.toFixed(2)}`}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-              <dl className="facts">
-                {market.salesPerYear != null && <div><dt>Sold a year</dt><dd>About {market.salesPerYear}, so it {market.speed}</dd></div>}
-                {market.buy != null && <div><dt>Shops usually pay</dt><dd>${market.buy.toFixed(2)}</dd></div>}
-                {market.sell != null && <div><dt>Shops usually sell at</dt><dd>${market.sell.toFixed(2)}</dd></div>}
-                {market.versions.length > 0 && <div><dt>Versions listed</dt><dd>{market.versions.join(', ')}</dd></div>}
-              </dl>
-              <p className="hint">Estimates from <a href={market.link} target="_blank" rel="noopener noreferrer nofollow">SportsCardsPro</a>, not sales. For staff and the owner only: never show these figures to a seller.</p>
-            </details>
-          )}
-        </div>
       )}
 
       <div className="more">
@@ -271,6 +225,14 @@ export default async function OfferPage({ params, searchParams }) {
                       <h3>{st.title}</h3>
                       <span className="step-chip">{STATUS_WORDS[st.status]}</span>
                     </div>
+                    {st.facts && (
+                      <p className="facts-line">
+                        {st.facts.stage && <span className="stage-tag">{st.facts.stage}</span>}
+                        {st.facts.line}
+                        {st.facts.sources.length > 0 && <span className="hint"> · {st.facts.sources.map((u, i) => <a key={i} href={u} target="_blank" rel="noopener noreferrer nofollow">source {i + 1}</a>).reduce((x, y) => [x, ' ', y])}</span>}
+                      </p>
+                    )}
+                    {st.note && <p className="field-error">{st.note}</p>}
                     {st.afterStop && <p className="hint">The card already stopped at step {st.afterStop}. This is shown so you can see the whole method.</p>}
                     {st.rows.length > 0 && (
                       <ul className="step-rows">
@@ -404,54 +366,21 @@ export default async function OfferPage({ params, searchParams }) {
                 <ul>{draft.questions_for_staff.map((q, i) => <li key={i}>{q}</li>)}</ul>
               </div>
             )}
-            <details>
-              <summary>All the evidence the AI looked at</summary>
-            <h3>Sold sales the AI found</h3>
-            <p className="hint">
-              Counted by the server: {run.sales_count} accepted
-              {(run.sales ?? []).some((x) => x.accepted && x.overseas)
-                ? ` (${(run.sales ?? []).filter((x) => x.accepted && !x.overseas).length} Australian, ${(run.sales ?? []).filter((x) => x.accepted && x.overseas).length} overseas, converted)`
-                : ''}
-              {run.median_sold_aud != null ? `, middle price ${aud.format(Number(run.median_sold_aud))}` : ''}. Open each link to check it.
-            </p>
-            {(run.sales ?? []).length === 0 ? <p className="empty">No sold sales recorded.</p> : (
-              <ul className="draft-sales">
-                {run.sales.map((x, i) => (
-                  <li key={i} className={x.accepted ? 'ok' : 'rejected'}>
-                    <span>{x.accepted ? 'Accepted' : 'Not counted'}</span>{' '}
-                    {x.overseas ? `AUD ${Number(x.price_aud).toFixed(2)} (overseas: ${x.currency} ${x.price}${x.rate ? ` at A$${x.rate}` : ''}, after your adjustment)` : `${x.currency} ${x.price}`} · {x.sold_date} ·{' '}
-                    <a href={x.url} target="_blank" rel="noopener noreferrer nofollow">{x.title || 'link'}</a>
-                    {!x.accepted && <div className="hint">{(x.problems ?? []).join('; ')}</div>}
-                  </li>
-                ))}
-              </ul>
-            )}
-              {steps.length > 0 && run.price_guide && !run.price_guide.found && run.price_guide.candidates?.length > 0 && (
-                <p className="hint">Closest cards SportsCardsPro found: {run.price_guide.candidates.join('; ')}</p>
-              )}
-              <h4>What the AI did, step by step</h4>
-              <ol className="trace">
-                {(run.trace ?? []).map((t, i) => (
-                  <li key={i}>
-                    {t.type === 'search' && <>Searched: “{t.query}”</>}
-                    {t.type === 'search_results' && <>Got {t.results.length} result(s)</>}
-                    {t.type === 'tool' && <>Used {t.name}{t.name === 'record_sale' ? (t.accepted ? ' (accepted)' : ` (rejected: ${t.problems?.join('; ')})`) : ''}</>}
-                  </li>
-                ))}
-              </ol>
-            </details>
+            <p className="evidence-link"><Link href={`/offers/${offer.id}/evidence`}>All the evidence and what the AI did →</Link></p>
           </div>
           </details>
         )}
-        {assessment && !running && (
-          <details className="fold">
-            <summary>Run it again</summary>
-            {agentPanel}
-          </details>
-        )}
         {settings ? (
-          <details className="fold" open={false}>
-            <summary>{assessment ? 'Change an answer or score' : 'Enter the evidence yourself'}</summary>
+          <details className="fold">
+            <summary>{assessment ? 'Change something' : 'Enter the evidence yourself'}</summary>
+            {assessment && !running && (
+              <>
+                <h3 className="sub-h">Run the AI again</h3>
+                <p className="hint">For example after changing the stock or condition, or to update the price fairness score.</p>
+                {agentPanel}
+                <h3 className="sub-h">Or change an answer or score yourself</h3>
+              </>
+            )}
             <p className="hint">
               Uses the owner&apos;s rules from <Link href="/settings">Owner settings</Link>
               {settings?.provisional ? ' (provisional values)' : ''}.
