@@ -19,9 +19,9 @@ export default async function SettingsPage() {
         <>
           {settings.provisional && (
             <p className="notice">
-              Provisional values. The player weights and thresholds come from Cerf&apos;s CERF model. The spending,
+              Provisional values. The player weights and thresholds come from the owner&apos;s buying model. The spending,
               stock and pricing limits are placeholders until the owner confirms them. Choose No under &quot;Are these values
-              still provisional?&quot; once Cerf has confirmed them.
+              still provisional?&quot; once the owner has confirmed them.
             </p>
           )}
           <p className="hint">There is no login yet. Anyone with this link can change these settings, so share it only with the team and tutor.</p>

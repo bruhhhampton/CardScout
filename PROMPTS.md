@@ -303,3 +303,25 @@ Result: kept, after rejecting a first version
 What changed: The first version turned the shop notes into automatic declines; Daniel rejected it because the owner should be in control and the notes were open to interpretation. Now each rule from the visit (base cards, other makers, expensive cards, slow sellers, defects) is an Owner setting with Allow, Ask me or Don't buy, all starting on Ask me. An unknown maker is never declined on a guess. Staff can mark a card "Has a defect". Luka's idea (a homepage question about how well each user knows football and cards, then a different focus) was built and then removed after Daniel asked what it changed: it only reordered the same information, added a step before use and split the product into four parts. Its goal is kept by letting everyone open the player or market detail they need. Separately, the Paris Brunner card ("Green wave parallel, numbered 218/399 (RC logo)") now finds its SportsCardsPro price: serial numbers and words like "parallel" and "RC logo" are ignored, and the scanner saves only the short version name. A first version also used a single close version (for example "Green Wave Refractor" for "Green Wave"); Daniel questioned it ("what if it gets confused"), and then rejected "change the version and run it again" as manual work. Now, when there is no exact match, the verdict card shows every version SportsCardsPro lists for that player, number and year; staff tap the one on the card, and CardScout saves it, gets its price and works out the verdict again from the same research, with no new AI run. CardScout never picks a version itself.
 Validation performed and outcome: Each rule tested as Allow, Ask me and Don't buy; missing settings change nothing; unknown maker never declined. Browser test: settings show the three choices for each rule. The tests also caught a slip in the first edit that dropped the rookie and first-team checks; fixed. Build passed.
 Commit: Owner-chosen shop rules and better version matching
+
+## Entry 29
+Date/time: 9 Nov 2026
+Member: Daniel
+Slice: 25 - Owner settings read like a product, not our project notes
+Tool: Claude (instead of Copilot)
+Exact prompt: "it shouldn't just be rules from the shop visit. Cause you're now doing it based on the view of us as opposed to an app to be used by the card store themselves"
+Result: kept
+What changed: The "Rules from the shop visit" section and its "you said" and "placeholder" wording were removed. The rules now sit in the groups an owner thinks in: "Which cards I buy" (rookie cards, base cards, makers, defects, sets never bought) and "Spending and stock" (staff limit, copies, expensive cards, slow sellers), with neutral hints. Which values still need the owner's confirmation is tracked in SPEC.md and the "provisional" setting, not on screen. No database change.
+Validation performed and outcome: Build passed; settings page shows the new groups with no duplicate fields; all rule tests unchanged and passing.
+Commit: Owner settings grouped for the shop
+
+## Entry 30
+Date/time: 9 Nov 2026
+Member: Daniel
+Slice: 26 - General wording instead of "Cerf" and "CERF"
+Tool: Claude (instead of Copilot)
+Exact prompt: "Also what is a CERF? It should be more generalised wording when it comes to the decision like ask cerf"
+Result: kept
+What changed: CERF is the name of the owner's scoring model (from Cerf's cerf.py). On screen it was jargon, and "Ask Cerf" tied the app to one person. Staff and owner screens now say "Ask the owner first", the tab is "Owner", reasons say "Buying score", "Strong buy", "Not a strong enough buy yet", "Too uncertain" and "Too pricey", and the walkthrough says "the shop" and "the owner" with "Why it matters". The AI's instructions say "the owner's two checks" and "buying scores", so its reasons match. Older saved reasons are still reworded on screen. Also fixed an outdated line telling the AI the server adds a Football Manager part, which stopped being true on 5 Nov.
+Validation performed and outcome: New test checks no rule reason contains "CERF"; updated wording tests, AGENT.md sync, rule, explanation and price guide tests passed; build passed.
+Commit: General wording for the owner and buying score

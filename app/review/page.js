@@ -2,7 +2,7 @@ import { listOffers } from '@/lib/offers';
 import OfferList from '../offer-list';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'For Cerf · CardScout' };
+export const metadata = { title: 'Owner review · CardScout' };
 
 // Cards CardScout could not settle for staff. Cerf opens each one and decides.
 export default async function ReviewPage() {
@@ -11,11 +11,11 @@ export default async function ReviewPage() {
   return (
     <main>
       <header className="appbar">
-        <h1>For Cerf</h1>
-        <p className="sub">Cards that need the owner&apos;s judgement. Each one says what Cerf needs to decide.</p>
+        <h1>Owner review</h1>
+        <p className="sub">Cards that need the owner&apos;s judgement. Each one says what needs deciding.</p>
       </header>
       {error && <p className="error" role="alert">{error}</p>}
-      {!error && <OfferList offers={waiting} empty="Nothing waiting for Cerf." />}
+      {!error && <OfferList offers={waiting} empty="Nothing waiting for the owner." />}
     </main>
   );
 }

@@ -46,7 +46,7 @@ export default function AgentPanel({ offerId, remembered = false, initial = {}, 
               aria-describedby={err.condition ? 'agent_condition-hint agent_condition-error' : 'agent_condition-hint'}>
               <option value="" disabled>Choose…</option>
               <option value="acceptable">Meets the standard</option>
-              <option value="defect">Has a defect (Cerf decides if it is a real one)</option>
+              <option value="defect">Has a defect (the owner decides if it matters)</option>
               <option value="not_acceptable">Does not meet the standard</option>
               <option value="unsure">Not sure yet</option>
             </select>

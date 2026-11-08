@@ -18,7 +18,7 @@ export default async function Home() {
 
       <Link href="/scan" className="cta">Scan a card</Link>
       {waiting > 0 && (
-        <p><Link href="/review">{waiting} card{waiting === 1 ? '' : 's'} waiting for Cerf</Link></p>
+        <p><Link href="/review">{waiting} card{waiting === 1 ? '' : 's'} waiting for the owner</Link></p>
       )}
 
       <section aria-labelledby="offers-heading">

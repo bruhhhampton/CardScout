@@ -77,9 +77,9 @@ assert.equal(yam.category, 'WATCH');
 assert.equal(yam.reason, 'Valuation 58 is below your attractive level of 60');
 const low = cerf({ football: 70, career: 60, collector: 50, card: 50, valuation: 65 }, s);
 assert.equal(low.category, 'WATCH');
-assert.match(low.reason, /^CERF total \d+\.\d is below your attractive level of 75$/);
+assert.match(low.reason, /^Buying score \d+\.\d is below your strong-buy level of 75$/);
 const both = cerf({ football: 70, career: 60, collector: 50, card: 50, valuation: 45 }, s);
-assert.match(both.reason, /CERF total .* below .*; Valuation 45 is below/);
+assert.match(both.reason, /Buying score .* below .*; Valuation 45 is below/);
 // FM role fit counts for 20% of football quality (cerf.py); real-world is the other 80%.
 const yamal = assess(offer, { ...input, scores: { football: 92, career: 88, collector: 90, card: 68, valuation: 58 }, fm_fit: 84.8, fm_role: 'WINGER' }, s);
 assert.equal(yamal.football, 90.56);
@@ -125,5 +125,10 @@ assert.equal(assess(offer, { ...input, scores: { ...good, football: 55 }, fm_fit
   assert.equal(assess({ ...topps, set_name: 'Demo Football Set' }, input, no).outcome, 'owner_review');
   assert.notEqual(assess(topps, { ...input, sales_per_year: 40 }, ask).outcome, 'owner_review');
   console.log('Shop rule checks passed.');
+}
+// Reasons staff see use plain words: no "CERF" jargon.
+for (const [, o, i] of cases) {
+  const r = assess({ ...offer, ...o }, { ...input, ...i, scores: { ...good, ...(i.scores ?? {}) } }, s);
+  assert.ok(!r.reasons.some((x) => /CERF/.test(x)), `no CERF in: ${r.reasons.join(' | ')}`);
 }
 console.log(`${cases.length} synthetic assessment checks passed. Real owner rules and live data not tested.`);

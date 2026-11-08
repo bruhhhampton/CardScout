@@ -173,7 +173,7 @@ export default async function OfferPage({ params, searchParams }) {
           )}
           {holds.length > 0 && (
             <div className="holdups">
-              <h3>{assessment.outcome === 'counteroffer' ? 'Why not the asking price' : assessment.outcome === 'decline' ? 'Why not' : 'What Cerf needs to decide'}</h3>
+              <h3>{assessment.outcome === 'counteroffer' ? 'Why not the asking price' : assessment.outcome === 'decline' ? 'Why not' : 'What the owner needs to decide'}</h3>
               <ul>{holds.map((h, i) => <li key={i}>{h}</li>)}</ul>
             </div>
           )}
@@ -197,7 +197,7 @@ export default async function OfferPage({ params, searchParams }) {
       ) : (
         <section className="panel" aria-labelledby="ready-heading">
           <h2 id="ready-heading">Assess this card</h2>
-          <p className="hint">CardScout finds the price, researches the player and applies Cerf&apos;s rules. Nothing is bought.</p>
+          <p className="hint">CardScout finds the price, researches the player and applies the owner&apos;s rules. Nothing is bought.</p>
           {agentPanel}
         </section>
       )}
@@ -258,7 +258,7 @@ export default async function OfferPage({ params, searchParams }) {
                       </div>
                     )}
                     {st.result && <p className="step-result">{st.result}</p>}
-                    {st.lesson && <p className="lesson"><strong>Why Cerf cares:</strong> {st.lesson}</p>}
+                    {st.lesson && <p className="lesson"><strong>Why it matters:</strong> {st.lesson}</p>}
                   </li>
                 ))}
               </ol>
@@ -286,7 +286,7 @@ export default async function OfferPage({ params, searchParams }) {
             </ul>
             {draft.checks && (
               <>
-                <h3>Cerf&apos;s checks (AI suggestion, you confirm)</h3>
+                <h3>The owner&apos;s checks (AI suggestion, you confirm)</h3>
                 <ul className="draft-scores">
                   {GATE_FIELDS.map((g) => {
                     const ch = draft.checks[g.name] ?? {};

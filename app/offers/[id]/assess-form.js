@@ -70,7 +70,7 @@ export default function AssessForm({ offerId, salesWindowDays, initial = {}, age
         <input type="hidden" name="offer_id" value={offerId} />
         {(agentRunId || keepRunId) && <input type="hidden" name="agent_run_id" value={agentRunId || keepRunId} />}
         {agentRunId && (
-          <p className="notice">Sales, scores and Cerf&apos;s two checks come from the AI draft above. Confirm the two checks, add stock and condition, then run it.</p>
+          <p className="notice">Sales, scores and the owner&apos;s two checks come from the AI draft above. Confirm the two checks, add stock and condition, then run it.</p>
         )}
         {fromLast && (
           <p className="notice">Filled in from the last assessment. Change anything that has changed, then run it again.</p>
@@ -81,7 +81,7 @@ export default function AssessForm({ offerId, salesWindowDays, initial = {}, age
             aria-invalid={condErr ? 'true' : undefined} aria-describedby={condErr ? 'condition-error' : undefined}>
             <option value="" disabled>Choose…</option>
             <option value="acceptable">Meets the standard</option>
-            <option value="defect">Has a defect (Cerf decides if it is a real one)</option>
+            <option value="defect">Has a defect (the owner decides if it matters)</option>
             <option value="not_acceptable">Does not meet the standard</option>
             <option value="unsure">Not sure yet</option>
           </select>

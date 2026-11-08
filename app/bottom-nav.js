@@ -13,7 +13,7 @@ const ICON = {
 const TABS = [
   { href: '/', key: 'offers', label: 'Offers', match: (p) => p === '/' || p.startsWith('/offers') },
   { href: '/scan', key: 'scan', label: 'Scan', match: (p) => p.startsWith('/scan') },
-  { href: '/review', key: 'review', label: 'For Cerf', match: (p) => p.startsWith('/review') },
+  { href: '/review', key: 'review', label: 'Owner', match: (p) => p.startsWith('/review') },
   { href: '/settings', key: 'settings', label: 'Settings', match: (p) => p.startsWith('/settings') },
 ];
 
