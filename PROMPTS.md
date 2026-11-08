@@ -413,3 +413,25 @@ Result: kept
 What changed: Scout picks now show the player's position in plain words. A player's cards are ranked: "🔥 Hot" marks his most-sold cards, only when SportsCardsPro shows at least 20 sold a year (no fire on a guess); "⭐ Rookie year" marks his first season. Hot rookie-year cards come first. If the search gives no sales a year, CardScout looks up his three most likely best cards one at a time, within the 1-call-a-second limit. The scout sees the same flags and is told to suggest hot rookie-year cards first; its button shows 🔥 for a hot card.
 Validation performed and outcome: New ranking tests (order, fire only with 20+ sales a year, none without numbers, rookie year is his first season). Browser test: both of a test player's cards showed "🔥 Hot" and "⭐ Rookie year" with price and sales a year on one line; the scout pick showed "Attacking midfielder (right)" and "🔥 Assess card #150". All tests and build passed.
 Commit: Best cards first, position on picks
+
+## Entry 39
+Date/time: 9 Nov 2026
+Member: Daniel
+Slice: 30 - Defenders and goalkeepers in Find players
+Tool: Claude (instead of Copilot)
+Exact prompt: "hide defender and goalkeeper?" then "so there's no defending" then "ok lets include it as well"
+Result: kept
+What changed: The stored Football Manager ratings are attacking ones only (no tackling, marking, heading, handling or reflexes). For defenders and goalkeepers, search now uses only age, nationality and club, lists youngest first and hides pace and finishing, with a note saying why. The position list says "(age, nationality, club only)". A defender's or keeper's profile says the ratings say little about him. "More like him" and the scout follow the same rule. Defending ratings could be added later if Luka's original file has them.
+Validation performed and outcome: New tests (filters and order switched off for defenders and keepers, kept for attackers, More like him). A defender search with a pace filter of 15 still returned the Korean defender in the test data, youngest first, with no pace shown. All tests and build passed.
+Commit: Defenders and goalkeepers searched by age, nationality and club
+
+## Entry 40
+Date/time: 9 Nov 2026
+Member: Daniel (Luka's data)
+Slice: 30 - Defending ratings from Luka's full file
+Tool: Claude (instead of Copilot)
+Exact prompt: "do we need to reupload luka's initial data" then "I have given access to luka's data folder"
+Result: kept
+What changed: Luka's full file (34,644 players, same player IDs) has defending ratings that were never uploaded. A one-off file, players_defending.csv, carries tackling, marking, heading, positioning, jumping, strength, stamina, work rate, crossing and concentration; database/015 adds the columns and copies them in. Find players now has "Tackling at least" and "Heading at least", sorts by tackling, heading or marking, shows tackling and heading for defenders, a Defending section on profiles and More like him for defenders. Goalkeepers stay unrated because the file has no goalkeeping ratings. Before database/015 is run, everything else keeps working and a defender rating search says what to run. The data's source and rights are recorded in SPEC.md.
+Validation performed and outcome: Data check: all 10 ratings present and between 1 and 20 for all 34,644 players. New tests for defender and goalkeeper filters, More like him and scout wording. Browser test before and after the database step: before, a clear message and attackers still worked; after, the right defender was found and a weaker one left out. All tests and build passed.
+Commit: Defending ratings for Find players

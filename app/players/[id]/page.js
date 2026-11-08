@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ATTRIBUTE_GROUPS, ATTRIBUTE_LABELS, getPlayer, PLAYER_ID_PATTERN } from '@/lib/players';
+import { ATTRIBUTE_GROUPS, ATTRIBUTE_LABELS, DEFENDING_GROUP, getPlayer, PLAYER_ID_PATTERN } from '@/lib/players';
 import { positionLabel, similarQuery } from '@/lib/find-players.mjs';
 import { playerCards } from '@/lib/price-guide';
 
@@ -60,7 +60,10 @@ export default async function PlayerPage({ params }) {
 
       <section className="panel" aria-labelledby="ratings-heading">
         <h2 id="ratings-heading">Game ratings (for context only)</h2>
-        {ATTRIBUTE_GROUPS.map((g) => (
+        {/^GK/i.test(String(player.position ?? '')) && (
+          <p className="hint">There are no goalkeeping ratings (handling, reflexes) in the data, so judge him on his real form.</p>
+        )}
+        {[...ATTRIBUTE_GROUPS, ...(player.tackling != null ? [DEFENDING_GROUP] : [])].map((g) => (
           <div key={g.label} className="attr-group">
             <h3>{g.label}</h3>
             <ul className="attrs">

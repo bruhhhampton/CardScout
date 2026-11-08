@@ -18,7 +18,7 @@ assert.equal(positionLabel('GK'), 'Goalkeeper');
 
 // Filters: only valid values get through.
 const f = readFilters({ position: 'striker', max_age: '21', min_pace: '15', min_finishing: '99', nationality: ' Korea ', club: '', sort: 'pace' });
-assert.deepEqual(f, { position: 'striker', maxAge: 21, minPace: 15, minFinishing: null, nationality: 'Korea', club: '', sort: 'pace' });
+assert.deepEqual(f, { position: 'striker', maxAge: 21, minPace: 15, minFinishing: null, minTackling: null, minHeading: null, nationality: 'Korea', club: '', sort: 'pace' });
 assert.equal(readFilters({ position: 'drop table', sort: 'x' }).position, '');
 assert.equal(readFilters({ sort: 'x' }).sort, 'pace');
 assert.equal(hasFilters(readFilters({})), false);
@@ -50,6 +50,25 @@ assert.equal(list[1].variant, 'Base');
   assert.deepEqual(r.filter((x) => x.rookie_year).map((x) => x.id), ['b', 'd']);
   assert.ok(rankCards([{ id: 'x', year: '2024', sales_per_year: null }]).every((x) => !x.hot), 'no sales numbers, no fire');
   assert.ok(rankCards([{ id: 'y', year: '2024', sales_per_year: 8 }]).every((x) => !x.hot), 'too few sales, no fire');
+}
+
+// Defenders use tackling and heading; goalkeepers have no ratings in the data.
+{
+  const d = readFilters({ position: 'defender', min_tackling: '14', min_heading: '13', sort: 'tackling', nationality: 'Korea' });
+  assert.equal(d.minTackling, 14);
+  assert.equal(d.minHeading, 13);
+  assert.equal(d.sort, 'tackling');
+  const k = readFilters({ position: 'keeper', min_tackling: '14', min_pace: '15', sort: 'pace' });
+  assert.equal(k.minTackling, null);
+  assert.equal(k.minPace, null);
+  assert.equal(k.sort, 'age_snapshot');
+  assert.equal(hasFilters(readFilters({ min_heading: '15' })), true);
+}
+{
+  const { similarQuery } = await import('../lib/find-players.mjs');
+  assert.equal(similarQuery({ position: 'D C', age_snapshot: 20, pace: 12, tackling: 15, heading: 14 }), 'position=defender&max_age=21&min_tackling=13&min_heading=12&sort=tackling');
+  assert.equal(similarQuery({ position: 'D C', age_snapshot: 20, pace: 12 }), 'position=defender&max_age=21&sort=age_snapshot', 'before the defending ratings are loaded');
+  assert.equal(similarQuery({ position: 'GK', age_snapshot: 19 }), 'position=keeper&max_age=20&sort=age_snapshot');
 }
 
 console.log('Find players checks passed (no database or network used).');
