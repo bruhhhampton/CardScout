@@ -43,7 +43,7 @@ function PhotoButton({ label, hint, value, onChange }) {
   );
 }
 
-export default function ScanFlow({ remembered }) {
+export default function ScanFlow({ remembered, prefill = null }) {
   const [state, formAction, pending] = useActionState(scanCard, START);
   const [front, setFront] = useState(null);
   const [back, setBack] = useState(null);
@@ -51,6 +51,17 @@ export default function ScanFlow({ remembered }) {
   const [again, setAgain] = useState(false);
   const done = state.status === 'success';
   const formKey = useRef(0);
+
+  if (prefill && !done) {
+    return (
+      <OfferForm
+        heading="Check the card"
+        intro="Filled in from SportsCardsPro. Check it matches the seller's card, add the grade and the asking price, then save."
+        initial={{ ...prefill, grade_condition: 'Ungraded' }}
+        unsure={['grade_condition']}
+      />
+    );
+  }
 
   if (done && !again) {
     return (

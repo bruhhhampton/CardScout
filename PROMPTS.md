@@ -358,3 +358,25 @@ Result: kept. A first attempt that shortened the walkthrough was dropped before 
 What changed: The card page went from 7 dropdowns to 2 ("How CardScout worked this out" and "Change something"). The separate "The player" and "The market" boxes repeated the walkthrough, so the player facts are now one line at the top of step 3 (with Prospect or Established and sources) and the graded values and versions are one line in step 2. The seller message is a copy button instead of a dropdown. The full evidence (price guide detail, every sale found, the AI's steps) moved to its own page, linked at the end of the walkthrough. "Run it again" and "Change an answer or score" are one "Change something". Also: when staff pick a version after the AI has run, step 3 says the price fairness score was scored before the pick and how to update it.
 Validation performed and outcome: New tests for the facts line, the market line and the stale-score note; browser test: two dropdowns, copy button copies the seller message, evidence page opens with three sections, no sideways scrolling. All tests and build passed.
 Commit: Fewer dropdowns, facts inside the steps
+
+## Entry 34
+Date/time: 9 Nov 2026
+Member: Daniel
+Slice: 29 - Find players
+Tool: Claude (instead of Copilot)
+Exact prompt: "is there a separate search function for the user to look up like fast player in the korean league", "owners aren't able to watch all the games and may have trouble keeping up to date with contemporary soccer", then "find players"
+Result: kept
+What changed: New Find tab. Staff search the Football Manager data (34,644 players) by position (plain choices turned into patterns on codes like "AM/ST R"), age, minimum pace and finishing, nationality and club, best first by pace, acceleration, finishing, dribbling or age. A player's profile shows who he is (game ratings, labelled for context only) and his cards from SportsCardsPro; "Assess this card" opens the scan form filled in, and the normal assessment decides. The ratings never value a card or change a verdict.
+Validation performed and outcome: New tests: position patterns against real codes from the dataset, plain position names, only valid filters accepted, a player's own cards only (newest first) with offer fields filled in. Browser test with a test player table: "Korean winger or attacking mid, up to 21, pace 15+" returned exactly the two right players and left out an older striker, a defender and a German player; profile listed his two cards; "Assess this card" filled the scan form. Five tabs, no sideways scrolling. Build passed.
+Commit: Find players
+
+## Entry 35
+Date/time: 9 Nov 2026
+Member: Daniel
+Slice: 30 - Scout for me (agentic, no typing) and More like him
+Tool: Claude (instead of Copilot)
+Exact prompt: "recall that it's a phone app as well as the fact that is there any way we can make this more agentic without having the owner having to type" then "yes please"
+Result: kept
+What changed: The Find tab now starts with "Scout for me": one tap runs a bounded agent in the background that chooses its own player searches, checks real form on the web, finds the players' cards and returns up to 5 picks with reasons, sources and an "Assess card" button that fills the scan form. An optional focus box ("Korean players", "strikers") is folded away. The filter form moved under "Search yourself". A player's profile has "More like him", which fills the search with the same kind of player. New table scout_runs (database/013).
+Validation performed and outcome: New tests: picks keep only players from a real search, drop made-up sources, mark a pick without a real source as unchecked, never attach another player's card; More like him filters. Browser test with a stand-in AI that tried to add a made-up player and a made-up source: the made-up player was dropped, the made-up source removed and that pick shown with a warning; "Assess card" filled the scan form; More like him returned similar players. All tests and build passed. Not yet run with the live AI.
+Commit: Scout for me

@@ -329,7 +329,7 @@ main { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
 
 .tabbar {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
-  display: grid; grid-template-columns: repeat(4, 1fr);
+  display: grid; grid-template-columns: repeat(5, 1fr);
   background: var(--surface); border-top: 1px solid var(--line);
   padding: 6px max(8px, env(safe-area-inset-left)) calc(6px + env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-right));
 }
@@ -419,3 +419,31 @@ button.wide { width: 100%; }
 .copy-btn { font: inherit; font-weight: 600; min-height: 44px; padding: 8px 14px; border-radius: 10px; cursor: pointer; border: 1px solid var(--line); background: var(--surface); color: var(--text); }
 .evidence-link { margin: 16px 0 4px; font-weight: 600; }
 .sub-h { margin: 16px 0 4px; font-size: 1rem; }
+
+/* Find players */
+.find-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 14px; margin-bottom: 12px; }
+.find-grid .field input, .find-grid .field select { width: 100%; }
+.ratings-mini { gap: 2px; font-size: 0.85rem; color: var(--muted); }
+.ratings-mini strong { color: var(--text); }
+.card-rows { list-style: none; margin: 8px 0; padding: 0; display: grid; gap: 8px; }
+.card-rows li { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.card-rows .chip { flex: none; text-decoration: none; font-weight: 600; padding: 8px 12px; border-radius: 999px; border: 1px solid var(--accent); color: var(--accent); min-height: 40px; display: inline-flex; align-items: center; }
+.attr-group h3 { margin: 12px 0 4px; font-size: 0.95rem; }
+.attrs { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.attrs li { display: grid; grid-template-columns: 8.5em minmax(0, 1fr) 2em; align-items: center; gap: 8px; }
+.attrs strong { text-align: right; font-variant-numeric: tabular-nums; }
+.mini-bar { display: block; height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; }
+.mini-bar span { display: block; height: 100%; background: var(--accent); }
+
+/* Scout for me */
+.scout .working { margin-top: 8px; }
+.scout-form { display: grid; gap: 10px; margin-top: 8px; }
+.scout-form .extra input { width: 100%; margin-top: 6px; }
+.picks { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 10px; counter-reset: pick; }
+.pick { padding: 12px 14px; border-radius: 12px; background: var(--bg); border: 1px solid var(--line); }
+.pick-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.pick p { margin: 6px 0 0; }
+.pick-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.pick-actions .chip, header .chip { text-decoration: none; font-weight: 600; padding: 8px 12px; border-radius: 999px; border: 1px solid var(--accent); color: var(--accent); min-height: 40px; display: inline-flex; align-items: center; }
+.pick-actions .chip.quiet { border-color: var(--line); color: var(--text); }
+.pick-actions .chip { max-width: 100%; white-space: normal; }
