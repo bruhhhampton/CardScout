@@ -29,3 +29,15 @@ assert.equal(checkPicks({}, { players, cards, known }).picks.length, 0);
 assert.equal(similarQuery({ position: 'AM R', age_snapshot: 18, pace: 17, finishing: 12 }), 'position=attacker&max_age=19&min_pace=15&min_finishing=10&sort=pace');
 assert.equal(similarQuery({ position: 'D C', age_snapshot: 20, pace: 12, finishing: 5 }), 'position=defender&max_age=21&min_pace=10&sort=pace');
 console.log('Scout checks passed (no AI, database or network used).');
+
+// Memory: a new angle each run, its own history, and "Not for us" enforced in code.
+{
+  const { angleFor, ANGLES, historyFrom } = await import('../lib/scout-checks.mjs');
+  assert.notEqual(angleFor(0), angleFor(1));
+  assert.equal(angleFor(ANGLES.length), angleFor(0), 'cycles through every angle');
+  const h = historyFrom([{ created_at: '2026-11-09T06:00:00Z', summary: 'Quick young Korean attackers.', picks: [{ name: 'Yang Min-hyeok' }], trace: [{ type: 'tool', name: 'search_players', input: { position: 'attacker', max_age: 21 } }, { type: 'search', query: 'Yang Min-hyeok form' }, { type: 'tool', name: 'get_owner_settings' }] }]);
+  assert.deepEqual(h, [{ date: '2026-11-09', focus: 'Quick young Korean attackers.', player_searches: [{ position: 'attacker', max_age: 21 }], web_searches: ['Yang Min-hyeok form'], picked: ['Yang Min-hyeok'] }]);
+  const again = checkPicks({ picks: [{ player_id: 'p2', why: 'x', sources: ['https://news.test/yang'] }, { player_id: 'p3', why: 'y', sources: ['https://news.test/lee'] }] }, { players, cards, known, skipped: new Set(['p2']) });
+  assert.deepEqual(again.picks.map((p) => p.name), ['Lee Seung-won'], 'a player marked Not for us is never picked');
+  console.log('Scout memory checks passed.');
+}

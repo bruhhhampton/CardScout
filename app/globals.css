@@ -447,3 +447,4 @@ button.wide { width: 100%; }
 .pick-actions .chip, header .chip { text-decoration: none; font-weight: 600; padding: 8px 12px; border-radius: 999px; border: 1px solid var(--accent); color: var(--accent); min-height: 40px; display: inline-flex; align-items: center; }
 .pick-actions .chip.quiet { border-color: var(--line); color: var(--text); }
 .pick-actions .chip { max-width: 100%; white-space: normal; }
+.not-for-us { font: inherit; font-weight: 600; cursor: pointer; background: transparent; }

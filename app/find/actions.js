@@ -6,7 +6,7 @@ import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { MODEL } from '@/lib/agent';
 import { runScout } from '@/lib/scout';
-import { countScoutsLastDay, finishScout, getLatestScout, isScoutRunning, startScout } from '@/lib/scout-runs';
+import { addSkip, countScoutsLastDay, finishScout, getLatestScout, isScoutRunning, startScout } from '@/lib/scout-runs';
 import { AGENT_COOKIE, agentToken, cookieOptions, isRemembered, passcodeOk } from '@/lib/agent-access';
 
 const SCOUT_DAILY_LIMIT = Number(process.env.SCOUT_DAILY_LIMIT || 10);
@@ -33,4 +33,13 @@ export async function scoutForMe(formData) {
   });
   revalidatePath('/find');
   back('started');
+}
+
+// "Not for us": the scout never suggests this player again.
+export async function notForUs(formData) {
+  const id = String(formData.get('player_id') ?? '');
+  if (!/^[A-Za-z0-9_-]{1,40}$/.test(id)) redirect('/find');
+  const { error } = await addSkip(id, formData.get('name'));
+  revalidatePath('/find');
+  redirect(`/find?scout=${error ? 'skip-failed' : 'skipped'}`);
 }

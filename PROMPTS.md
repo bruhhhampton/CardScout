@@ -380,3 +380,14 @@ Result: kept
 What changed: The Find tab now starts with "Scout for me": one tap runs a bounded agent in the background that chooses its own player searches, checks real form on the web, finds the players' cards and returns up to 5 picks with reasons, sources and an "Assess card" button that fills the scan form. An optional focus box ("Korean players", "strikers") is folded away. The filter form moved under "Search yourself". A player's profile has "More like him", which fills the search with the same kind of player. New table scout_runs (database/013).
 Validation performed and outcome: New tests: picks keep only players from a real search, drop made-up sources, mark a pick without a real source as unchecked, never attach another player's card; More like him filters. Browser test with a stand-in AI that tried to add a made-up player and a made-up source: the made-up player was dropped, the made-up source removed and that pick shown with a warning; "Assess card" filled the scan form; More like him returned similar players. All tests and build passed. Not yet run with the live AI.
 Commit: Scout for me
+
+## Entry 36
+Date/time: 9 Nov 2026
+Member: Daniel
+Slice: 30 - The scout remembers
+Tool: Claude (instead of Copilot)
+Exact prompt: "Now what's stopping it from just giving the same scout for me answer" then "shouldn't it have history of what it's searched previously"
+Result: kept
+What changed: The scout now reads its own history (last 5 runs: player searches, web searches, picks) and avoids repeating them; with no focus it rotates through 8 angles; "Not for us" on a pick saves the player (database/014) and code removes him from future searches and picks. Each run records its plan.
+Validation performed and outcome: New tests: angles rotate and cycle, history summary, a "Not for us" player is never picked even if the AI tries. Browser test with a stand-in AI: after "Not for us" on Yang Min-hyeok, the next run (which tried to pick him again) returned only Lee Seung-won; the second run received the first run's searches and picks as history; saved plans showed run 1 "young strikers who are scoring" and run 2 "young wingers with real pace". All tests and build passed.
+Commit: The scout remembers
