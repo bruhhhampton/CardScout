@@ -54,3 +54,22 @@ console.log('Explanation checks passed.');
   console.log('Walkthrough checks passed.');
 }
 
+
+// The player and The market boxes.
+{
+  const { playerBox, marketBox } = await import('../lib/explain.mjs');
+  const run = { status: 'completed', draft: { player_facts: { season: '2025-26', stage: 'prospect', age: { value: '19', source: 'https://a.test' }, club: { value: 'Monaco', source: 'https://a.test' }, appearances: { value: '14', source: 'https://b.test' }, goals: { value: '4', source: 'https://b.test' }, minutes: null } } };
+  const p = playerBox(run);
+  assert.equal(p.summary, '19 · Monaco · 14 apps · 4 goals');
+  assert.match(p.stage, /^Prospect/);
+  assert.equal(p.rows.find((r) => r.key === 'minutes').value, null);
+  assert.equal(playerBox({ status: 'completed', draft: {} }), null, 'no facts, no box');
+  assert.equal(playerBox({ status: 'running' }), null);
+  const g = { found: true, grade: 'Ungraded', value_aud: 49.03, sales_per_year: 459, versions: ['Base', 'Refractor', 'Gold'], link: 'https://x.test', grades: [{ label: 'Ungraded', usd: 39.96, aud: 49.03 }, { label: 'PSA 10', usd: 210, aud: 257.6 }], suggested_buy_aud: 21.59, suggested_sell_aud: 54 };
+  const m = marketBox({ price_guide: g }, { variant: 'Base' });
+  assert.equal(m.summary, '$49.03 ungraded · 459 sold a year · 3 versions');
+  assert.equal(m.grades.find((x) => x.mine).label, 'Ungraded');
+  assert.equal(m.speed, 'sells easily');
+  assert.equal(marketBox({ price_guide: { found: false } }, {}), null);
+  console.log('Player and market box checks passed.');
+}

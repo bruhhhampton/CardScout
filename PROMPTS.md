@@ -325,3 +325,14 @@ Result: kept
 What changed: CERF is the name of the owner's scoring model (from Cerf's cerf.py). On screen it was jargon, and "Ask Cerf" tied the app to one person. Staff and owner screens now say "Ask the owner first", the tab is "Owner", reasons say "Buying score", "Strong buy", "Not a strong enough buy yet", "Too uncertain" and "Too pricey", and the walkthrough says "the shop" and "the owner" with "Why it matters". The AI's instructions say "the owner's two checks" and "buying scores", so its reasons match. Older saved reasons are still reworded on screen. Also fixed an outdated line telling the AI the server adds a Football Manager part, which stopped being true on 5 Nov.
 Validation performed and outcome: New test checks no rule reason contains "CERF"; updated wording tests, AGENT.md sync, rule, explanation and price guide tests passed; build passed.
 Commit: General wording for the owner and buying score
+
+## Entry 31
+Date/time: 9 Nov 2026
+Member: Daniel
+Slice: 27 - "The player" and "The market" sections
+Tool: Claude (instead of Copilot)
+Exact prompt: "We're directly addressing both allowing the store to do research about players without having to watch all the games. Furthermore, it has a scanning feature to assign purchasing rules based on what owners set" then "want to move on"
+Result: kept
+What changed: Each card now has "The player": age, club, league, position and this season's appearances, starts, minutes, goals, assists and international caps, each linked to the page it came from, plus Prospect or Established. The AI records these from the pages it already reads; the server drops any fact whose page the AI did not actually find, and a missing fact shows "Not found", never a guess. Research from the last 24 hours is reused. "The market" shows SportsCardsPro's value for every grade (so staff see what grading would be worth), sales a year, suggested shop buy and sell prices and the other versions of the card, with a reminder never to show these figures to a seller. No extra AI or price guide calls. AGENT.md v1.9.
+Validation performed and outcome: New tests: facts kept only with a found source, invented source dropped, empty stays empty, older drafts still work; box summaries; every grade kept. Browser test with mock services in light and dark at phone width: both sections render, "Not found" shown for a missing fact, no sideways scrolling. Build passed. Not yet tested with the live AI.
+Commit: Player and market sections

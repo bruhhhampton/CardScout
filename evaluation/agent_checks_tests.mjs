@@ -83,3 +83,17 @@ import('../lib/sales-note.mjs').then(({ buildSalesNote }) => {
   assert.match(buildSalesNote(offer, { link: 'https://x.com', currency: 'JPY', rows: 'r' }), /prices in AUD/, 'unknown currency falls back to AUD');
   console.log('Sales note checks passed.');
 });
+
+// Player facts: kept only with a source the agent actually found; nothing is estimated.
+{
+  const facts = { season: '2025-26', stage: 'prospect', age: { value: '19', source: 'https://site.com/a' }, club: { value: 'Monaco', source: 'https://made-up.com/x' }, goals: { value: '', source: 'https://site.com/a' } };
+  for (const k of ['league', 'position', 'appearances', 'starts', 'minutes', 'assists', 'caps']) facts[k] = { value: '', source: '' };
+  const d = checkDraft({ player_facts: facts }, known);
+  assert.deepEqual(d.player_facts.age, { value: '19', source: 'https://site.com/a' });
+  assert.equal(d.player_facts.club, null, 'a fact from a page the agent never found is dropped');
+  assert.equal(d.player_facts.goals, null, 'an empty value stays empty');
+  assert.equal(d.player_facts.stage, 'prospect');
+  assert.equal(checkDraft({ player_facts: { stage: 'superstar' } }, known).player_facts.stage, 'unsure');
+  assert.equal(checkDraft({}, known).player_facts.age, null, 'older drafts without facts still work');
+  console.log('Player fact checks passed.');
+}

@@ -10,7 +10,7 @@ import AssessForm from './assess-form';
 import AgentPanel from './agent-panel';
 import { getLatestRun, isRunning } from '@/lib/agent-runs';
 import RunWatcher from './run-watcher';
-import { headline, holdUps, ladder, sellerWords, STATUS_WORDS, walkthrough, whyLines } from '@/lib/explain.mjs';
+import { headline, holdUps, ladder, marketBox, playerBox, sellerWords, STATUS_WORDS, walkthrough, whyLines } from '@/lib/explain.mjs';
 import { cookies } from 'next/headers';
 import { isRemembered } from '@/lib/agent-access';
 
@@ -113,6 +113,9 @@ export default async function OfferPage({ params, searchParams }) {
   const holds = assessment ? holdUps(assessment) : [];
   // The four questions Cerf asks, with the sums, for staff to learn from.
   const steps = assessment && !running ? walkthrough(assessment, run, offer, settings ?? {}) : [];
+  // Research the shop cannot do itself: the player's real numbers and the card's market.
+  const player = !running ? playerBox(run) : null;
+  const market = !running ? marketBox(run, offer) : null;
   const agentPanel = (
     <AgentPanel offerId={offer.id} remembered={remembered} soldSearchUrl={soldSearchUrl(offer)} priceSiteUrl={priceSiteUrl(offer)}
       initial={assessment ? { stock_count: String(assessment.stock_count ?? ''), condition: assessment.condition ?? '' } : {}} />
@@ -200,6 +203,54 @@ export default async function OfferPage({ params, searchParams }) {
           <p className="hint">CardScout finds the price, researches the player and applies the owner&apos;s rules. Nothing is bought.</p>
           {agentPanel}
         </section>
+      )}
+
+      {(player || market) && (
+        <div className="research">
+          {player && (
+            <details className="fold research-box" open>
+              <summary><span className="research-title">The player</span>{player.summary && <span className="hint"> {player.summary}</span>}</summary>
+              {player.stage && <p className="stage">{player.stage}</p>}
+              <dl className="facts">
+                {player.rows.map((r) => (
+                  <div key={r.key} className={r.value ? '' : 'missing'}>
+                    <dt>{r.label}</dt>
+                    <dd>
+                      {r.value ?? 'Not found'}
+                      {r.source && <> <a href={r.source} target="_blank" rel="noopener noreferrer nofollow" className="src">source</a></>}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+              <p className="hint">{player.season ? `Season ${player.season}. ` : ''}Every number links to the page it came from. &quot;Not found&quot; means CardScout found no source, so it did not guess.</p>
+            </details>
+          )}
+          {market && (
+            <details className="fold research-box">
+              <summary><span className="research-title">The market</span>{market.summary && <span className="hint"> {market.summary}</span>}</summary>
+              {market.grades.length > 0 && (
+                <table className="grades">
+                  <caption className="hint">Value by grade, from SportsCardsPro, in AUD</caption>
+                  <tbody>
+                    {market.grades.map((g) => (
+                      <tr key={g.label} className={g.mine ? 'mine' : ''}>
+                        <th scope="row">{g.label}{g.mine ? ' (this card)' : ''}</th>
+                        <td>{g.aud != null ? `$${g.aud.toFixed(2)}` : `US$${g.usd.toFixed(2)}`}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+              <dl className="facts">
+                {market.salesPerYear != null && <div><dt>Sold a year</dt><dd>About {market.salesPerYear}, so it {market.speed}</dd></div>}
+                {market.buy != null && <div><dt>Shops usually pay</dt><dd>${market.buy.toFixed(2)}</dd></div>}
+                {market.sell != null && <div><dt>Shops usually sell at</dt><dd>${market.sell.toFixed(2)}</dd></div>}
+                {market.versions.length > 0 && <div><dt>Versions listed</dt><dd>{market.versions.join(', ')}</dd></div>}
+              </dl>
+              <p className="hint">Estimates from <a href={market.link} target="_blank" rel="noopener noreferrer nofollow">SportsCardsPro</a>, not sales. For staff and the owner only: never show these figures to a seller.</p>
+            </details>
+          )}
+        </div>
       )}
 
       <div className="more">

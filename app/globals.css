@@ -392,3 +392,20 @@ button.wide { width: 100%; }
 .pick-version h3 { margin: 0 0 4px; font-size: 1rem; }
 .pick-version .chip { font: inherit; font-weight: 600; min-height: 44px; padding: 6px 14px; border-radius: 999px; cursor: pointer; border: 1px solid var(--accent); background: transparent; color: var(--accent); }
 .pick-version .chip:hover { background: var(--accent); color: var(--surface); }
+
+/* The player and The market */
+.research { display: grid; gap: 0; margin-top: 8px; }
+.research-box summary { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; }
+.research-title { font-weight: 700; }
+.stage { margin: 8px 0 4px; font-weight: 600; }
+.facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 16px; margin: 10px 0; }
+.facts > div { display: flex; flex-direction: column; min-width: 0; }
+.facts dt { font-size: 0.8rem; color: var(--muted); }
+.facts dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.facts .missing dd { font-weight: 400; color: var(--muted); }
+.facts .src { font-size: 0.8rem; font-weight: 400; }
+.grades { width: 100%; border-collapse: collapse; margin: 10px 0; font-variant-numeric: tabular-nums; }
+.grades caption { text-align: left; padding-bottom: 4px; }
+.grades th, .grades td { padding: 6px 0; border-bottom: 1px solid var(--line); text-align: left; font-weight: 400; }
+.grades td { text-align: right; font-weight: 600; }
+.grades tr.mine th, .grades tr.mine td { color: var(--accent); font-weight: 700; }

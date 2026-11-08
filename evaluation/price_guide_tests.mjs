@@ -71,4 +71,11 @@ assert.match(similar.similar[0], /Green Wave Refractor/);
 const other = pickProduct([{ id: 11, 'product-name': 'Pedri [Green Wave Refractor] #44', 'console-name': 'Soccer Cards 2024 Topps Chrome UEFA Club' }], { player: 'Paris Brunner', card_number: '44', year: '2024', variant: 'Green Wave' });
 assert.equal(other.similar, undefined);
 
+// Every grade's value is kept for the market box.
+{
+  const sum = summariseProduct({ id: 5, 'product-name': 'X #1', 'console-name': 'Y', 'loose-price': 4000, 'graded-price': 9000, 'manual-only-price': 21000 }, { grade_condition: 'Ungraded' }, { rate: 1.5, adjust: 1 });
+  assert.deepEqual(sum.grades.map((g) => g.label), ['Ungraded', 'Grade 9', 'PSA 10']);
+  assert.equal(sum.grades[2].aud, 315);
+}
+
 console.log('Price guide checks passed (no network used).');
