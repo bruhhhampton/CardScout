@@ -1,8 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getOffer } from '@/lib/offers';
-import { ATTRIBUTE_GROUPS, ATTRIBUTE_LABELS, getPlayer, searchPlayers } from '@/lib/players';
-import { confirmVerdict, linkPlayer, unlinkPlayer } from './actions';
+import { confirmVerdict } from './actions';
 import { getLatestAssessment } from '@/lib/assessments';
 import { getSettings } from '@/lib/settings';
 import { OUTCOMES } from '@/lib/assess.mjs';
@@ -11,7 +10,6 @@ import AssessForm from './assess-form';
 import AgentPanel from './agent-panel';
 import { getLatestRun, isRunning } from '@/lib/agent-runs';
 import RunWatcher from './run-watcher';
-import { combineFootball, fmFit, ROLE_LABEL } from '@/lib/fm-fit.mjs';
 import { headline, holdUps, ladder, sellerWords, STATUS_WORDS, walkthrough, whyLines } from '@/lib/explain.mjs';
 import { cookies } from 'next/headers';
 import { isRemembered } from '@/lib/agent-access';
@@ -51,9 +49,6 @@ const MESSAGES = {
   'created-started': { kind: 'success', text: 'Offer saved. CardScout started assessing it with 0 in stock and condition meeting the standard. If either is wrong, change it under Run it again.' },
   confirmed: { kind: 'success', text: 'Verdict confirmed.' },
   'confirm-failed': { kind: 'error', text: 'The confirmation was not saved. Run database/007_confirm.sql in Supabase, then try again.' },
-  linked: { kind: 'success', text: 'Player linked. CardScout uses these game ratings for 20% of football quality, as role fit. They are unverified, so real-world form counts for the other 80%.' },
-  unlinked: { kind: 'success', text: 'Player link removed.' },
-  'bad-player': { kind: 'error', text: 'That player could not be found. Search again and pick from the list.' },
   'save-failed': { kind: 'error', text: 'The change was not saved. Try again.' },
 };
 
@@ -72,12 +67,9 @@ export default async function OfferPage({ params, searchParams }) {
   }
   if (!offer) notFound();
 
-  const query = typeof sp?.q === 'string' ? sp.q : offer.player;
   const message = MESSAGES[sp?.msg];
   const remembered = isRemembered(await cookies());
-  const [{ player, error: playerError }, { players: results, error: searchError }, { assessment }, { settings }, { run }] = await Promise.all([
-    offer.player_id ? getPlayer(offer.player_id) : Promise.resolve({ player: null, error: null }),
-    offer.player_id ? Promise.resolve({ players: [], error: null }) : searchPlayers(query),
+  const [{ assessment }, { settings }, { run }] = await Promise.all([
     getLatestAssessment(offer.id),
     getSettings(),
     getLatestRun(offer.id),
@@ -110,99 +102,6 @@ export default async function OfferPage({ params, searchParams }) {
         }
       : {};
   const fromLast = !usedRun && Boolean(assessment);
-  const fit = player ? fmFit(player) : null;
-
-  const fmSection = (
-        <section className="panel" aria-labelledby="fm-heading">
-          <h2 id="fm-heading">Football Manager player context</h2>
-          <p className="notice">
-            Game ratings, unverified, never price evidence. From a community Football Manager 26 dataset. As in Cerf&apos;s
-            model, the player&apos;s FM role fit counts for 20% of football quality; real-world evidence is the other 80%.
-          </p>
-
-          {playerError && <p className="error" role="alert">{playerError}</p>}
-
-          {player ? (
-            <>
-              <div className="row">
-                <div>
-                  <h3 className="player-name">{player.name}</h3>
-                  <p className="hint">
-                    {player.position} · {player.club_snapshot} · age {player.age_snapshot} at snapshot
-                  </p>
-                </div>
-                <form action={unlinkPlayer}>
-                  <input type="hidden" name="offer_id" value={offer.id} />
-                  <button type="submit" className="secondary">Remove link</button>
-                </form>
-              </div>
-              <div className="attr-groups">
-                {ATTRIBUTE_GROUPS.map((g) => (
-                  <div key={g.label} className="attr-group">
-                    <h4>{g.label}</h4>
-                    <dl>
-                      {g.keys.map((k) => (
-                        <div key={k} className="attr">
-                          <dt>{ATTRIBUTE_LABELS[k]}</dt>
-                          <dd>
-                            <span className="bar" aria-hidden="true">
-                              <span style={{ width: `${(Number(player[k]) / 20) * 100}%` }} />
-                            </span>
-                            <span className="attr-value">{player[k]}<span className="hint"> / 20</span></span>
-                          </dd>
-                        </div>
-                      ))}
-                    </dl>
-                  </div>
-                ))}
-              </div>
-              <p className={fit ? 'success' : 'hint'}>
-                {fit
-                  ? `FM role fit: ${fit.score} as a ${ROLE_LABEL[fit.role]}. Counts for 20% of football quality in Cerf's model; real-world evidence is the other 80%.`
-                  : "No attacking-role fit for this player in Cerf's model, so football quality uses real-world evidence only."}
-              </p>
-              <p className="hint">
-                Club and age are from an undated snapshot. Status: {player.data_status}. Source: {player.source}.
-              </p>
-            </>
-          ) : (
-            <>
-              <p>Find the player this card shows, then confirm the match. The app never matches automatically.</p>
-              <form method="get" className="search-row" role="search">
-                <label htmlFor="q" className="sr-only">Player name</label>
-                <input id="q" name="q" type="search" defaultValue={query} maxLength={60} placeholder="Player name" />
-                <button type="submit" className="secondary">Search</button>
-              </form>
-              <p className="hint">Search ignores capital letters but not accents. If nothing shows, try part of the name.</p>
-
-              {searchError && <p className="error" role="alert">{searchError}</p>}
-              {!searchError && query.trim().length < 2 && <p className="hint">Type at least 2 letters.</p>}
-              {!searchError && query.trim().length >= 2 && results.length === 0 && (
-                <p className="empty">No players found for “{query}”.</p>
-              )}
-
-              {results.length > 0 && (
-                <ul className="results">
-                  {results.map((p) => (
-                    <li key={p.player_id} className="result">
-                      <div>
-                        <strong>{p.name}</strong>
-                        <span className="hint"> · {p.position} · {p.club_snapshot} · age {p.age_snapshot} at snapshot</span>
-                      </div>
-                      <form action={linkPlayer}>
-                        <input type="hidden" name="offer_id" value={offer.id} />
-                        <input type="hidden" name="player_id" value={p.player_id} />
-                        <button type="submit" className="secondary">This is the player</button>
-                      </form>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </>
-          )}
-        </section>
-  );
-
   const asking = Number(offer.asking_price_aud);
   const head = assessment ? headline(assessment, asking) : null;
   const scale = assessment ? ladder(assessment, run, asking) : null;
@@ -495,10 +394,6 @@ export default async function OfferPage({ params, searchParams }) {
         ) : (
           <p className="error" role="alert">Owner settings are missing. Run database/003_settings_assessments.sql in Supabase.</p>
         )}
-        <details className="fold">
-          <summary>{player ? `Football Manager ratings: ${player.name}` : 'Football Manager player: not linked'}</summary>
-          {fmSection}
-        </details>
       </div>
 
       <footer>CardScout never buys cards automatically.</footer>

@@ -2,14 +2,12 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { getOffer, OFFER_ID_PATTERN, setOfferPlayer } from '@/lib/offers';
-import { getPlayer, PLAYER_ID_PATTERN } from '@/lib/players';
+import { getOffer, OFFER_ID_PATTERN } from '@/lib/offers';
 
 import { getSettings } from '@/lib/settings';
 import { confirmAssessment, createAssessment } from '@/lib/assessments';
 import { validateAssessment } from '@/lib/assessment-fields';
 import { assess, OUTCOMES } from '@/lib/assess.mjs';
-import { fmFit } from '@/lib/fm-fit.mjs';
 import { buildSalesNote } from '@/lib/sales-note.mjs';
 import { runAgent, SEARCHES_WITH_SALES } from '@/lib/agent';
 import { countRunsLastDay, getLatestRun, saveRun } from '@/lib/agent-runs';
@@ -21,30 +19,6 @@ function field(formData, name) {
   const v = formData.get(name);
   return typeof v === 'string' ? v.trim() : '';
 }
-
-// Staff confirm which FM player an offer refers to. The server checks both ids.
-export async function linkPlayer(formData) {
-  const offerId = field(formData, 'offer_id');
-  const playerId = field(formData, 'player_id');
-  if (!OFFER_ID_PATTERN.test(offerId)) redirect('/');
-  if (!PLAYER_ID_PATTERN.test(playerId)) redirect(`/offers/${offerId}?msg=bad-player`);
-  const { player } = await getPlayer(playerId);
-  if (!player) redirect(`/offers/${offerId}?msg=bad-player`);
-  const { error } = await setOfferPlayer(offerId, playerId);
-  revalidatePath('/');
-  revalidatePath(`/offers/${offerId}`);
-  redirect(`/offers/${offerId}?msg=${error ? 'save-failed' : 'linked'}`);
-}
-
-export async function unlinkPlayer(formData) {
-  const offerId = field(formData, 'offer_id');
-  if (!OFFER_ID_PATTERN.test(offerId)) redirect('/');
-  const { error } = await setOfferPlayer(offerId, null);
-  revalidatePath('/');
-  revalidatePath(`/offers/${offerId}`);
-  redirect(`/offers/${offerId}?msg=${error ? 'save-failed' : 'unlinked'}`);
-}
-
 
 const ASSESS_FIELDS = [
   'stock_count', 'condition', 'rookie_card', 'first_team', 'sales_count', 'median_sold_aud', 'evidence_source',
@@ -64,12 +38,10 @@ export async function assessOffer(_prev, formData) {
   const [{ offer }, { settings, error: sErr }] = await Promise.all([getOffer(offerId), getSettings()]);
   if (!offer) return fail('This offer could not be found.');
   if (sErr) return fail(sErr);
-  // Cerf's FM role fit (20% of football quality), worked out in plain code from the linked player.
-  const fit = offer.player_id ? fmFit((await getPlayer(offer.player_id)).player) : null;
   // Keep using the price guide value from the latest AI draft, if there is one.
   const { run: latest } = await getLatestRun(offerId);
   const guide = latest?.status === 'completed' && latest.price_guide?.found ? latest.price_guide.value_aud : null;
-  const result = assess(offer, { ...check.input, price_guide_aud: guide, fm_fit: fit?.score ?? null, fm_role: fit?.role ?? null }, settings);
+  const result = assess(offer, { ...check.input, price_guide_aud: guide }, settings);
   const runId = field(formData, 'agent_run_id');
   const agentRunId = OFFER_ID_PATTERN.test(runId) ? runId : null;
   const { error } = await createAssessment(offerId, check.input, result, settings, agentRunId);

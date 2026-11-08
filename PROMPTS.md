@@ -270,3 +270,25 @@ Result: kept
 What changed: CardScout is laid out for a phone with a tab bar: Offers, Scan (the main button), For Cerf and Settings. Each screen does one job. It can be added to the home screen and opens full screen with its own icon. The Scan tab takes a photo of the front and, optionally, the back. The photo is shrunk on the phone, then Claude reads only what is printed (player, year, set, number, version, slab grade). Fields it is unsure of are marked "Check this". SportsCardsPro lists every version of that card so staff tap the right one. Staff type the asking price and save, and the assessment starts on its own. Scanning needs the team passcode like the assessment, and photos are not saved.
 Validation performed and outcome: Browser test at phone width, light and dark, with mock services: four tabs, no sideways scrolling, Read button disabled until a photo is taken, fields filled from the scan, version chips shown and tappable, save started the assessment and reached a verdict, the card appeared under For Cerf. New version-list test passed with the rule, explanation and walkthrough tests; build passed. Not yet tested with a real card photo.
 Commit: Phone app layout with tabs and card scanning
+
+## Entry 26
+Date/time: 5 Nov 2026
+Member: Daniel
+Slice: 22 - Scanning fix after the first real card
+Tool: Claude (instead of Copilot)
+Exact prompt: (screenshot of the error) "Why does it [not] work"
+Result: kept
+What changed: The first real scan (an N'Golo Kanté card) failed with "tool_choice: type tool and any are not supported for this model". The scan no longer forces the tool; the instructions ask Claude to answer with it, and if it answers in text instead, CardScout takes the details from that text. Scan errors now show the reason so staff can report it.
+Validation performed and outcome: Mock browser test passed again (fields filled, saved, verdict reached). Real card still to be retested on the live site.
+Commit: Fix scanning on the current model
+
+## Entry 27
+Date/time: 5 Nov 2026
+Member: Daniel
+Slice: 23 - Remove Football Manager ratings
+Tool: Claude (instead of Copilot)
+Exact prompt: "Should we do away with the manager" then "I dont see any reason other than creating a gaping q and a hole like how can we reason this"
+Result: kept
+What changed: Football Manager ratings no longer feed football quality, so it is real-world evidence only. The FM section is gone from the card page, new offers are no longer linked to an FM player, the player link actions were removed and the AI no longer has the get_fm_player tool. AGENT.md moved to v1.8. Older assessments that used FM still display correctly.
+Validation performed and outcome: Rule, explanation, walkthrough, price guide and AGENT.md sync tests passed; build passed; browser test with mock services: scan, save, automatic assessment and the four-step walkthrough all worked with no FM section.
+Commit: Remove Football Manager ratings
