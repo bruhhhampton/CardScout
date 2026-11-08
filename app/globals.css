@@ -448,3 +448,19 @@ button.wide { width: 100%; }
 .pick-actions .chip.quiet { border-color: var(--line); color: var(--text); }
 .pick-actions .chip { max-width: 100%; white-space: normal; }
 .not-for-us { font: inherit; font-weight: 600; cursor: pointer; background: transparent; }
+
+/* Past scouts */
+.past-link { margin: 12px 0 0; font-weight: 600; }
+.scout-runs { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.scout-run h2 { margin: 2px 0 8px; font-size: 1.05rem; }
+.run-when { margin: 0; font-size: 0.85rem; color: var(--muted); }
+.skip-list { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px; }
+.skip-list li { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+
+/* Best cards first */
+.card-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 4px; }
+.tag { font-size: 0.75rem; font-weight: 700; padding: 1px 8px; border-radius: 999px; }
+.tag.hot { background: #fde3d5; color: #8a3412; }
+.tag.rookie { background: var(--badge-bg); color: var(--badge-text); }
+@media (prefers-color-scheme: dark) { .tag.hot { background: #4a2414; color: #ffc4a3; } }
+.card-rows li > span { display: flex; flex-direction: column; min-width: 0; }

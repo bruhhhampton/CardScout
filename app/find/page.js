@@ -3,7 +3,8 @@ import { cookies } from 'next/headers';
 import { findPlayers } from '@/lib/players';
 import { getLatestScout, getSkips, isScoutRunning } from '@/lib/scout-runs';
 import { isRemembered } from '@/lib/agent-access';
-import { notForUs, scoutForMe } from './actions';
+import { scoutForMe } from './actions';
+import PickCard from './pick-card';
 import RunWatcher from '../offers/[id]/run-watcher';
 import { hasFilters, POSITIONS, positionLabel, readFilters, SORTS } from '@/lib/find-players.mjs';
 
@@ -34,7 +35,6 @@ export default async function FindPage({ searchParams }) {
   };
   const note = MSG[sp?.scout];
   const done = sp?.scout === 'skipped' ? 'Got it. The scout will not suggest him again.' : null;
-  const scanLink = (c) => `/scan?${new URLSearchParams({ player: c.player, year: c.year, set_name: c.set_name, card_number: c.card_number, variant: c.variant })}`;
 
   return (
     <main>
@@ -74,32 +74,11 @@ export default async function FindPage({ searchParams }) {
             <p className="hint">Scouted {new Date(scout.created_at).toLocaleString('en-AU', { timeZone: 'Australia/Sydney', dateStyle: 'medium', timeStyle: 'short' })}. {scout.summary}</p>
             {scout.picks.length === 0 && <p className="empty">No players passed the real-form check this time. Try again with a focus.</p>}
             <ol className="picks">
-              {scout.picks.filter((p) => !skippedIds.has(p.player_id)).map((p) => (
-                <li key={p.player_id} className="pick">
-                  <div className="pick-head">
-                    <Link href={`/players/${p.player_id}`}><strong>{p.name}</strong></Link>
-                    <span className="hint">{p.age} · {p.club}</span>
-                  </div>
-                  <p>{p.why}</p>
-                  {p.checked ? (
-                    <p className="hint">Sources: {p.sources.map((u, i) => <a key={i} href={u} target="_blank" rel="noopener noreferrer nofollow">{i + 1}</a>).reduce((x, y) => [x, ' ', y])}</p>
-                  ) : (
-                    <p className="field-error">No source found for this, so check his form before buying.</p>
-                  )}
-                  <div className="pick-actions">
-                    {p.card && <Link href={scanLink(p.card)} className="chip">Assess card #{p.card.card_number}{p.card.variant !== 'Base' ? ` ${p.card.variant}` : ''}</Link>}
-                    <Link href={`/players/${p.player_id}`} className="chip quiet">See his cards</Link>
-                    <form action={notForUs}>
-                      <input type="hidden" name="player_id" value={p.player_id} />
-                      <input type="hidden" name="name" value={p.name} />
-                      <button type="submit" className="chip quiet not-for-us">Not for us</button>
-                    </form>
-                  </div>
-                </li>
-              ))}
+              {scout.picks.filter((p) => !skippedIds.has(p.player_id)).map((p) => <PickCard key={p.player_id} p={p} />)}
             </ol>
           </>
         )}
+        <p className="past-link"><Link href="/find/history">Past scouts →</Link></p>
       </section>
 
       <details className="fold" open={searched || undefined}>

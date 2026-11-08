@@ -1,7 +1,7 @@
 // Run: node evaluation/find_players_tests.mjs   (no database or network used)
 import assert from 'node:assert/strict';
 import { hasFilters, POSITIONS, positionLabel, readFilters } from '../lib/find-players.mjs';
-import { cardFromProduct, cardsForPlayer } from '../lib/price-guide.mjs';
+import { cardFromProduct, cardsForPlayer, rankCards } from '../lib/price-guide.mjs';
 
 // Position patterns against real Football Manager codes from the dataset.
 const is = (pos, code) => new RegExp(POSITIONS[pos].re, 'i').test(code);
@@ -26,7 +26,7 @@ assert.equal(hasFilters(readFilters({ nationality: 'Japan' })), true);
 
 // His cards from a SportsCardsPro search: only his, with the offer fields filled in.
 const c = cardFromProduct({ id: 7, 'product-name': 'Lamine Yamal [Gold] #64', 'console-name': 'Soccer Cards 2023 Topps Chrome UEFA Club', 'loose-price': 4000 });
-assert.deepEqual(c, { id: '7', player: 'Lamine Yamal', year: '2023', set_name: 'Topps Chrome UEFA Club', card_number: '64', variant: 'Gold', title: '2023 Topps Chrome UEFA Club #64 · Gold', loose_usd: 40 });
+assert.deepEqual(c, { id: '7', player: 'Lamine Yamal', year: '2023', set_name: 'Topps Chrome UEFA Club', card_number: '64', variant: 'Gold', title: '2023 Topps Chrome UEFA Club #64 · Gold', loose_usd: 40, sales_per_year: null });
 const list = cardsForPlayer([
   { id: 1, 'product-name': 'Lamine Yamal #64', 'console-name': 'Soccer Cards 2023 Topps Chrome UEFA Club' },
   { id: 2, 'product-name': 'Lamine Yamal #12', 'console-name': 'Soccer Cards 2025 Topps Chrome UEFA Club' },
@@ -34,5 +34,22 @@ const list = cardsForPlayer([
 ], 'Lamine Yamal');
 assert.deepEqual(list.map((x) => x.id), ['2', '1'], 'only his cards, newest first');
 assert.equal(list[1].variant, 'Base');
+
+// Best cards first: hot only with real sales a year, rookie year is his first season.
+{
+  const r = rankCards([
+    { id: 'a', year: '2025', sales_per_year: 5 },
+    { id: 'b', year: '2023', sales_per_year: 450 },
+    { id: 'c', year: '2024', sales_per_year: 300 },
+    { id: 'd', year: '2023', sales_per_year: 12 },
+    { id: 'e', year: '2024', sales_per_year: 40 },
+    { id: 'f', year: '2025', sales_per_year: null },
+  ]);
+  assert.deepEqual(r.map((x) => x.id), ['b', 'c', 'd', 'e', 'a', 'f'], 'hot rookie-year first, then hot, then rookie year, then the rest');
+  assert.deepEqual(r.filter((x) => x.hot).map((x) => x.id), ['b', 'c'], 'only his top sellers with 20+ a year are hot');
+  assert.deepEqual(r.filter((x) => x.rookie_year).map((x) => x.id), ['b', 'd']);
+  assert.ok(rankCards([{ id: 'x', year: '2024', sales_per_year: null }]).every((x) => !x.hot), 'no sales numbers, no fire');
+  assert.ok(rankCards([{ id: 'y', year: '2024', sales_per_year: 8 }]).every((x) => !x.hot), 'too few sales, no fire');
+}
 
 console.log('Find players checks passed (no database or network used).');

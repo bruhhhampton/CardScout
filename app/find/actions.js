@@ -6,7 +6,7 @@ import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { MODEL } from '@/lib/agent';
 import { runScout } from '@/lib/scout';
-import { addSkip, countScoutsLastDay, finishScout, getLatestScout, isScoutRunning, startScout } from '@/lib/scout-runs';
+import { addSkip, removeSkip, countScoutsLastDay, finishScout, getLatestScout, isScoutRunning, startScout } from '@/lib/scout-runs';
 import { AGENT_COOKIE, agentToken, cookieOptions, isRemembered, passcodeOk } from '@/lib/agent-access';
 
 const SCOUT_DAILY_LIMIT = Number(process.env.SCOUT_DAILY_LIMIT || 10);
@@ -41,5 +41,16 @@ export async function notForUs(formData) {
   if (!/^[A-Za-z0-9_-]{1,40}$/.test(id)) redirect('/find');
   const { error } = await addSkip(id, formData.get('name'));
   revalidatePath('/find');
-  redirect(`/find?scout=${error ? 'skip-failed' : 'skipped'}`);
+  revalidatePath('/find/history');
+  const from = formData.get('from') === 'history' ? '/find/history' : '/find';
+  redirect(`${from}?scout=${error ? 'skip-failed' : 'skipped'}`);
+}
+
+// Undo "Not for us": the scout may suggest this player again.
+export async function undoNotForUs(formData) {
+  const id = String(formData.get('player_id') ?? '');
+  if (/^[A-Za-z0-9_-]{1,40}$/.test(id)) await removeSkip(id);
+  revalidatePath('/find');
+  revalidatePath('/find/history');
+  redirect('/find/history?scout=undone');
 }

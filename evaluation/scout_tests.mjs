@@ -41,3 +41,15 @@ console.log('Scout checks passed (no AI, database or network used).');
   assert.deepEqual(again.picks.map((p) => p.name), ['Lee Seung-won'], 'a player marked Not for us is never picked');
   console.log('Scout memory checks passed.');
 }
+
+// Past scouts page wording.
+{
+  const { describeSearch, runFocus } = await import('../lib/scout-checks.mjs');
+  assert.equal(describeSearch({ position: 'attacker', max_age: 21, min_pace: 15, nationality: 'Korea' }), 'wingers or attacking mids, up to 21, pace 15+, Korea');
+  assert.equal(describeSearch({ position: 'striker', min_finishing: 14, sort: 'age_snapshot' }), 'strikers, finishing 14+ (best youngest first)');
+  assert.equal(describeSearch({}), 'any position');
+  assert.equal(runFocus({ trace: [{ type: 'plan', focus: null, angle: 'young wingers with real pace' }] }), 'Looked at: young wingers with real pace');
+  assert.equal(runFocus({ trace: [{ type: 'plan', focus: 'Korean players', angle: null }] }), 'Focus asked for: Korean players');
+  assert.equal(runFocus({ summary: 'Older run.', trace: [] }), 'Older run.');
+  console.log('Past scouts checks passed.');
+}

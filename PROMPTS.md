@@ -391,3 +391,25 @@ Result: kept
 What changed: The scout now reads its own history (last 5 runs: player searches, web searches, picks) and avoids repeating them; with no focus it rotates through 8 angles; "Not for us" on a pick saves the player (database/014) and code removes him from future searches and picks. Each run records its plan.
 Validation performed and outcome: New tests: angles rotate and cycle, history summary, a "Not for us" player is never picked even if the AI tries. Browser test with a stand-in AI: after "Not for us" on Yang Min-hyeok, the next run (which tried to pick him again) returned only Lee Seung-won; the second run received the first run's searches and picks as history; saved plans showed run 1 "young strikers who are scoring" and run 2 "young wingers with real pace". All tests and build passed.
 Commit: The scout remembers
+
+## Entry 37
+Date/time: 9 Nov 2026
+Member: Daniel
+Slice: 30 - Past scouts
+Tool: Claude (instead of Copilot)
+Exact prompt: "where would it show the history of the past searches" then "it should show on the actual app itself so then they can find it if they missed it"
+Result: kept
+What changed: New Past scouts page, linked from the Find tab. Each run shows when it ran, what it looked at, its player searches in plain words ("wingers or attacking mids, up to 21, pace 15+, Korea"), its web searches and its picks with the same buttons as on Find. A "Not for us" list at the bottom has Undo. The pick layout is shared by both pages.
+Validation performed and outcome: New wording tests passed. Browser test: two runs listed with their angles and searches; Not for us from the page hid that player from every run and listed him; Undo brought him back. No sideways scrolling. All tests and build passed.
+Commit: Past scouts page
+
+## Entry 38
+Date/time: 9 Nov 2026
+Member: Daniel
+Slice: 30 - Best cards first, and position on picks
+Tool: Claude (instead of Copilot)
+Exact prompt: "the find doesn't display the player's position and also it should do like a fire symbol or trending on the 'best' cards so it's not just a whole list of random cards"
+Result: kept
+What changed: Scout picks now show the player's position in plain words. A player's cards are ranked: "🔥 Hot" marks his most-sold cards, only when SportsCardsPro shows at least 20 sold a year (no fire on a guess); "⭐ Rookie year" marks his first season. Hot rookie-year cards come first. If the search gives no sales a year, CardScout looks up his three most likely best cards one at a time, within the 1-call-a-second limit. The scout sees the same flags and is told to suggest hot rookie-year cards first; its button shows 🔥 for a hot card.
+Validation performed and outcome: New ranking tests (order, fire only with 20+ sales a year, none without numbers, rookie year is his first season). Browser test: both of a test player's cards showed "🔥 Hot" and "⭐ Rookie year" with price and sales a year on one line; the scout pick showed "Attacking midfielder (right)" and "🔥 Assess card #150". All tests and build passed.
+Commit: Best cards first, position on picks

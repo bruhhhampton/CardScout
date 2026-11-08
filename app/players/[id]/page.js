@@ -39,15 +39,23 @@ export default async function PlayerPage({ params }) {
             {cards.map((c) => (
               <li key={c.id}>
                 <span>
+                  {(c.hot || c.rookie_year) && (
+                    <span className="card-tags">
+                      {c.hot && <span className="tag hot">🔥 Hot</span>}
+                      {c.rookie_year && <span className="tag rookie">⭐ Rookie year</span>}
+                    </span>
+                  )}
                   <strong>{c.title}</strong>
-                  {c.loose_usd != null && <span className="hint"> · about US${c.loose_usd.toFixed(2)} ungraded</span>}
+                  {(c.loose_usd != null || c.sales_per_year != null) && (
+                    <span className="hint">{[c.loose_usd != null && `About US$${c.loose_usd.toFixed(2)} ungraded`, c.sales_per_year != null && `${c.sales_per_year} sold a year`].filter(Boolean).join(' · ')}</span>
+                  )}
                 </span>
                 <Link href={scanLink(c)} className="chip">Assess this card</Link>
               </li>
             ))}
           </ul>
         )}
-        <p className="hint">From SportsCardsPro. Assessing a card checks his real form and the owner&apos;s rules before anything is bought.</p>
+        <p className="hint">Best first. 🔥 Hot: his most-sold cards, with at least 20 sold a year on SportsCardsPro. ⭐ Rookie year: his first season, which collectors want most. Assessing a card checks his real form and the owner&apos;s rules before anything is bought.</p>
       </section>
 
       <section className="panel" aria-labelledby="ratings-heading">
