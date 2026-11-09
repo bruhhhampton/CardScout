@@ -8,6 +8,7 @@ import PickCard from './pick-card';
 import RunWatcher from '../offers/[id]/run-watcher';
 import { hasFilters, positionLabel, RATINGS, ratingsApply, readFilters, shownRatings } from '@/lib/find-players.mjs';
 import SearchForm from './search-form';
+import Tabs from '../tabs';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Find players · CardScout' };
@@ -43,6 +44,8 @@ export default async function FindPage({ searchParams }) {
         <p className="sub">Players worth watching in leagues the shop cannot follow.</p>
       </header>
 
+      <Tabs label="How to find players" initial={searched ? 'search' : 'scout'} tabs={[
+        { id: 'scout', label: 'Scout for me', content: (
       <section className="panel scout" aria-labelledby="scout-heading">
         <h2 id="scout-heading">Scout for me</h2>
         <p className="sub">One tap. CardScout looks for young players worth watching, checks their real form this season and finds their cards. Nothing is bought.</p>
@@ -82,11 +85,10 @@ export default async function FindPage({ searchParams }) {
         )}
         <p className="past-link"><Link href="/find/history">Past scouts →</Link></p>
       </section>
-
-      <details className="fold" open={searched || undefined}>
-        <summary>Search yourself</summary>
+        ) },
+        { id: 'search', label: 'Search yourself', content: (
+          <>
       <SearchForm f={f} />
-      </details>
 
       {error && <p className="error" role="alert">{error}</p>}
       {searched && !error && (
@@ -114,6 +116,9 @@ export default async function FindPage({ searchParams }) {
           </ul>
         </section>
       )}
+          </>
+        ) },
+      ]} />
     </main>
   );
 }

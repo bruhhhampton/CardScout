@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { OUTCOMES } from '@/lib/assess.mjs';
+import CardThumb from './card-thumb';
 
 const aud = new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' });
 const time = new Intl.DateTimeFormat('en-AU', { timeStyle: 'short', timeZone: 'Australia/Sydney' });
@@ -11,7 +12,7 @@ const LABEL = { ...OUTCOMES, eligible: 'OK to buy', decline: "Don't buy", owner_
 // Once the owner has decided, the list shows his decision instead.
 const OWNER = { buy: ['Owner: Buy', 'eligible'], dont_buy: ["Owner: Don't buy", 'decline'], offer: ['Owner: Offer', 'counteroffer'] };
 
-// One tappable row per offer: who, which card, the asking price and the verdict.
+// One tappable row per offer. Left: who and which card (wraps as needed). Right, fixed width: asking price, verdict, date.
 export default function OfferList({ offers, empty }) {
   if (!offers.length) return <p className="empty">{empty}</p>;
   const today = dayKey(new Date());
@@ -22,14 +23,18 @@ export default function OfferList({ offers, empty }) {
         const [badge, tone] = OWNER[o.owner_decision] ?? [o.last_outcome ? LABEL[o.last_outcome] : 'Not assessed', o.last_outcome ?? 'none'];
         return (
           <li key={o.id}>
-            <Link href={`/offers/${o.id}`} className={`offer-row outcome-${tone}`}>
-              <span className="offer-main">
-                <strong>{o.player}</strong>
-                <span className="hint">{o.year} {o.set_name} #{String(o.card_number).replace(/^#/, '')} · {o.variant}</span>
+            <Link href={`/offers/${o.id}`} className={`offer-row sale-row outcome-${tone}${o.photo_path ? ' with-photo' : ''}`}>
+              {/* A photo only when there is one, so rows without a photo carry no empty box. */}
+              {o.photo_path && <CardThumb offer={o} />}
+              <span className="row-body">
+                <strong className="row-title">{o.player}</strong>
+                <span className="row-sub">{o.year} · {o.set_name} · #{String(o.card_number).replace(/^#/, '')}</span>
+                <span className="row-sub">{[o.variant, o.grade_condition].filter(Boolean).join(' · ')}</span>
               </span>
-              <span className="offer-side">
+              <span className="row-side">
+                <span className="row-price">{aud.format(Number(o.asking_price_aud))}</span>
                 <span className="badge">{badge}</span>
-                <span className="hint">{aud.format(Number(o.asking_price_aud))} · {dayKey(at) === today ? time.format(at) : date.format(at)}</span>
+                <span className="row-date">{dayKey(at) === today ? time.format(at) : date.format(at)}</span>
               </span>
             </Link>
           </li>

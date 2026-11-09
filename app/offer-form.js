@@ -16,7 +16,7 @@ const INPUTS = [
 ];
 
 // initial: values read from a scan. unsure: fields the scan was not sure of. variants: versions from SportsCardsPro.
-export default function OfferForm({ initial = {}, unsure = [], variants = [], heading = 'Add an offer', intro }) {
+export default function OfferForm({ initial = {}, unsure = [], variants = [], heading = 'Add an offer', intro, photo = null }) {
   const [state, formAction, pending] = useActionState(saveOffer, START);
   const formRef = useRef(null);
   const [picked, setPicked] = useState(initial.variant ?? '');
@@ -52,6 +52,8 @@ export default function OfferForm({ initial = {}, unsure = [], variants = [], he
 
       {/* key changes on every attempt so typed values are put back after an error */}
       <form ref={formRef} action={formAction} key={state.attempt} noValidate className="offer-form">
+        {/* The scan photo travels with the offer so it can be kept. */}
+        {photo && <input type="hidden" name="photo" value={photo} />}
         {INPUTS.map((f) => {
           const error = state.errors[f.name];
           const hintId = `${f.name}-hint`;

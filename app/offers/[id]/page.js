@@ -18,6 +18,9 @@ import { isRemembered } from '@/lib/agent-access';
 import { getOwnerDecision, listOwnerDecisions } from '@/lib/owner-decisions';
 import { comparisonText, compareWithSuggestion, decisionText, ownerSellerWords, similarDecisions } from '@/lib/owner-decisions.mjs';
 import OwnerDecision from './owner-decision';
+import Tabs from '../../tabs';
+import CardThumb from '../../card-thumb';
+import AddPhoto from './add-photo';
 
 export const dynamic = 'force-dynamic';
 // AI drafts can take up to a minute.
@@ -140,13 +143,25 @@ export default async function OfferPage({ params, searchParams }) {
 
   return (
     <main>
-      <p className="back"><Link href="/">← Offers</Link></p>
+      <Link href="/" className="back-arrow" aria-label="Back to offers">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 12H5M11 6l-6 6 6 6" /></svg>
+      </Link>
 
-      <section className="card-label" aria-labelledby="offer-heading">
-        <p className="card-line">{offer.year} {offer.set_name} #{String(offer.card_number).replace(/^#/, '')} · {offer.variant} · {offer.grade_condition}</p>
-        <h1 id="offer-heading" className="offer-title">{offer.player}</h1>
-        <p className="price">Seller asks {aud.format(asking)}</p>
-      </section>
+      <div className="card-head">
+        <section className="card-label" aria-labelledby="offer-heading">
+          <p className="card-line">{offer.year} {offer.set_name}</p>
+          <h1 id="offer-heading" className="offer-title">{offer.player} #{String(offer.card_number).replace(/^#/, '')}</h1>
+          <dl className="card-facts">
+            <div><dt>Version</dt><dd><span className="boxed">{offer.variant || 'Base'}</span></dd></div>
+            <div><dt>Condition</dt><dd>{offer.grade_condition}</dd></div>
+            <div><dt>Seller asks</dt><dd className="price">{aud.format(asking)}</dd></div>
+          </dl>
+        </section>
+        <div className="photo-col">
+          <CardThumb offer={offer} big />
+          <AddPhoto offerId={offer.id} has={Boolean(offer.photo_path)} />
+        </div>
+      </div>
 
       {message && !(['created', 'created-linked'].includes(sp?.msg) && (run || assessment)) && (
         <p className={message.kind} role={message.kind === 'success' ? 'status' : 'alert'}>{message.text}</p>
@@ -156,14 +171,8 @@ export default async function OfferPage({ params, searchParams }) {
         <p className="error" role="alert">The last assessment stopped without finishing. Run it again.</p>
       )}
 
-      {running ? (
-        <section className="panel working" role="status">
-          <p><strong>Working on it.</strong> Started {new Date(run.created_at).toLocaleTimeString('en-AU', { timeZone: 'Australia/Sydney' })}, usually under a minute.</p>
-          <p className="hint">You can start the next card; the verdict appears here on its own.</p>
-          <RunWatcher startedAt={run.created_at} />
-        </section>
-      ) : assessment ? (
-        <section className={`verdict tone-${head.tone}`} aria-labelledby="verdict-heading">
+      {assessment && !running && (
+        <div className={`hero tone-${head.tone}`}>
           {owner && (
             <div className="owner-said" role="status">
               <span className="hint">The owner decided · {fmtDate(owner.created_at)}</span>
@@ -179,6 +188,20 @@ export default async function OfferPage({ params, searchParams }) {
               Learned from the owner: {decisionText(learnedFrom)} on {fmtDate(learnedFrom.created_at)}{learnedFrom.reason ? `, "${learnedFrom.reason}"` : ''}. <Link href="/settings#learned">Change in Settings</Link>
             </p>
           )}
+        </div>
+      )}
+
+      <Tabs label="This card" tabs={[
+        { id: 'decision', label: 'Decision', content: (
+          <>
+          {running ? (
+        <section className="panel working" role="status">
+          <p><strong>Working on it.</strong> Started {new Date(run.created_at).toLocaleTimeString('en-AU', { timeZone: 'Australia/Sydney' })}, usually under a minute.</p>
+          <p className="hint">You can start the next card; the verdict appears here on its own.</p>
+          <RunWatcher startedAt={run.created_at} />
+        </section>
+      ) : assessment ? (
+        <section className={`verdict tone-${head.tone}`} aria-label="Decision details">
           {scale && (
             <div className="ladder" aria-label="Price comparison">
               <div className="ladder-line" aria-hidden="true">
@@ -240,16 +263,7 @@ export default async function OfferPage({ params, searchParams }) {
           </dl>
           <div className="seller-line">
             <p className="hint">For the seller: &ldquo;{seller}&rdquo;</p>
-            <CopyButton text={seller} />
           </div>
-          {assessment.confirmed === false && !owner && !askOwner && (
-            <form action={confirmVerdict} className="verdict-actions">
-              <input type="hidden" name="offer_id" value={offer.id} />
-              <input type="hidden" name="assessment_id" value={assessment.id} />
-              <button type="submit">Confirm</button>
-              <span className="hint">Nothing is bought. Confirming records the decision.</span>
-            </form>
-          )}
         </section>
       ) : (
         <section className="panel" aria-labelledby="ready-heading">
@@ -258,11 +272,9 @@ export default async function OfferPage({ params, searchParams }) {
           {agentPanel}
         </section>
       )}
-
-      <div className="more">
-        {draft && (
-          <details className="fold">
-            <summary>How CardScout worked this out{steps.length > 0 ? ': 4 steps, about a minute to read' : ''}</summary>
+          </>
+        ) },
+        { id: 'workings', label: 'Workings', content: draft ? (
             <div className="draft">
 
             <p className="hint">
@@ -420,11 +432,9 @@ export default async function OfferPage({ params, searchParams }) {
             )}
             <p className="evidence-link"><Link href={`/offers/${offer.id}/evidence`}>All the evidence and what the AI did →</Link></p>
           </div>
-          </details>
-        )}
-        {settings ? (
-          <details className="fold">
-            <summary>{assessment ? 'Change something' : 'Enter the evidence yourself'}</summary>
+        ) : null },
+        { id: 'change', label: assessment ? 'Change' : 'Manual', content: settings ? (
+          <div className="change">
             {assessment && !running && (
               <>
                 <h3 className="sub-h">Run the AI again</h3>
@@ -445,11 +455,25 @@ export default async function OfferPage({ params, searchParams }) {
             </p>
             <AssessForm key={usedRun?.id ?? 'manual'} offerId={offer.id} salesWindowDays={settings.sales_window_days}
               initial={initial} agentRunId={usedRun?.id ?? null} keepRunId={!usedRun ? assessment?.agent_run_id ?? null : null} fromLast={fromLast} />
-          </details>
+          </div>
         ) : (
           <p className="error" role="alert">Owner settings are missing. Run database/003_settings_assessments.sql in Supabase.</p>
-        )}
-      </div>
+        ) },
+      ]} />
+
+      {assessment && !running && (
+        <div className="actionbar">
+          {assessment.confirmed === false && !owner && !askOwner && (
+            <form action={confirmVerdict} className="verdict-actions">
+              <input type="hidden" name="offer_id" value={offer.id} />
+              <input type="hidden" name="assessment_id" value={assessment.id} />
+              <button type="submit">Confirm</button>
+              <span className="hint">Nothing is bought. Confirming records the decision.</span>
+            </form>
+          )}
+          <CopyButton text={seller} />
+        </div>
+      )}
 
       <footer>CardScout never buys cards automatically.</footer>
     </main>

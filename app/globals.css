@@ -494,3 +494,393 @@ button.wide { width: 100%; }
 .suggest { border-left: 4px solid var(--tone-counteroffer); }
 .suggest-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .suggest-actions button.primary { padding: 0 18px; }
+
+/* =====================================================================
+   Look (10 Nov 2026): Ludex-style navy, visual only.
+   Everything below only changes how things look. It overrides the colours,
+   type and spacing above; no behaviour depends on it.
+   ===================================================================== */
+:root {
+  --bg: #0A1224; --surface: #131D35; --surface-2: #1B2742; --text: #FFFFFF; --muted: #A3AECA; --line: #22304F;
+  --accent: #7BE0A8; --input-bg: #0E1830; --focus: #9CC2FF;
+  --badge-bg: transparent; --badge-text: var(--muted);
+  --error-bg: #3A1A1C; --error-text: #FFB4AB; --success-bg: #12301F; --success-text: #8FE0B4;
+  --tone-eligible: #7BE0A8; --tone-counteroffer: #F5BF4F; --tone-owner_review: #B7B2FF; --tone-decline: #F07A6A;
+  --mono: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+  color-scheme: dark;
+}
+.outcome-eligible { --o-bg: #12301F; --o-text: #8FE0B4; }
+.outcome-decline { --o-bg: #3A1A1C; --o-text: #FFB4AB; }
+.outcome-counteroffer { --o-bg: #3A2E12; --o-text: #F5BF4F; }
+.outcome-owner_review { --o-bg: #24224A; --o-text: #C9C5FF; }
+
+body { font-family: Inter, -apple-system, system-ui, 'Segoe UI', Roboto, sans-serif; font-size: 15px; line-height: 1.4; }
+main { padding: 8px 14px 110px; }
+h1 { color: var(--text); font-size: 1.45rem; letter-spacing: -0.01em; }
+.sub { margin: 2px 0 14px; font-size: 0.9rem; }
+a { color: var(--accent); }
+
+/* Logo strip */
+.brand { display: flex; justify-content: center; align-items: center; gap: 8px; padding: calc(10px + env(safe-area-inset-top)) 16px 2px; color: var(--text); text-decoration: none; }
+.brand { gap: 0; padding-top: calc(12px + env(safe-area-inset-top)); }
+.brand span { font-weight: 600; font-size: 20px; letter-spacing: 0.24em; line-height: 1; }
+.brand-o { margin: -2px 0.3em 0 0.02em; flex: none; }
+
+/* Labels read like Ludex: small typewriter text over big values */
+.field label, .ladder-points dt, .facts dt, .why dt, .result-facts dt, .verdict-kicker, .attr dt,
+.list-heading.small, .run-when { font-family: var(--mono); font-weight: 400; font-size: 0.78rem; color: var(--muted); letter-spacing: 0; text-transform: none; }
+
+/* One layer: plain rounded surfaces, no coloured side strips, no borders */
+.panel, .offer, .verdict, .owner-said, .pick, .result, .draft-scores li, .draft-sales li, .attr-group, .research-box, .step {
+  border: 0; border-radius: 12px; background: var(--surface);
+}
+.panel { padding: 14px; margin-bottom: 18px; }
+.verdict { border-left: 0; padding: 14px 14px 16px; }
+.verdict-title { font-size: 1.75rem; font-weight: 800; margin: 0 0 10px; }
+.verdict h3 { font-family: var(--mono); font-weight: 400; font-size: 0.78rem; color: var(--muted); margin: 14px 0 4px; }
+.card-label { border-top: 0; padding: 4px 0 10px; margin: 0 0 12px; }
+.card-label .offer-title { font-size: 1.45rem; font-weight: 700; }
+.card-line { font-weight: 300; font-size: 0.95rem; color: var(--text); }
+.card-label .price { font-weight: 800; font-size: 1.3rem; }
+.card-head { display: flex; gap: 12px; align-items: flex-start; }
+.card-head .card-label { flex: 1; min-width: 0; }
+.thumb { flex: none; width: 50px; height: 70px; background: var(--surface-2); display: flex; align-items: center; justify-content: center; }
+.thumb.big { width: 110px; height: 154px; }
+.thumb svg { opacity: 0.55; }
+.past-decisions li { border-left: 0; background: var(--surface); border-radius: 10px; padding: 10px 12px; }
+.past-decisions li.d-buy strong { color: var(--tone-eligible); }
+.past-decisions li.d-offer strong { color: var(--tone-counteroffer); }
+.past-decisions li.d-dont_buy strong { color: var(--tone-decline); }
+.suggest { border-left: 0; }
+.steps .step { border-left: 0; }
+
+/* Offer rows: photo spot, bold name, status as coloured text (no pill) */
+.offer-rows { gap: 8px; }
+.offer-row { background: var(--surface); border: 0; border-radius: 10px; padding: 8px 12px 8px 8px; gap: 12px; align-items: center; }
+.offer-main strong { font-size: 0.98rem; }
+.badge { background: transparent; padding: 0; border-radius: 0; font-size: 0.8rem; font-weight: 600; }
+.badge[class*='outcome-']:not(.outcome-none), .offer-row .badge { background: transparent; color: var(--o-text, var(--muted)); }
+.offer-row.outcome-eligible .badge { color: var(--tone-eligible); }
+.offer-row.outcome-counteroffer .badge { color: var(--tone-counteroffer); }
+.offer-row.outcome-owner_review .badge { color: var(--tone-owner_review); }
+.offer-row.outcome-decline .badge { color: var(--tone-decline); }
+.offer-side .hint { font-family: var(--mono); color: var(--text); font-size: 0.9rem; }
+
+/* Inputs: dark, 16px so the iPhone does not zoom in */
+.field input, .field select, .search-row input, .agent-form textarea, .agent-form input, .scout-form input, textarea, select {
+  background: var(--input-bg); color: var(--text); border: 1px solid var(--line); border-radius: 8px; font-size: 16px;
+}
+
+/* Buttons: white pill for the main action, navy pill for the rest */
+button.primary, .scan-form button, .offer-form button, .agent-form button, .cta {
+  background: #FFFFFF; color: var(--bg); border: 0; border-radius: 999px; font-weight: 700;
+}
+button.secondary, .chip, .copy-btn, .linkbtn.btn, .verdict-actions button:not(.primary) {
+  background: var(--surface-2); color: var(--text); border: 0; border-radius: 999px;
+}
+.chip[aria-pressed='true'], .offer-form .chip[aria-pressed='true'] { background: #FFFFFF; color: var(--bg); }
+.choice { background: var(--surface-2); border: 0; border-radius: 999px; }
+.tag { background: var(--surface-2); border: 0; }
+
+/* Tab bar: navy with labels, active in white */
+.tabbar { background: var(--bg); border-top: 1px solid var(--line); }
+.tab { color: var(--muted); font-weight: 500; font-size: 0.7rem; }
+.tab.on { color: #FFFFFF; font-weight: 600; }
+.tab-scan svg { width: 24px; height: 24px; padding: 0; margin: 0; background: none; color: currentColor; box-shadow: none; border-radius: 0; }
+.tab-scan.on { color: #FFFFFF; }
+@media (min-width: 720px) { .tabbar { border: 1px solid var(--line); border-bottom: 0; } }
+
+/* Folds read as plain rows */
+details > summary { color: var(--text); }
+.fold, .extra, .seller { border-color: var(--line); }
+.offer-row .offer-main { flex: 1; min-width: 0; }
+
+/* ---------- Ludex-style layout (10 Nov 2026) ---------- */
+/* Faint diagonal bands behind everything, like a card sleeve catching the light. */
+body { background: var(--bg) linear-gradient(118deg, transparent 0 34%, rgb(255 255 255 / 0.022) 34% 52%, transparent 52% 70%, rgb(255 255 255 / 0.014) 70% 82%, transparent 82%) fixed; }
+.mono { font-family: var(--mono); font-size: 0.8rem; color: #C9D1E4; }
+
+/* Section headings: bold capitals */
+.list-heading, .panel h2, .appbar h1, .scout-run h2 { text-transform: uppercase; font-weight: 700; letter-spacing: 0.02em; font-size: 1.15rem; }
+.appbar h1 { font-size: 1.35rem; }
+.section-head { display: flex; justify-content: space-between; align-items: baseline; margin: 22px 2px 10px; }
+.section-head .list-heading { margin: 0; }
+
+/* Home: summary box, then the offers */
+.home { padding-top: 6px; }
+.summary { position: relative; display: grid; gap: 2px; padding: 16px 18px; margin-top: 10px; border-radius: 14px; background: var(--surface); color: var(--text); text-decoration: none; }
+.summary-big { font-size: 2.1rem; font-weight: 800; line-height: 1.1; }
+.summary-sub { font-weight: 700; font-size: 0.95rem; color: #C9D1E4; letter-spacing: 0.02em; }
+.summary-icon { position: absolute; right: 18px; bottom: 16px; color: #8E99B3; }
+.fab { position: fixed; z-index: 11; right: max(16px, calc(50vw - 344px)); bottom: calc(78px + env(safe-area-inset-bottom)); width: 70px; height: 70px; border-radius: 50%;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; background: #DCE4F5; color: var(--bg); text-decoration: none; font-size: 0.8rem; font-weight: 600; box-shadow: 0 0 0 6px rgb(220 228 245 / 0.12); }
+
+/* Offer rows, laid out like a sales row: photo, date and status, title, set, price */
+.sale-row { align-items: stretch; padding: 10px 14px 10px 10px; gap: 14px; }
+.sale-row .thumb { width: 58px; height: 81px; }
+.row-body { flex: 1; min-width: 0; display: grid; gap: 1px; }
+.row-top { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.row-date { font-weight: 700; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.03em; }
+.row-title { font-weight: 500; font-size: 1.02rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row-sub { font-size: 0.85rem; color: #C9D1E4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row-price { justify-self: end; font-family: var(--mono); font-size: 1.05rem; }
+
+/* Card page header: back arrow level with the logo, facts on the left, photo on the right */
+.back-arrow { position: absolute; top: calc(4px + env(safe-area-inset-top)); left: max(6px, calc(50vw - 356px)); width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #C9D1E4; }
+.card-head { gap: 10px; margin-top: 6px; }
+.card-head .thumb.big { width: 148px; height: 207px; margin-right: -14px; }
+.card-line { font-weight: 300; font-size: 1.1rem; line-height: 1.2; }
+.card-label .offer-title { font-size: 1.3rem; line-height: 1.2; margin: 0 0 12px; }
+.card-facts { margin: 0; display: grid; gap: 10px; }
+.card-facts dt { font-family: var(--mono); font-size: 0.8rem; color: #C9D1E4; }
+.card-facts dd { margin: 2px 0 0; font-weight: 700; }
+.card-facts dd.price { font-weight: 800; font-size: 1.5rem; }
+.boxed { display: inline-flex; align-items: center; min-width: 8.5em; min-height: 34px; padding: 4px 10px; border: 1.5px solid var(--accent); border-radius: 6px; }
+
+/* The verdict, set like an estimate: small label, very large value */
+.hero { --tone: var(--tone-owner_review); padding: 14px 0 0; }
+.hero.tone-eligible { --tone: var(--tone-eligible); }
+.hero.tone-counteroffer { --tone: var(--tone-counteroffer); }
+.hero.tone-decline { --tone: var(--tone-decline); }
+.hero .verdict-kicker { margin: 0; }
+.hero .verdict-title { margin: 0; font-size: 2rem; line-height: 1.15; color: var(--tone); }
+.hero .learned-note { margin: 4px 0 0; font-family: var(--mono); font-size: 0.78rem; color: var(--muted); }
+.hero .owner-said { padding: 0; margin: 0 0 12px; background: transparent; }
+.hero .owner-said .hint { font-family: var(--mono); }
+.hero .owner-said strong.big { font-size: 2rem; font-weight: 800; }
+.hero .owner-said + .verdict-kicker + .verdict-title { font-size: 1.1rem; color: var(--text); font-weight: 700; }
+
+/* Underlined tabs */
+.tablist { display: flex; gap: 24px; margin: 16px -14px 0; padding: 0 14px; border-bottom: 2px solid var(--surface-2); overflow-x: auto; }
+.tabbtn { flex: none; min-height: 44px; padding: 0; margin-bottom: -2px; border: 0; border-bottom: 3px solid transparent; background: none; color: var(--muted); font: inherit; font-size: 1.08rem; font-weight: 500; cursor: pointer; }
+.tabbtn.on { color: #FFFFFF; font-weight: 700; border-bottom-color: #FFFFFF; }
+.tabpanel { padding-top: 14px; }
+.tabpanel > .panel:first-child { margin-top: 0; }
+
+/* Inside the Decision tab: figures in a row, then rounded rows like a sales list */
+.tabpanel .verdict { background: transparent; padding: 0; margin: 0; }
+.ladder { margin: 0 2px 14px; }
+.ladder-points dd { font-size: 1.35rem; font-weight: 800; }
+.holdups, .owner-ask, dl.why, .seller-line, .pick-version, .before-confirm { background: var(--surface); border-radius: 10px; padding: 12px 14px; margin: 0 0 10px; }
+.tabpanel .verdict h3, .before > h3, .draft h3, .sub-h { font-family: inherit; font-weight: 700; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text); margin: 0 0 6px; }
+.tabpanel .verdict > h3 { margin: 14px 2px 6px; }
+.before { margin-bottom: 10px; }
+dl.why { gap: 0; padding: 4px 14px; }
+dl.why div { padding: 9px 0; grid-template-columns: 6em minmax(0, 1fr); }
+dl.why dt { font-family: inherit; font-size: 0.95rem; font-weight: 400; color: #C9D1E4; }
+.seller-line .hint { color: var(--text); font-size: 0.95rem; }
+.change .sub-h { margin-top: 18px; }
+.steps .step { margin-bottom: 10px; }
+
+/* Two round buttons fixed above the tab bar */
+main:has(.actionbar) { padding-bottom: 200px; }
+.actionbar { position: fixed; z-index: 9; left: 50%; transform: translateX(-50%); width: min(100%, 720px); bottom: calc(64px + env(safe-area-inset-bottom));
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 10px; padding: 8px 12px 10px; background: var(--bg); }
+.actionbar .verdict-actions { display: contents; }
+.actionbar .verdict-actions .hint { grid-column: 1 / -1; order: -1; text-align: center; font-size: 0.75rem; margin: 0; }
+.actionbar button { min-height: 50px; padding: 0 12px; border: 0; border-radius: 999px; font: inherit; font-size: 1rem; font-weight: 700; cursor: pointer; min-width: 0; }
+.actionbar .verdict-actions button { background: #FFFFFF; color: var(--bg); }
+.actionbar .copy-btn { background: #A9B6D3; color: var(--bg); }
+.actionbar > .copy-btn:only-child { grid-column: 1 / -1; }
+
+/* Scan: a card-shaped frame with corner marks, like a camera view */
+.scan-form { justify-items: stretch; }
+.photo-front { flex-direction: column; justify-content: center; text-align: center; gap: 10px; width: min(74%, 270px); aspect-ratio: 5 / 7; margin: 6px auto 4px; padding: 14px; position: relative; overflow: hidden;
+  border: 0; border-radius: 4px; background-color: rgb(255 255 255 / 0.04);
+  background-image: linear-gradient(#C9D1E4, #C9D1E4), linear-gradient(#C9D1E4, #C9D1E4), linear-gradient(#C9D1E4, #C9D1E4), linear-gradient(#C9D1E4, #C9D1E4), linear-gradient(#C9D1E4, #C9D1E4), linear-gradient(#C9D1E4, #C9D1E4), linear-gradient(#C9D1E4, #C9D1E4), linear-gradient(#C9D1E4, #C9D1E4);
+  background-repeat: no-repeat; background-size: 30px 3px, 3px 30px, 30px 3px, 3px 30px, 30px 3px, 3px 30px, 30px 3px, 3px 30px;
+  background-position: left top, left top, right top, right top, left bottom, left bottom, right bottom, right bottom; }
+.photo-front.has-photo { border: 0; }
+.photo-front img { position: absolute; inset: 8px; width: calc(100% - 16px); height: calc(100% - 16px); object-fit: cover; border-radius: 2px; }
+.photo-front.has-photo .photo-text { position: absolute; left: 8px; right: 8px; bottom: 8px; padding: 8px; background: rgb(10 18 36 / 0.82); }
+.photo-icon { width: auto; font-size: 0; color: #C9D1E4; }
+.photo-back { border: 0; border-radius: 10px; background: var(--surface-2); min-height: 60px; }
+.photo-back.has-photo { border: 0; }
+.identifying { margin: 6px 0 0; text-align: center; font-size: 1.4rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.01em; }
+.identifying::after { content: '›››'; display: block; color: var(--accent); font-size: 2rem; line-height: 1; letter-spacing: 0.1em; }
+.panel.scan { background: transparent; padding: 0; }
+.panel.scan h2 { text-align: center; }
+.panel.scan .sub { text-align: center; font-size: 0.85rem; }
+
+/* Find: the scout panel sits flat under its tab */
+.tabpanel > .panel.scout { background: transparent; padding: 0; }
+.pick { padding: 12px 14px; }
+
+/* Card photos */
+.thumb.has-photo { background: #000; overflow: hidden; }
+.thumb.has-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.photo-col { flex: none; display: grid; justify-items: center; gap: 6px; margin-right: -14px; }
+.card-head .photo-col .thumb.big { margin-right: 0; }
+.add-photo { display: grid; justify-items: center; gap: 4px; width: 148px; }
+.add-photo-btn { display: inline-flex; align-items: center; justify-content: center; min-height: 36px; padding: 0 12px; border-radius: 999px; background: var(--surface-2); color: var(--text); font-size: 0.8rem; font-weight: 600; cursor: pointer; }
+.add-photo-btn:focus-within { outline: 3px solid var(--focus); outline-offset: 2px; }
+.add-photo .field-error { font-size: 0.75rem; text-align: center; }
+
+/* =====================================================================
+   One type scale and tighter spacing (10 Nov 2026).
+   The app looked zoomed in and mixed too many text sizes and weights.
+   From here every piece of text is one of five sizes and three weights:
+     11px  tab labels
+     12px  labels, hints, dates, status
+     14px  everything else
+     17px  headings and key figures
+     24px  the one big figure on a screen
+   Inter everywhere; the typewriter face only for small labels.
+   ===================================================================== */
+:root { --t-xs: 11px; --t-sm: 12px; --t-md: 14px; --t-lg: 17px; --t-xl: 24px; }
+html { font-size: 16px; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body { font-size: var(--t-md); line-height: 1.4; font-weight: 400; }
+/* Everything inherits first, so no stray size or weight survives from older rules. */
+main *, .brand *, .tabbar *, .actionbar * { font-size: inherit !important; font-family: inherit !important; font-weight: inherit; letter-spacing: normal; }
+main strong, main b, main dt, main summary, main label { font-weight: 600; }
+
+/* 12px: labels (typewriter) */
+.mono, .card-facts dt, .verdict-kicker, .ladder-points dt, .learned-note, .hero .owner-said .hint, .field label, .attr dt, .result-facts dt, .facts dt, .why dt, .run-when {
+  font-family: var(--mono) !important; font-size: var(--t-sm) !important; font-weight: 400 !important; color: #C9D1E4; }
+/* 12px: hints, dates, status, footers */
+.hint, .row-sub, .row-date, .badge, time, footer, .field-error, .summary-sub, .check-tag, .tag, .step-chip, .stage-tag, .add-photo-btn, .actionbar .hint, .panel .sub, .sub {
+  font-size: var(--t-sm) !important; }
+.row-date, .badge, .summary-sub, .add-photo-btn { font-weight: 600 !important; }
+/* 12px capitals: small headings inside a tab */
+.tabpanel .verdict h3, .before > h3, .draft h3, .sub-h, .attr-group h3, .attr-group h4, .pick-version h3, .before-confirm h3 {
+  font-size: var(--t-sm) !important; font-weight: 700 !important; text-transform: uppercase; letter-spacing: 0.04em; }
+/* 14px strong: row titles, values, buttons, tabs */
+.row-title, .card-facts dd, .tabbtn, button, .cta, .chip, .choice { font-weight: 600 !important; }
+.row-title { font-weight: 600 !important; }
+.row-price { font-family: inherit !important; font-weight: 600 !important; font-variant-numeric: tabular-nums; }
+.card-line { font-weight: 400 !important; }
+/* 17px: headings and key figures */
+h1, h2, .list-heading, .panel h2, .appbar h1, .card-label .offer-title, .ladder-points dd, .card-facts dd.price, .identifying, .scout-run h2, .settings-form legend, .step-head h3, .pick-head strong {
+  font-size: var(--t-lg) !important; font-weight: 700 !important; }
+.list-heading, .panel h2, .appbar h1, .identifying { text-transform: uppercase; letter-spacing: 0.02em; }
+.card-label .offer-title, .step-head h3, .settings-form legend { text-transform: none; }
+/* 24px: the one big figure */
+.hero .verdict-title, .hero .owner-said strong.big, .summary-big { font-size: var(--t-xl) !important; font-weight: 700 !important; line-height: 1.15; }
+.hero .owner-said + .verdict-kicker + .verdict-title { font-size: var(--t-md) !important; font-weight: 600 !important; }
+/* Logo and tab bar */
+.brand span { font-size: 15px !important; font-weight: 600 !important; letter-spacing: 0.24em !important; }
+.brand-o { width: 10px; height: 15px; margin-top: -1px; }
+.tab span { font-size: var(--t-xs) !important; }
+.tab { font-weight: 400; min-height: 44px; }
+.tab.on { font-weight: 600; }
+.tab svg, .tab-scan svg { width: 21px; height: 21px; }
+.fab span { font-size: var(--t-xs) !important; font-weight: 600; }
+/* Text boxes stay at 16px so the iPhone does not zoom in when you tap one. */
+main input, main select, main textarea { font-size: 16px !important; font-weight: 400; }
+
+/* Tighter spacing */
+main { padding: 6px 12px 100px; }
+.brand { padding: calc(8px + env(safe-area-inset-top)) 16px 0; }
+.back-arrow { top: calc(-3px + env(safe-area-inset-top)); }
+.appbar h1 { margin-top: 6px; }
+.sub { margin: 2px 0 10px; }
+.summary { padding: 12px 14px; border-radius: 12px; margin-top: 8px; }
+.summary-icon { width: 32px; height: 32px; right: 14px; bottom: 12px; }
+.section-head { margin: 16px 2px 8px; }
+.offer-rows { gap: 6px; }
+.sale-row { padding: 8px 12px 8px 8px; gap: 12px; }
+.sale-row .thumb { width: 44px; height: 62px; }
+.fab { width: 56px; height: 56px; bottom: calc(64px + env(safe-area-inset-bottom)); }
+.fab svg { width: 22px; height: 22px; }
+.card-head { margin-top: 2px; }
+.card-head .thumb.big { width: 112px; height: 157px; }
+.add-photo { width: 112px; }
+.card-label { padding: 2px 0 6px; margin-bottom: 4px; }
+.card-label .offer-title { margin: 0 0 8px; }
+.card-facts { gap: 7px; }
+.card-facts dd { margin-top: 1px; }
+.boxed { min-height: 28px; min-width: 7.5em; padding: 2px 10px; border-width: 1px; }
+.hero { padding-top: 8px; }
+.tablist { margin-top: 10px; gap: 20px; }
+.tabbtn { min-height: 38px; border-bottom-width: 2px; }
+.tabpanel { padding-top: 10px; }
+.ladder { margin-bottom: 10px; }
+.ladder-line { margin: 10px 6px 8px; height: 3px; }
+.ladder-dot { width: 12px; height: 12px; border-width: 2px; }
+.holdups, .owner-ask, dl.why, .seller-line, .pick-version, .before-confirm { padding: 10px 12px; margin-bottom: 8px; }
+dl.why { padding: 2px 12px; }
+dl.why div { padding: 7px 0; }
+.panel { padding: 12px; margin-bottom: 12px; }
+.past-decisions li { padding: 8px 10px; }
+.tabbar { padding-top: 3px; padding-bottom: calc(3px + env(safe-area-inset-bottom)); }
+.actionbar { bottom: calc(52px + env(safe-area-inset-bottom)); padding: 6px 12px 8px; }
+.actionbar button { min-height: 44px; }
+main:has(.actionbar) { padding-bottom: 160px; }
+button.primary, .scan-form button, .offer-form button, .agent-form button, .cta, .copy-btn, .chip, .choice, button.secondary { min-height: 44px; }
+.photo-front { width: min(58%, 220px); }
+
+/* =====================================================================
+   Charcoal design system, stage 1 (10 Nov 2026): colours, type and the
+   offer row. Visual only. Replaces the navy look above.
+     Canvas #101113, surface #1A1B1E, divider #2A2C30.
+     One typeface (Inter), prices in tabular numerals.
+     Status is coloured text: green OK to buy, blue Counteroffer,
+     amber Ask the owner, red Don't buy, grey Not assessed.
+   ===================================================================== */
+:root {
+  --bg: #101113; --surface: #1A1B1E; --surface-2: #232529; --line: #2A2C30; --text: #F2F3F5; --muted: #9A9FA8;
+  --accent: #F2F3F5; --input-bg: #1A1B1E; --focus: #6EA8FE;
+  --tone-eligible: #5FCB8B; --tone-counteroffer: #6EA8FE; --tone-owner_review: #E8B04B; --tone-decline: #EF6B5E;
+  --error-bg: #2B1715; --error-text: #EF6B5E; --success-bg: #14261C; --success-text: #5FCB8B;
+  --mono: Inter, -apple-system, system-ui, 'Segoe UI', Roboto, sans-serif;
+}
+.outcome-eligible { --o-bg: transparent; --o-text: var(--tone-eligible); }
+.outcome-decline { --o-bg: transparent; --o-text: var(--tone-decline); }
+.outcome-counteroffer { --o-bg: transparent; --o-text: var(--tone-counteroffer); }
+.outcome-owner_review { --o-bg: transparent; --o-text: var(--tone-owner_review); }
+body { background: var(--bg); color: var(--text); }
+main a:not([class]) { color: var(--text); text-decoration: underline; text-underline-offset: 2px; }
+
+/* Small labels: 11px capitals in the same typeface. */
+.mono, .card-facts dt, .verdict-kicker, .ladder-points dt, .field label, .attr dt, .result-facts dt, .facts dt, .why dt, .run-when {
+  font-size: var(--t-xs) !important; font-weight: 600 !important; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+.learned-note, .hero .owner-said .hint { color: var(--muted); }
+.row-sub, .hint, .sub, footer { color: var(--muted); }
+
+/* Headings in sentence case. The screen title is the one 24px line. */
+.list-heading, .panel h2, .appbar h1, .identifying, .scout-run h2 { text-transform: none; letter-spacing: 0; }
+.appbar h1, .screen-head h1 { font-size: var(--t-xl) !important; font-weight: 600 !important; margin: 0; }
+.screen-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin: 10px 0 6px; }
+main { padding-left: 16px; padding-right: 16px; }
+
+/* Offer rows: no boxes, a divider between rows. The card details wrap, the money column never moves. */
+.offer-rows { gap: 0; border-top: 1px solid var(--line); }
+.offer-row { background: transparent; border-radius: 0; border-bottom: 1px solid var(--line); padding: 12px 0; }
+.sale-row { display: grid; grid-template-columns: minmax(0, 1fr) 7.25rem; column-gap: 12px; align-items: start; padding: 12px 0; }
+.sale-row.with-photo { grid-template-columns: 40px minmax(0, 1fr) 7.25rem; }
+.sale-row .thumb { width: 40px; height: 56px; border-radius: 2px; }
+.row-body { display: grid; gap: 2px; }
+.row-title, .row-sub { white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; }
+.row-title { font-size: var(--t-lg) !important; font-weight: 600 !important; line-height: 1.25; }
+.row-side { display: grid; gap: 2px; justify-items: end; text-align: right; }
+.row-price { font-size: var(--t-lg) !important; font-weight: 600 !important; line-height: 1.25; font-variant-numeric: tabular-nums; justify-self: end; }
+.row-date { font-weight: 400 !important; text-transform: none; letter-spacing: 0; color: var(--muted); }
+.offer-row.outcome-none .badge { color: var(--muted); }
+
+/* Controls: 6px corners. Colour carries meaning: green records a buying decision,
+   white is for neutral actions such as search and identify, outlines are secondary. */
+button.primary, .scan-form button, .offer-form button, .agent-form button, .cta { background: #F2F3F5; color: #101113; border-radius: 6px; font-weight: 600; }
+button.secondary, .chip, .copy-btn, .linkbtn.btn, .verdict-actions button:not(.primary), .choice, .add-photo-btn { background: transparent; color: var(--text); border: 1px solid var(--line); border-radius: 6px; }
+.chip[aria-pressed='true'], .offer-form .chip[aria-pressed='true'] { background: #F2F3F5; color: #101113; border-color: #F2F3F5; }
+.actionbar { background: var(--bg); border-top: 1px solid var(--line); }
+.actionbar button { border-radius: 6px; }
+.actionbar .verdict-actions button { background: var(--tone-eligible); color: #0B1F14; border: 0; }
+.actionbar .copy-btn { background: transparent; color: var(--text); border: 1px solid var(--line); }
+.field input, .field select, .search-row input, .agent-form textarea, .agent-form input, .scout-form input, textarea, select { border-radius: 6px; }
+.panel, .offer, .verdict, .owner-said, .pick, .result, .draft-scores li, .draft-sales li, .attr-group, .research-box, .step,
+.holdups, .owner-ask, dl.why, .seller-line, .pick-version, .before-confirm, .past-decisions li { border-radius: 8px; }
+.tag { border-radius: 4px; }
+.boxed { border-color: var(--line); border-radius: 6px; }
+
+/* Tab bar and in-page tabs */
+.tabbar { background: var(--bg); border-top: 1px solid var(--line); }
+.tab.on, .tab-scan.on { color: var(--text); }
+.tablist { border-bottom: 1px solid var(--line); }
+.tabbtn.on { color: var(--text); border-bottom-color: var(--text); }
+.back-arrow { color: var(--muted); }
+
+/* Scan frame and photo spots in charcoal */
+.photo-front { background-color: var(--surface); }
+.photo-front.has-photo .photo-text { background: rgb(16 17 19 / 0.82); }
+.photo-icon { color: var(--muted); }
+.identifying::after { color: var(--muted); }

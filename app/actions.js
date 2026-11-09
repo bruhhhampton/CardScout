@@ -6,6 +6,7 @@ import { createOffer } from '@/lib/offers';
 import { readValues, validateOffer } from '@/lib/validate-offer';
 import { cookies } from 'next/headers';
 import { autoStart } from '@/lib/auto-assess';
+import { savePhoto } from '@/lib/photos';
 
 const EMPTY = {
   player: '', year: '', set_name: '', card_number: '', variant: '', grade_condition: '', asking_price_aud: '',
@@ -25,6 +26,9 @@ export async function saveOffer(_previous, formData) {
   if (error) {
     return { status: 'error', message: error, errors: {}, values, attempt };
   }
+
+  // Keep the scan photo with the offer. The offer is saved even if the photo cannot be.
+  if (id) await savePhoto(id, formData.get('photo'));
 
   // Start the assessment straight away on a device that remembers the team passcode.
   const started = id ? await autoStart(id, await cookies()) : false;

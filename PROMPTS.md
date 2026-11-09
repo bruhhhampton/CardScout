@@ -490,3 +490,47 @@ Result: kept
 What changed: The rules now evolve from the owner's decisions, in plain code, with the owner able to see and undo everything. (1) When he decides a card, "Do the same next time for this card" is on by default. The next time the same card comes in (same player, year, set and version), the verdict follows his decision: Offer $35 becomes "Offer up to $35" (or OK to buy if the asking price is $35 or less), Buy at $50 never pays more than $50, Don't buy declines, and nothing goes over the staff limit. The card says "Learned from the owner" with the date and his reason. Facts about the new copy still stop it (condition to check, a defect, enough copies in stock, no first-team chance, an excluded set). (2) Other cards waiting for him that are the same card are worked out again straight away, with no AI run, and saved as not confirmed. (3) When he buys or makes offers on 3 cards that one of his rules turns away or sends to him, the Owner tab says so and changes the rule with one tap, or he taps "Keep my rule". (4) Settings has "Learned from your decisions", with Remove on each. database/017 adds the columns. The AI still only reads past decisions as context (AGENT.md v2.0).
 Validation performed and outcome: New tests for matching the same card (name order, case, year, version, empty version as base), which decision applies (turned off, removed, the card itself, newest), the verdicts for Offer, Buy and Don't buy, never above what he paid or the staff limit, every fact that stops it, the Settings list, which rules flagged a card, and when a rule change is suggested (3 decisions, only buys and offers, reset by saving Settings). Browser test with fictional records on a phone-sized screen: Offer $35 on one Yamal base card changed a second identical card waiting for the owner to "Offer up to $35" with the learned note; three base-card buys showed the rule suggestion, and one tap changed Base cards from decline to ask; Remove in Settings removed a learned rule; nothing scrolled sideways. All tests and build passed.
 Commit: CardScout learns from the owner's decisions
+
+## Entry 46
+Date/time: 10 Nov 2026
+Member: Daniel
+Slice: 35 - Ludex-style layout and look
+Tool: Claude (instead of Copilot)
+Exact prompt: "can you still keep the functionality but change the look to resemble a ludex style because presently it just looks like you're slapping a new coat of paint"
+Result: kept
+What changed: The screens are laid out like the Ludex card app, not only recoloured. Every button, form, rule and AI instruction works as before. Home: a summary box (cards waiting for the owner, number of offers), then offers as rows with a photo spot, date, status, card and price, and a round Scan button. Card page: set and player on the left with Version, Condition and Seller asks as small typewriter labels over bold values, a photo spot on the right, the verdict very large, then Decision, Workings and Change tabs in place of the fold-out sections (all three stay on the page, only hidden, so forms keep what was typed). Confirm and Copy message for seller are two round buttons fixed above the tab bar. Find: Scout for me and Search yourself are tabs at the top. Scan: a card-shaped frame with corner marks, and "Identifying card" while it reads. Deep navy background, stacked-cards logo on every page, tab bar reads Offers, Find, Scan, Owner and More (More is Settings). The home count of waiting cards now leaves out cards the owner has already decided, the same as the Owner tab.
+Validation performed and outcome: All 9 test files and the build passed. Browser test on a phone-sized screen with fictional records: opening a card from the list, an owner offer at the asking price refused, Offer $35 saved and shown at the top, the same card waiting elsewhere updated, the Change tab showing run again, owner change and the manual form, Confirm working from the fixed bar, Find search staying on its tab with results, and Owner, Scan, More and Past scouts all loading, with no page errors and nothing scrolling sideways. Not done here because they change behaviour: saving the scan photo (the photo spots are grey until then), a count on the Owner tab and the trading-desk wording.
+Commit: Ludex-style layout and look
+
+## Entry 47
+Date/time: 10 Nov 2026
+Member: Daniel
+Slice: 36 - Card photos
+Tool: Claude (instead of Copilot)
+Exact prompt: "Where will it get images of cards" then "Yes"
+Result: kept
+What changed: The front photo staff take when they scan a card is now kept with the offer and shown on the Offers list, the card page (tap to open it full size) and the Owner tab. A card that was typed in gets an "Add photo" button under its photo spot, and "Replace photo" once it has one. Photos are shrunk on the phone, checked on the server (JPEG, PNG or WebP, under 1.5 MB) and kept in a private Supabase storage bucket that only the CardScout server can read; the app shows them through its own /photo address. Only one photo is kept per offer. An offer is still saved if its photo cannot be. database/018 adds the photo_path column and the bucket; until it is run the app works as before with grey photo spots. The Scan screen now says the front photo is kept. Find and the scout's picks have no pictures, because SportsCardsPro's data has prices only.
+Validation performed and outcome: New tests for the photo check (missing, wrong type, empty, too large, each allowed type) and where photos are stored. Browser test on a phone-sized screen with a made-up test picture: no photo and a bad id both return "not found"; adding a photo on a card page showed it there, on the Offers list and on the Owner tab, and the button changed to Replace photo; scanning a card and saving the offer showed the scan photo on the new offer. All 10 test files and the build passed.
+Commit: Keep and show card photos
+
+## Entry 48
+Date/time: 10 Nov 2026
+Member: Daniel
+Slice: 35 - One type scale, less zoomed in
+Tool: Claude (instead of Copilot)
+Exact prompt: "It looks very zoomed in, and some giveaways of AI is when there's like major discrepancies in font and size"
+Result: kept
+What changed: Looks only. Every piece of text is now one of five sizes (11px tab labels, 12px labels and hints, 14px everything else, 17px headings and key figures, 24px for the one big figure on a screen) and one of three weights. Inter is used everywhere, with the typewriter face only for small labels. Spacing, photo spots, rows, tabs and buttons are smaller so more fits on a phone screen. Text boxes stay at 16px so the iPhone does not zoom in when you tap one.
+Validation performed and outcome: All 10 test files and the build passed. The browser run-through (owner decision, tabs, Confirm, Find search, photos) passed again on a phone-sized screen and nothing scrolled sideways.
+Commit: One type scale, less zoomed in
+
+## Entry 49
+Date/time: 10 Nov 2026
+Member: Daniel
+Slice: 36 - Charcoal design system, stage 1 (colours, type, offer row)
+Tool: Claude (instead of Copilot)
+Exact prompt: "I approve the overall CardScout visual direction, with the following refinements before implementation. [...] Proceed with the approved UI refactor incrementally, beginning with the design tokens and Offers row component."
+Result: kept
+What changed: Looks only. The navy look is replaced by charcoal (canvas #101113, surface #1A1B1E, divider #2A2C30) with no background pattern. One typeface (Inter); the typewriter face is gone and small labels are 11px capitals. Status is coloured text: green OK to buy, blue Counteroffer, amber Ask the owner, red Don't buy, grey Not assessed. Offer rows have no boxes: the player, then year, set and number, then version and grade on the left (wrapping as needed), and the asking price, verdict and date in a fixed right-hand column. A thumbnail shows only when the offer has a photo. The Offers screen has a plain title with the count; the "Waiting for the owner" box and the floating Scan button were removed because the Owner and Scan tabs already do those jobs. Buttons have 6px corners; the confirm button is green, neutral actions are white and secondary actions are outlined. No rules, calculations, actions or database calls changed.
+Validation performed and outcome: All 10 test files and the build passed. The browser run-through (17 checks) and the photo run-through (11 checks) passed on a phone-sized screen and nothing scrolled sideways. The row was checked with a short name, a long set name, a numbered parallel, a graded four-figure card, a card with a photo and two near-identical cards of different versions.
+Commit: Charcoal design system: colours, type and offer rows

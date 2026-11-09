@@ -6,6 +6,7 @@ import { getOffer, OFFER_ID_PATTERN, setOfferVariant } from '@/lib/offers';
 import { priceForPick } from '@/lib/price-guide';
 import { effectiveRates, getAudRates } from '@/lib/fx.mjs';
 import { getLatestAssessment } from '@/lib/assessments';
+import { savePhoto } from '@/lib/photos';
 import { applyToWaiting, learnedRuleForOffer, saveOwnerDecision } from '@/lib/owner-decisions';
 import { applyLearned, rulesHit, validateDecision } from '@/lib/owner-decisions.mjs';
 
@@ -212,4 +213,16 @@ export async function decideOffer(_prev, formData) {
   revalidatePath('/review');
   revalidatePath(`/offers/${offerId}`);
   redirect(`/offers/${offerId}?msg=decided${changed ? `&also=${changed}` : ''}`);
+}
+
+// Add or replace the card's photo from the card page.
+export async function addPhoto(_prev, formData) {
+  const offerId = field(formData, 'offer_id');
+  if (!OFFER_ID_PATTERN.test(offerId)) return { status: 'error', message: 'This offer could not be found.' };
+  const { error, skipped } = await savePhoto(offerId, formData.get('photo'));
+  if (error || skipped) return { status: 'error', message: error ?? 'Choose a photo first.' };
+  revalidatePath('/');
+  revalidatePath('/review');
+  revalidatePath(`/offers/${offerId}`);
+  return { status: 'success', message: '' };
 }
