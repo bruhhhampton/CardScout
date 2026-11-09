@@ -545,3 +545,14 @@ Result: kept
 What changed: Looks and layout only. The Owner screen has two tabs, Pending (with the count) and Decided, and both lists use the same row as Offers. A decided row shows the owner's decision in its status colour where the price sits, with the asking price and date under it, and his reason and what CardScout had suggested on the left. The Find screen opens on Search, with Scout as the second tab; the Scout tab opens by itself when a scout is running, has just finished or has a message. Player results use the same row, with the ratings in the right-hand column. The intro paragraphs on both screens were removed or cut to one line. No rules, calculations, actions or database calls changed.
 Validation performed and outcome: All 10 test files and the build passed. The browser run-through now has 20 checks (added: Search opens first, the Scout tab shows the scout form, the Pending tab lists cards, the Decided tab lists the decision) and all passed, as did the 11 photo checks. Nothing scrolled sideways.
 Commit: Charcoal design system: Owner and Find rows
+
+## Entry 51
+Date/time: 10 Nov 2026
+Member: Daniel
+Slice: 38 - Charcoal design system, stage 3 (card decision page)
+Tool: Claude (instead of Copilot)
+Exact prompt: "Alright let's do stage 3 now I'm ready"
+Result: kept
+What changed: Looks and wording only on the card page. The top shows the player, two lines of card details and the seller's asking price, with the photo on the right in its own shape (tap to open it full size); a card with no photo shows only an Add photo button, not an empty box. The recommendation is one line in its status colour. The dotted price line was replaced by plain figures: Most we pay, Sold middle and Price guide value, each labelled by where it comes from. A Sold sales section lists the individual sales the server counted (site, date, price, each linking to its source), or says none were found; no sales are invented. Sections are divided by lines, not boxes. "Confirm" is now "Record decision" (it only marks the recommendation as checked by a person; nothing is bought), "Copy message for seller" is "Copy seller message" as a secondary button, the "Workings" tab is "Details", and "CardScout suggests" is "Recommendation". A recommendation that follows an earlier owner decision now says so in those words. Where it does so against one of the owner's don't-buy rules, an amber "For review" note says which rule; the logic itself was not changed and this is logged for a separate decision. The owner's own Save button is amber.
+Validation performed and outcome: All 10 test files and the build passed. The browser run-through has 22 checks (added: the review note shows on a learned price that goes against a rule, the figures and sold sales sections show) and all passed, as did the 11 photo checks. Nothing scrolled sideways.
+Commit: Charcoal design system: card decision page

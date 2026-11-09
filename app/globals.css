@@ -904,3 +904,56 @@ button.secondary, .chip, .copy-btn, .linkbtn.btn, .verdict-actions button:not(.p
 .past-link { font-weight: 400; }
 .suggest { background: var(--surface); }
 .tabbtn { -webkit-tap-highlight-color: transparent; }
+
+/* ---------- Charcoal, stage 3: the card decision page ---------- */
+/* Identity: name, two lines of card details, the asking price. Photo on the right when there is one. */
+.card-head { align-items: flex-start; gap: 12px; margin-top: 8px; }
+.card-label { padding: 0; margin: 0; }
+.card-label .offer-title { margin: 0 0 2px; }
+.card-line { color: var(--muted); margin: 0; font-size: var(--t-sm) !important; line-height: 1.45; overflow-wrap: anywhere; }
+.card-facts { margin-top: 12px; }
+.card-facts dd.price { font-variant-numeric: tabular-nums; font-weight: 600 !important; }
+.photo-col { margin-right: 0; justify-items: end; }
+.photo-col .thumb.big.has-photo { width: 104px; height: auto; background: transparent; border-radius: 4px; }
+.photo-col .thumb.big.has-photo img { width: 100%; height: auto; object-fit: contain; }
+.add-photo { width: auto; justify-items: end; }
+.add-photo-btn { min-height: 32px; font-weight: 400 !important; color: var(--muted); }
+
+/* Recommendation: one 24px line in its status colour. */
+.hero { padding: 14px 0 0; margin-top: 14px; border-top: 1px solid var(--line); }
+.hero .verdict-title { font-weight: 600 !important; }
+.hero .owner-said strong.big { font-weight: 600 !important; }
+.hero .learned-note { margin-top: 6px; }
+.conflict { margin: 10px 0 0; padding: 8px 10px; border: 1px solid var(--tone-owner_review); border-radius: 6px; color: var(--tone-owner_review); font-size: var(--t-sm) !important; }
+.draft > .conflict { margin: 12px 0; }
+.tablist { margin-top: 12px; }
+
+/* Plain figures, then flat sections divided by lines. No boxes. */
+.figures { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0; padding: 12px 0; }
+.figures:empty { display: none; }
+.figures dt { font-size: var(--t-xs) !important; font-weight: 600 !important; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+.figures dd { margin: 2px 0 0; font-size: var(--t-lg) !important; font-weight: 600 !important; font-variant-numeric: tabular-nums; }
+.ledger, .holdups, .owner-ask, .before, .seller-line, .pick-version, .before-confirm { background: transparent; border-radius: 0; padding: 12px 0; margin: 0; border-top: 1px solid var(--line); }
+.tabpanel .verdict h3, .tabpanel .verdict > h3, .ledger h3, .before > h3, .seller-line h3 { margin: 0 0 6px; color: var(--muted); font-size: var(--t-xs) !important; font-weight: 600 !important; letter-spacing: 0.05em; }
+.tabpanel .verdict > h3 { padding-top: 12px; border-top: 1px solid var(--line); }
+.ledger-rows { list-style: none; margin: 0; padding: 0; }
+.ledger-rows li { display: grid; grid-template-columns: minmax(0, 1fr) 4.5rem 5.5rem; gap: 8px; padding: 6px 0; align-items: baseline; }
+.ledger-rows li + li { border-top: 1px solid var(--line); }
+.ledger-rows span { color: var(--muted); font-size: var(--t-sm) !important; }
+.ledger-rows strong { text-align: right; font-variant-numeric: tabular-nums; }
+.ledger .hint, .seller-line .hint { margin: 0; }
+.seller-line .hint { color: var(--text); font-size: var(--t-md) !important; }
+.holdups ul { margin: 0; padding-left: 18px; }
+dl.why { background: transparent; border-radius: 0; padding: 0 0 6px; margin: 0; }
+dl.why div { border-top: 0; padding: 4px 0; }
+dl.why dt { color: var(--muted); text-transform: none; letter-spacing: 0; font-size: var(--t-md) !important; font-weight: 400 !important; }
+.past-decisions { gap: 0; }
+.past-decisions li { background: transparent; border-radius: 0; padding: 8px 0; }
+.past-decisions li + li { border-top: 1px solid var(--line); }
+.past-decisions li.d-offer strong { color: var(--tone-counteroffer); }
+
+/* Actions. Green records a recommendation, amber is the owner's own decision, the copy button is secondary. */
+.actionbar .verdict-actions button { font-weight: 600 !important; }
+.owner-decision button[type='submit'], .owner-ask button[type='submit'] { background: var(--tone-owner_review); color: #1F1503; border: 0; }
+.actionbar { box-shadow: 0 24px 0 var(--bg); }
+.photo-col .thumb.big.has-photo { min-height: 60px; }

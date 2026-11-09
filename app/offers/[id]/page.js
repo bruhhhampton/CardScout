@@ -10,13 +10,13 @@ import AssessForm from './assess-form';
 import AgentPanel from './agent-panel';
 import { getLatestRun, isRunning } from '@/lib/agent-runs';
 import RunWatcher from './run-watcher';
-import { headline, holdUps, ladder, sellerWords, STATUS_WORDS, walkthrough, whyLines } from '@/lib/explain.mjs';
+import { headline, holdUps, sellerWords, STATUS_WORDS, walkthrough, whyLines } from '@/lib/explain.mjs';
 import CopyButton from './copy-button';
 import { cookies } from 'next/headers';
 import { versionLabels } from '@/lib/price-guide.mjs';
 import { isRemembered } from '@/lib/agent-access';
 import { getOwnerDecision, listOwnerDecisions } from '@/lib/owner-decisions';
-import { comparisonText, compareWithSuggestion, decisionText, ownerSellerWords, similarDecisions } from '@/lib/owner-decisions.mjs';
+import { comparisonText, compareWithSuggestion, decisionText, ownerSellerWords, rulesHit, RULE_WORDS, similarDecisions } from '@/lib/owner-decisions.mjs';
 import OwnerDecision from './owner-decision';
 import Tabs from '../../tabs';
 import CardThumb from '../../card-thumb';
@@ -55,7 +55,7 @@ const MESSAGES = {
   created: { kind: 'success', text: 'Offer saved. Check stock and condition, then click Assess this card.' },
   'created-linked': { kind: 'success', text: 'Offer saved. Check stock and condition, then click Assess this card.' },
   'created-started': { kind: 'success', text: 'Offer saved. CardScout started assessing it with 0 in stock and condition meeting the standard. If either is wrong, change it under Run it again.' },
-  confirmed: { kind: 'success', text: 'Verdict confirmed.' },
+  confirmed: { kind: 'success', text: 'Decision recorded. Nothing is bought.' },
   decided: { kind: 'success', text: "Decision saved. Staff can tell the seller. Nothing is bought." },
   picked: { kind: 'success', text: 'Version saved. CardScout used its SportsCardsPro price and worked out the verdict again.' },
   'picked-no-price': { kind: 'error', text: 'Version saved, but SportsCardsPro has no price for this grade, so the verdict uses real sales instead.' },
@@ -127,7 +127,22 @@ export default async function OfferPage({ params, searchParams }) {
   const fromLast = !usedRun && Boolean(assessment);
   const asking = Number(offer.asking_price_aud);
   const head = assessment ? headline(assessment, asking) : null;
-  const scale = assessment ? ladder(assessment, run, asking) : null;
+  // Figures shown as plain numbers. Sold sales and the price guide are labelled separately.
+  const soldMiddle = assessment && assessment.median_sold_aud != null && Number(assessment.sales_count) > 0 ? Number(assessment.median_sold_aud) : null;
+  const guideValue = run?.price_guide?.found && run.price_guide.value_aud != null ? Number(run.price_guide.value_aud) : null;
+  // The individual sold sales the server counted for this card (real records only).
+  const soldSales = (run?.sales ?? []).filter((x) => x.accepted);
+  const site = (u) => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return 'Sale'; } };
+  // A verdict that follows an earlier owner decision even though one of his don't-buy rules flags this card.
+  // Shown for review only: the logic is not changed here.
+  const overridden = learnedFrom && learnedFrom.decision !== 'dont_buy' && settings && assessment
+    ? rulesHit(offer, assessment, settings).filter((r) => r === 'rookie_only' || settings[r] === 'decline').map((r) => RULE_WORDS[r]?.what).filter(Boolean)
+    : [];
+  const conflict = overridden.length > 0 && (
+    <p className="conflict" role="note">
+      For review: your rule is not to buy {overridden.join(' or ')}. This recommendation follows the owner&apos;s earlier decision on this card instead.
+    </p>
+  );
   const why = assessment ? whyLines(assessment, offer, run) : [];
   const holds = assessment ? holdUps(assessment) : [];
   // The four questions Cerf asks, with the sums, for staff to learn from.
@@ -149,16 +164,16 @@ export default async function OfferPage({ params, searchParams }) {
 
       <div className="card-head">
         <section className="card-label" aria-labelledby="offer-heading">
-          <p className="card-line">{offer.year} {offer.set_name}</p>
-          <h1 id="offer-heading" className="offer-title">{offer.player} #{String(offer.card_number).replace(/^#/, '')}</h1>
+          <h1 id="offer-heading" className="offer-title">{offer.player}</h1>
+          <p className="card-line">{offer.year} {offer.set_name} · #{String(offer.card_number).replace(/^#/, '')}</p>
+          <p className="card-line">{[offer.variant || 'Base', offer.grade_condition].filter(Boolean).join(' · ')}</p>
           <dl className="card-facts">
-            <div><dt>Version</dt><dd><span className="boxed">{offer.variant || 'Base'}</span></dd></div>
-            <div><dt>Condition</dt><dd>{offer.grade_condition}</dd></div>
-            <div><dt>Seller asks</dt><dd className="price">{aud.format(asking)}</dd></div>
+            <div><dt>Seller ask</dt><dd className="price">{aud.format(asking)}</dd></div>
           </dl>
         </section>
-        <div className="photo-col">
-          <CardThumb offer={offer} big />
+        {/* The photo keeps its own shape and opens full size. With no photo there is only the Add photo button. */}
+        <div className={`photo-col${offer.photo_path ? '' : ' no-photo'}`}>
+          {offer.photo_path && <CardThumb offer={offer} big />}
           <AddPhoto offerId={offer.id} has={Boolean(offer.photo_path)} />
         </div>
       </div>
@@ -175,19 +190,20 @@ export default async function OfferPage({ params, searchParams }) {
         <div className={`hero tone-${head.tone}`}>
           {owner && (
             <div className="owner-said" role="status">
-              <span className="hint">The owner decided · {fmtDate(owner.created_at)}</span>
+              <span className="hint">Owner decision · {fmtDate(owner.created_at)}</span>
               <strong className="big">{decisionText(owner)}</strong>
               {owner.reason && <p>&ldquo;{owner.reason}&rdquo;</p>}
               <span className="hint">{comparisonText(owner)}</span>
             </div>
           )}
-          <p className="verdict-kicker">{owner ? 'CardScout suggested' : assessment.confirmed === false ? 'CardScout suggests' : 'Confirmed verdict'}</p>
+          <p className="verdict-kicker">{owner ? 'Recommendation was' : assessment.confirmed === false ? 'Recommendation' : 'Recorded decision'}</p>
           <h2 id="verdict-heading" className="verdict-title">{head.title}</h2>
           {learnedFrom && (
             <p className="learned-note">
-              Learned from the owner: {decisionText(learnedFrom)} on {fmtDate(learnedFrom.created_at)}{learnedFrom.reason ? `, "${learnedFrom.reason}"` : ''}. <Link href="/settings#learned">Change in Settings</Link>
+              Based on the owner&apos;s earlier decision: {decisionText(learnedFrom)} on {fmtDate(learnedFrom.created_at)}{learnedFrom.reason ? `, "${learnedFrom.reason}"` : ''}. <Link href="/settings#learned">Change in Settings</Link>
             </p>
           )}
+          {conflict}
         </div>
       )}
 
@@ -202,19 +218,29 @@ export default async function OfferPage({ params, searchParams }) {
         </section>
       ) : assessment ? (
         <section className={`verdict tone-${head.tone}`} aria-label="Decision details">
-          {scale && (
-            <div className="ladder" aria-label="Price comparison">
-              <div className="ladder-line" aria-hidden="true">
-                {scale.points.map((p) => <span key={p.key} className={`ladder-dot dot-${p.key}`} style={{ left: `${p.at}%` }} />)}
-              </div>
-              <dl className="ladder-points">
-                {scale.points.map((p) => (
-                  <div key={p.key} className={`pt-${p.key}`}><dt>{p.label}</dt><dd>{p.text}</dd></div>
+          <dl className="figures" aria-label="Prices">
+            {assessment.offer_ceiling_aud != null && <div><dt>Most we pay</dt><dd>{aud.format(Number(assessment.offer_ceiling_aud))}</dd></div>}
+            {soldMiddle != null && <div><dt>Sold middle</dt><dd>{aud.format(soldMiddle)}</dd></div>}
+            {guideValue != null && <div><dt>Price guide value</dt><dd>{aud.format(guideValue)}</dd></div>}
+          </dl>
+          <div className="ledger">
+            <h3>Sold sales</h3>
+            {soldSales.length > 0 ? (
+              <ul className="ledger-rows">
+                {soldSales.map((x, i) => (
+                  <li key={i}>
+                    <a href={x.url} target="_blank" rel="noopener noreferrer nofollow">{site(x.url)}</a>
+                    <span>{x.sold_date ? fmtDate(x.sold_date) : ''}</span>
+                    <strong>{aud.format(Number(x.price_aud))}</strong>
+                  </li>
                 ))}
-              </dl>
-              {scale.worthFrom && <p className="hint">Worth is the {scale.worthFrom}.</p>}
-            </div>
-          )}
+              </ul>
+            ) : Number(assessment.sales_count) > 0 ? (
+              <p className="hint">{assessment.sales_count} sold sale{Number(assessment.sales_count) === 1 ? '' : 's'} counted. The individual sales were not saved with this assessment.</p>
+            ) : (
+              <p className="hint">No sold sales in the last {settings?.sales_window_days ?? 30} days.</p>
+            )}
+          </div>
           {run?.status === 'completed' && !run.price_guide?.found && run.price_guide?.options?.length > 0 && (
             <div className="pick-version">
               <h3>Which version is the card?</h3>
@@ -232,7 +258,7 @@ export default async function OfferPage({ params, searchParams }) {
           )}
           {holds.length > 0 && (
             <div className="holdups">
-              <h3>{assessment.outcome === 'counteroffer' ? 'Why not the asking price' : assessment.outcome === 'decline' ? 'Why not' : 'What the owner needs to decide'}</h3>
+              <h3>{assessment.outcome === 'counteroffer' ? 'Why not the asking price' : assessment.outcome === 'decline' ? 'Why not' : 'For the owner to decide'}</h3>
               <ul>{holds.map((h, i) => <li key={i}>{h}</li>)}</ul>
             </div>
           )}
@@ -244,7 +270,7 @@ export default async function OfferPage({ params, searchParams }) {
           )}
           {similar.filter((d) => d.id !== learnedFrom?.id).length > 0 && (
             <div className="before">
-              <h3>The owner decided before</h3>
+              <h3>Earlier owner decisions</h3>
               <ul className="past-decisions">
                 {similar.filter((d) => d.id !== learnedFrom?.id).map((d) => (
                   <li key={d.id} className={`d-${d.decision}`}>
@@ -257,12 +283,13 @@ export default async function OfferPage({ params, searchParams }) {
               </ul>
             </div>
           )}
-          <h3>What makes this card worth it (or not)</h3>
+          <h3>Assessment</h3>
           <dl className="why">
             {why.map((w) => <div key={w.label}><dt>{w.label}</dt><dd>{w.text}</dd></div>)}
           </dl>
           <div className="seller-line">
-            <p className="hint">For the seller: &ldquo;{seller}&rdquo;</p>
+            <h3>Seller message</h3>
+            <p className="hint">&ldquo;{seller}&rdquo;</p>
           </div>
         </section>
       ) : (
@@ -274,8 +301,9 @@ export default async function OfferPage({ params, searchParams }) {
       )}
           </>
         ) },
-        { id: 'workings', label: 'Workings', content: draft ? (
+        { id: 'workings', label: 'Details', content: draft ? (
             <div className="draft">
+            {conflict}
 
             <p className="hint">
               Drafted {new Date(run.created_at).toLocaleString('en-AU', { timeZone: 'Australia/Sydney' })} · {run.model} · {run.searches} search(es)
@@ -467,11 +495,11 @@ export default async function OfferPage({ params, searchParams }) {
             <form action={confirmVerdict} className="verdict-actions">
               <input type="hidden" name="offer_id" value={offer.id} />
               <input type="hidden" name="assessment_id" value={assessment.id} />
-              <button type="submit">Confirm</button>
-              <span className="hint">Nothing is bought. Confirming records the decision.</span>
+              <button type="submit">Record decision</button>
+              <span className="hint">Records this recommendation as checked by a person. Nothing is bought.</span>
             </form>
           )}
-          <CopyButton text={seller} />
+          <CopyButton text={seller} label="Copy seller message" />
         </div>
       )}
 
