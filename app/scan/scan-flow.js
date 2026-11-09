@@ -24,7 +24,7 @@ function PhotoButton({ label, hint, value, onChange, side = 'front' }) {
         </span>
       )}
       <span className="photo-text">
-        <strong>{busy ? 'Loading…' : value ? `${label} ✓ (tap to retake)` : label}</strong>
+        <strong>{busy ? 'Loading…' : value ? `${label} · tap to retake` : label}</strong>
         {!value && hint && <span className="hint">{hint}</span>}
       </span>
     </label>
@@ -74,12 +74,12 @@ export default function ScanFlow({ remembered, prefill = null }) {
   return (
     <>
       <section className="panel scan" aria-labelledby="scan-heading">
-        <h2 id="scan-heading">Scan a card</h2>
-        <p className="sub">Take a photo, or choose one you saved or screenshotted from a listing. Fill the photo with the card. The front photo is kept with the offer so staff and the owner can see the card.</p>
+        <h2 id="scan-heading" className="sr-only">Scan a card</h2>
+        <p className="sub">Fill the photo with the card. The front photo is kept with the offer.</p>
         {state.status === 'error' && <p className="error" role="alert">{state.message}</p>}
         <form action={formAction} className="scan-form" onSubmit={() => setAgain(false)}>
-          <PhotoButton label="Photo of the front" value={front} onChange={setFront} />
-          <PhotoButton side="back" label="Photo of the back" hint="Optional. The card number is usually on the back." value={back} onChange={setBack} />
+          <PhotoButton label="Front" value={front} onChange={setFront} />
+          <PhotoButton side="back" label="Back" hint="Optional. Helps with the card number." value={back} onChange={setBack} />
           <input type="hidden" name="front" value={front ?? ''} />
           <input type="hidden" name="back" value={back ?? ''} />
           {!remembered && (
@@ -91,12 +91,12 @@ export default function ScanFlow({ remembered, prefill = null }) {
           )}
           {pending && <p className="identifying" role="status">Identifying card</p>}
           <button type="submit" className="primary" disabled={!front || pending} aria-disabled={!front || pending}>
-            {pending ? 'Reading the card…' : 'Read the card'}
+            {pending ? 'Identifying…' : 'Identify card'}
           </button>
         </form>
       </section>
       <details className="fold">
-        <summary>Type it in instead</summary>
+        <summary>Enter manually</summary>
         <OfferForm key={`again-${formKey.current}`} />
       </details>
     </>

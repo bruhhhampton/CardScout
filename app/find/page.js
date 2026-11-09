@@ -6,7 +6,7 @@ import { isRemembered } from '@/lib/agent-access';
 import { scoutForMe } from './actions';
 import PickCard from './pick-card';
 import RunWatcher from '../offers/[id]/run-watcher';
-import { hasFilters, positionLabel, RATINGS, ratingsApply, readFilters, shownRatings } from '@/lib/find-players.mjs';
+import { hasFilters, positionLabel, POSITIONS, RATINGS, ratingsApply, readFilters, shownRatings } from '@/lib/find-players.mjs';
 import SearchForm from './search-form';
 import Tabs from '../tabs';
 
@@ -49,7 +49,13 @@ export default async function FindPage({ searchParams }) {
       <Tabs label="How to find players" initial={openScout ? 'scout' : 'search'} tabs={[
         { id: 'search', label: 'Search', content: (
           <>
-      <SearchForm f={f} />
+      {/* After a search the filters fold down to one line, so results start at the top. */}
+      {searched ? (
+        <details className="filters">
+          <summary><span>{[f.position && POSITIONS[f.position]?.label, f.maxAge && `Age up to ${f.maxAge}`, ...Object.entries(f.mins ?? {}).map(([k, v]) => `${RATINGS[k]} ${v}+`), f.nationality, f.club].filter(Boolean).join(' · ')}</span><span className="filters-edit">Edit</span></summary>
+          <SearchForm f={f} />
+        </details>
+      ) : <SearchForm f={f} />}
 
       {error && <p className="error" role="alert">{error}</p>}
       {searched && !error && (

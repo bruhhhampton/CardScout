@@ -556,3 +556,14 @@ Result: kept
 What changed: Looks and wording only on the card page. The top shows the player, two lines of card details and the seller's asking price, with the photo on the right in its own shape (tap to open it full size); a card with no photo shows only an Add photo button, not an empty box. The recommendation is one line in its status colour. The dotted price line was replaced by plain figures: Most we pay, Sold middle and Price guide value, each labelled by where it comes from. A Sold sales section lists the individual sales the server counted (site, date, price, each linking to its source), or says none were found; no sales are invented. Sections are divided by lines, not boxes. "Confirm" is now "Record decision" (it only marks the recommendation as checked by a person; nothing is bought), "Copy message for seller" is "Copy seller message" as a secondary button, the "Workings" tab is "Details", and "CardScout suggests" is "Recommendation". A recommendation that follows an earlier owner decision now says so in those words. Where it does so against one of the owner's don't-buy rules, an amber "For review" note says which rule; the logic itself was not changed and this is logged for a separate decision. The owner's own Save button is amber.
 Validation performed and outcome: All 10 test files and the build passed. The browser run-through has 22 checks (added: the review note shows on a learned price that goes against a rule, the figures and sold sales sections show) and all passed, as did the 11 photo checks. Nothing scrolled sideways.
 Commit: Charcoal design system: card decision page
+
+## Entry 52
+Date/time: 10 Nov 2026
+Member: Daniel
+Slice: 39 - Charcoal design system, stage 4 (Scan and the Find filters)
+Tool: Claude (instead of Copilot)
+Exact prompt: "Let's get started stage 4. Is it the last one"
+Result: kept
+What changed: Looks and wording only. Scan: the front frame is the main thing on the screen with one line of instruction, the back photo is a slim control under it, the button reads "Identify card" and typing a card in is a quiet "Enter manually" line. The tick character and the repeated "Scan a card" heading are gone. Find: after a search the filters fold down to one line (for example "Defender or wing-back · Age up to 21") with Edit, so results start near the top; Edit opens the same form with the choices kept. No rules, calculations, actions or database calls changed.
+Validation performed and outcome: All 10 test files and the build passed. The browser run-through has 24 checks (added: filters fold to one line after a search, Edit opens them with the choice kept) and all passed, as did the 11 photo checks, which scan a card through the new Scan screen. Nothing scrolled sideways.
+Commit: Charcoal design system: Scan and Find filters

@@ -957,3 +957,33 @@ dl.why dt { color: var(--muted); text-transform: none; letter-spacing: 0; font-s
 .owner-decision button[type='submit'], .owner-ask button[type='submit'] { background: var(--tone-owner_review); color: #1F1503; border: 0; }
 .actionbar { box-shadow: 0 24px 0 var(--bg); }
 .photo-col .thumb.big.has-photo { min-height: 60px; }
+
+/* ---------- Charcoal, stage 4: Scan and the Find filters ---------- */
+/* Scan: the front frame is the screen. One line of instruction, the back as a slim control, then the action. */
+.panel.scan { background: transparent; padding: 0; border-radius: 0; }
+.panel.scan > .sub { margin: 4px 0 10px; }
+.scan-form { gap: 10px; }
+.photo-front { width: min(64%, 250px); margin: 0 auto; border-radius: 4px; }
+.photo-front img { inset: 0; width: 100%; height: 100%; border-radius: 4px; }
+.photo-front.has-photo .photo-text { left: 0; right: 0; bottom: 0; }
+.photo-back { background: transparent; border: 1px solid var(--line); border-radius: 6px; min-height: 52px; padding: 6px 12px; gap: 12px; }
+.photo-back.has-photo { border: 1px solid var(--line); }
+.photo-back img { width: 30px; height: 42px; border-radius: 2px; }
+.photo-back .photo-icon svg { width: 20px; height: 20px; }
+.photo-back .photo-text { flex-direction: row; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+main > details.fold { border-top: 1px solid var(--line); margin-top: 14px; }
+main > details.fold > summary { color: var(--muted); font-weight: 400 !important; min-height: 32px; }
+
+/* Find: after a search the filters are one line with Edit. */
+.filters { border-bottom: 1px solid var(--line); }
+.filters > summary { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; padding: 12px 0; cursor: pointer; list-style: none; color: var(--muted); }
+.filters > summary::-webkit-details-marker { display: none; }
+.filters > summary > span:first-child { min-width: 0; overflow-wrap: anywhere; }
+.filters-edit { color: var(--text); text-decoration: underline; text-underline-offset: 2px; flex: none; }
+.filters[open] .filters-edit { display: none; }
+.filters .find-form { background: transparent; padding: 0 0 12px; border-radius: 0; }
+.find-form > .hint { margin: 8px 0 0; }
+.tabpanel > section > .list-heading { margin: 12px 0 0; }
+.filters > summary::before { content: none; }
+.filters > summary { margin: 0; min-height: 44px; align-items: center; font-weight: 400 !important; }
+.filters > summary > span:first-child { flex: 1; text-align: left; }
