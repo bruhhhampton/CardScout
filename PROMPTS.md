@@ -468,3 +468,14 @@ Result: kept
 What changed: Tapping Scout for me while a scout was already running put "already working" in the page address, so the red message stayed on screen even after the scout finished. Now a second tap just shows the scout in progress, with no red message. The focus box is styled like the other boxes.
 Validation performed and outcome: Build passed. Live check: tap Scout for me twice quickly; the second tap shows "Scouting…" and no red message stays once the picks appear.
 Commit: Fix stale "scout is already working" message
+
+## Entry 44
+Date/time: 9 Nov 2026
+Member: Daniel
+Slice: 33 - The owner decides, and CardScout learns from it
+Tool: Claude (instead of Copilot)
+Exact prompt: "alright, i reckon the next step is fixing the name, owner decision loop and then its ui fix"
+Result: kept
+What changed: On a card that needs the owner, he taps Buy, Don't buy or Offer (the amount starts at CardScout's highest offer), adds a reason if he wants, and saves. The decision is saved next to what CardScout suggested (database/016 adds the owner_decisions table). The card then shows his decision at the top, and the message for the seller uses it. On any other card the owner can decide differently under "Change something". New cards show up to 3 of his decisions on similar cards (same player first, then same set and version, then same set at a similar price) under "The owner decided before". The Owner tab has "Waiting for you" and "Decided", with how often he did the same as CardScout. The offers list shows "Owner: Buy" and so on. The AI gets the same similar decisions as context only (AGENT.md v2.0): never a source or a sale, and it asks staff about any where the owner went against CardScout. Nothing is bought. Changing a rule is left to the owner in Settings.
+Validation performed and outcome: New tests for the checks (missing choice, missing or bad amount, an offer at the asking price or more, long reasons), wording, agree or differ, seller words with no price guide figures, matching (name order, set and version, similar price, the card itself and older decisions on the same card left out) and what the AI sees. Browser test with fictional records on a phone-sized screen: an "Ask the owner" card showed the owner's earlier Buy on the same player; an offer at the asking price was refused; Offer $75 with a reason saved, showed at the top with the new seller message, moved the card from Waiting to Decided and showed "Owner: Offer" on the list; nothing scrolled sideways. AGENT.md and code instructions match. All tests and build passed. The AI test in AGENT.md is not run yet.
+Commit: Owner decides: Buy, Don't buy or Offer, saved and reused

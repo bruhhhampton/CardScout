@@ -15,6 +15,9 @@ import CopyButton from './copy-button';
 import { cookies } from 'next/headers';
 import { versionLabels } from '@/lib/price-guide.mjs';
 import { isRemembered } from '@/lib/agent-access';
+import { getOwnerDecision, listOwnerDecisions } from '@/lib/owner-decisions';
+import { comparisonText, compareWithSuggestion, decisionText, ownerSellerWords, similarDecisions } from '@/lib/owner-decisions.mjs';
+import OwnerDecision from './owner-decision';
 
 export const dynamic = 'force-dynamic';
 // AI drafts can take up to a minute.
@@ -50,6 +53,7 @@ const MESSAGES = {
   'created-linked': { kind: 'success', text: 'Offer saved. Check stock and condition, then click Assess this card.' },
   'created-started': { kind: 'success', text: 'Offer saved. CardScout started assessing it with 0 in stock and condition meeting the standard. If either is wrong, change it under Run it again.' },
   confirmed: { kind: 'success', text: 'Verdict confirmed.' },
+  decided: { kind: 'success', text: "Decision saved. Staff can tell the seller. Nothing is bought." },
   picked: { kind: 'success', text: 'Version saved. CardScout used its SportsCardsPro price and worked out the verdict again.' },
   'picked-no-price': { kind: 'error', text: 'Version saved, but SportsCardsPro has no price for this grade, so the verdict uses real sales instead.' },
   'pick-locked': { kind: 'error', text: 'Enter the team passcode once on this device (Assess this card) before picking a version.' },
@@ -75,11 +79,16 @@ export default async function OfferPage({ params, searchParams }) {
 
   const message = MESSAGES[sp?.msg];
   const remembered = isRemembered(await cookies());
-  const [{ assessment }, { settings }, { run }] = await Promise.all([
+  const [{ assessment }, { settings }, { run }, { decision: owner }, { decisions: past }] = await Promise.all([
     getLatestAssessment(offer.id),
     getSettings(),
     getLatestRun(offer.id),
+    getOwnerDecision(offer.id),
+    listOwnerDecisions(),
   ]);
+  // How the owner decided cards like this one before.
+  const similar = similarDecisions(offer, past);
+  const fmtDate = (d) => new Date(d).toLocaleDateString('en-AU', { timeZone: 'Australia/Sydney', day: 'numeric', month: 'short' });
   const running = isRunning(run);
   const draft = run?.status === 'completed' ? run.draft : null;
   const usedRun = draft && (!assessment || new Date(run.created_at) > new Date(assessment.created_at)) ? run : null;
@@ -115,6 +124,10 @@ export default async function OfferPage({ params, searchParams }) {
   const holds = assessment ? holdUps(assessment) : [];
   // The four questions Cerf asks, with the sums, for staff to learn from.
   const steps = assessment && !running ? walkthrough(assessment, run, offer, settings ?? {}) : [];
+  // The owner's offer box starts at CardScout's highest offer, if it is below the asking price.
+  const suggestedOffer = assessment?.offer_ceiling_aud != null && Number(assessment.offer_ceiling_aud) < asking ? String(Number(assessment.offer_ceiling_aud)) : null;
+  const askOwner = assessment?.outcome === 'owner_review' && !owner;
+  const seller = owner ? ownerSellerWords(owner, asking) : assessment ? sellerWords(assessment, asking) : '';
   const agentPanel = (
     <AgentPanel offerId={offer.id} remembered={remembered} soldSearchUrl={soldSearchUrl(offer)} priceSiteUrl={priceSiteUrl(offer)}
       initial={assessment ? { stock_count: String(assessment.stock_count ?? ''), condition: assessment.condition ?? '' } : {}} />
@@ -146,7 +159,15 @@ export default async function OfferPage({ params, searchParams }) {
         </section>
       ) : assessment ? (
         <section className={`verdict tone-${head.tone}`} aria-labelledby="verdict-heading">
-          <p className="verdict-kicker">{assessment.confirmed === false ? 'CardScout suggests' : 'Confirmed verdict'}</p>
+          {owner && (
+            <div className="owner-said" role="status">
+              <span className="hint">The owner decided · {fmtDate(owner.created_at)}</span>
+              <strong className="big">{decisionText(owner)}</strong>
+              {owner.reason && <p>&ldquo;{owner.reason}&rdquo;</p>}
+              <span className="hint">{comparisonText(owner)}</span>
+            </div>
+          )}
+          <p className="verdict-kicker">{owner ? 'CardScout suggested' : assessment.confirmed === false ? 'CardScout suggests' : 'Confirmed verdict'}</p>
           <h2 id="verdict-heading" className="verdict-title">{head.title}</h2>
           {scale && (
             <div className="ladder" aria-label="Price comparison">
@@ -182,15 +203,36 @@ export default async function OfferPage({ params, searchParams }) {
               <ul>{holds.map((h, i) => <li key={i}>{h}</li>)}</ul>
             </div>
           )}
+          {askOwner && (
+            <div className="owner-ask">
+              <h3>Owner&apos;s decision</h3>
+              <OwnerDecision offerId={offer.id} remembered={remembered} suggestedOffer={suggestedOffer} />
+            </div>
+          )}
+          {similar.length > 0 && (
+            <div className="before">
+              <h3>The owner decided before</h3>
+              <ul className="past-decisions">
+                {similar.map((d) => (
+                  <li key={d.id} className={`d-${d.decision}`}>
+                    <strong>{decisionText(d)}</strong> · <Link href={`/offers/${d.offer_id}`}>{d.player}, {[d.year, d.set_name, d.variant].filter(Boolean).join(' ')}</Link>
+                    {d.asking_price_aud != null && <span className="hint"> · asked {aud.format(Number(d.asking_price_aud))}</span>}
+                    {d.reason && <div>&ldquo;{d.reason}&rdquo;</div>}
+                    <div className="hint">{d.why} · {fmtDate(d.created_at)}{compareWithSuggestion(d) === 'differed' ? ` · ${comparisonText(d)}` : ''}</div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
           <h3>What makes this card worth it (or not)</h3>
           <dl className="why">
             {why.map((w) => <div key={w.label}><dt>{w.label}</dt><dd>{w.text}</dd></div>)}
           </dl>
           <div className="seller-line">
-            <p className="hint">For the seller: &ldquo;{sellerWords(assessment, asking)}&rdquo;</p>
-            <CopyButton text={sellerWords(assessment, asking)} />
+            <p className="hint">For the seller: &ldquo;{seller}&rdquo;</p>
+            <CopyButton text={seller} />
           </div>
-          {assessment.confirmed === false && (
+          {assessment.confirmed === false && !owner && !askOwner && (
             <form action={confirmVerdict} className="verdict-actions">
               <input type="hidden" name="offer_id" value={offer.id} />
               <input type="hidden" name="assessment_id" value={assessment.id} />
@@ -378,6 +420,12 @@ export default async function OfferPage({ params, searchParams }) {
                 <h3 className="sub-h">Run the AI again</h3>
                 <p className="hint">For example after changing the stock or condition, or to update the price fairness score.</p>
                 {agentPanel}
+                {!askOwner && (
+                  <>
+                    <h3 className="sub-h">{owner ? 'The owner changes his decision' : 'The owner decides differently'}</h3>
+                    <OwnerDecision offerId={offer.id} remembered={remembered} suggestedOffer={suggestedOffer} current={owner} />
+                  </>
+                )}
                 <h3 className="sub-h">Or change an answer or score yourself</h3>
               </>
             )}

@@ -6,6 +6,8 @@ import { getOffer, OFFER_ID_PATTERN, setOfferVariant } from '@/lib/offers';
 import { priceForPick } from '@/lib/price-guide';
 import { effectiveRates, getAudRates } from '@/lib/fx.mjs';
 import { getLatestAssessment } from '@/lib/assessments';
+import { saveOwnerDecision } from '@/lib/owner-decisions';
+import { validateDecision } from '@/lib/owner-decisions.mjs';
 
 import { getSettings } from '@/lib/settings';
 import { confirmAssessment, createAssessment } from '@/lib/assessments';
@@ -181,4 +183,29 @@ export async function pickVersion(formData) {
   await verdictFromRun(offerId, { ...run, price_guide: saved }, run.id, values);
   revalidatePath('/');
   back(guide.found ? 'picked' : 'picked-no-price');
+}
+
+// The owner decides a card: Buy, Don't buy or Offer $X, with an optional reason. It is saved next to
+// CardScout's suggestion, so future cards can show it. Nothing is bought.
+export async function decideOffer(_prev, formData) {
+  const offerId = field(formData, 'offer_id');
+  const values = { decision: field(formData, 'decision'), offer_aud: field(formData, 'offer_aud'), reason: field(formData, 'reason') };
+  const fail = (message, errors = {}) => ({ status: 'error', message, errors, values, attempt: Date.now() });
+  if (!OFFER_ID_PATTERN.test(offerId)) return fail('This offer could not be found.');
+  const jar = await cookies();
+  if (!isRemembered(jar)) {
+    if (!passcodeOk(formData.get('passcode'))) return fail('Wrong team passcode. Nothing was saved.', { passcode: 'Wrong team passcode.' });
+    jar.set(AGENT_COOKIE, agentToken(), cookieOptions());
+  }
+  const { offer } = await getOffer(offerId);
+  if (!offer) return fail('This offer could not be found.');
+  const check = validateDecision(values, offer.asking_price_aud);
+  if (!check.ok) return fail('Please fix the highlighted part.', check.errors);
+  const { assessment } = await getLatestAssessment(offerId);
+  const { error } = await saveOwnerDecision(offer, assessment, check.input);
+  if (error) return fail(error);
+  revalidatePath('/');
+  revalidatePath('/review');
+  revalidatePath(`/offers/${offerId}`);
+  redirect(`/offers/${offerId}?msg=decided`);
 }
