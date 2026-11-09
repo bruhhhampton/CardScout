@@ -435,3 +435,14 @@ Result: kept
 What changed: Luka's full file (34,644 players, same player IDs) has defending ratings that were never uploaded. A one-off file, players_defending.csv, carries tackling, marking, heading, positioning, jumping, strength, stamina, work rate, crossing and concentration; database/015 adds the columns and copies them in. Find players now has "Tackling at least" and "Heading at least", sorts by tackling, heading or marking, shows tackling and heading for defenders, a Defending section on profiles and More like him for defenders. Goalkeepers stay unrated because the file has no goalkeeping ratings. Before database/015 is run, everything else keeps working and a defender rating search says what to run. The data's source and rights are recorded in SPEC.md.
 Validation performed and outcome: Data check: all 10 ratings present and between 1 and 20 for all 34,644 players. New tests for defender and goalkeeper filters, More like him and scout wording. Browser test before and after the database step: before, a clear message and attackers still worked; after, the right defender was found and a weaker one left out. All tests and build passed.
 Commit: Defending ratings for Find players
+
+## Entry 41
+Date/time: 9 Nov 2026
+Member: Daniel
+Slice: 31 - Player names that differ between sources
+Tool: Claude (instead of Copilot)
+Exact prompt: "alright, i reckon the next step is fixing the name, owner decision loop and then its ui fix"
+Result: kept
+What changed: Cards and price lookups no longer need the exact same spelling. Names count as the same player when they have the same words in any order, ignoring accents, hyphens, apostrophes and Jr/Junior ("Min-hyeok Yang" = "Yang Min-hyeok" = "Yang Minhyeok"; "Vinícius Júnior" = "Vinicius Jr"). A shorter card name that is part of his full name ("Rodrygo" for "Rodrygo Silva de Goes") is never counted automatically; it is listed under "May be his: check the name". If a search finds nothing, it tries the name the other way round. The same rule applies to offer price lookups and the version list.
+Validation performed and outcome: New tests for name order, hyphens, accents, Jr, apostrophes, an extra word and a shared family name (not matched), short names (maybe only), and offer price lookups. Browser test: "Min-hyeok Yang" found his "Yang Min-hyeok" cards; "Rodrygo Silva de Goes" showed "Rodrygo" only under "May be his". All tests and build passed.
+Commit: Match player names across sources

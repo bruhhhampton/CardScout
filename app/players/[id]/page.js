@@ -18,7 +18,7 @@ export default async function PlayerPage({ params }) {
     if (error) return <main><p className="error" role="alert">{error}</p></main>;
     notFound();
   }
-  const { cards, reason } = await playerCards(player.name);
+  const { cards, maybe = [], reason } = await playerCards(player.name);
 
   return (
     <main>
@@ -33,7 +33,7 @@ export default async function PlayerPage({ params }) {
       <section className="panel" aria-labelledby="cards-heading">
         <h2 id="cards-heading">His cards</h2>
         {reason && <p className="hint">{reason}</p>}
-        {!reason && cards.length === 0 && <p className="empty">SportsCardsPro lists no cards under this exact name.</p>}
+        {!reason && cards.length === 0 && maybe.length === 0 && <p className="empty">SportsCardsPro lists no cards under this name, in either order.</p>}
         {cards.length > 0 && (
           <ul className="card-rows">
             {cards.map((c) => (
@@ -54,6 +54,20 @@ export default async function PlayerPage({ params }) {
               </li>
             ))}
           </ul>
+        )}
+        {maybe.length > 0 && (
+          <>
+            <h3 className="sub-h">May be his: check the name</h3>
+            <p className="hint">Listed under a shorter name that is part of his. Make sure it is the same player before assessing.</p>
+            <ul className="card-rows">
+              {maybe.map((c) => (
+                <li key={c.id}>
+                  <span><strong>{c.player}</strong><span className="hint">{c.title}</span></span>
+                  <Link href={scanLink(c)} className="chip">Assess this card</Link>
+                </li>
+              ))}
+            </ul>
+          </>
         )}
         <p className="hint">Best first. 🔥 Hot: his most-sold cards, with at least 20 sold a year on SportsCardsPro. ⭐ Rookie year: his first season, which collectors want most. Assessing a card checks his real form and the owner&apos;s rules before anything is bought.</p>
       </section>

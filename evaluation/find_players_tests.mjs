@@ -72,3 +72,28 @@ assert.equal(list[1].variant, 'Base');
 }
 
 console.log('Find players checks passed (no database or network used).');
+
+// Name matching between Football Manager and SportsCardsPro.
+{
+  const { samePlayer, maybePlayer, maybeCardsForPlayer, cardsForPlayer: cards } = await import('../lib/price-guide.mjs');
+  assert.ok(samePlayer('Min-hyeok Yang', 'Yang Min-hyeok'), 'name order');
+  assert.ok(samePlayer('Yang Min-hyeok', 'Yang Minhyeok'), 'hyphen');
+  assert.ok(samePlayer('Vinícius Júnior', 'Vinicius Jr'), 'accents and Jr');
+  assert.ok(samePlayer('Kylian Mbappé', 'Kylian Mbappe'));
+  assert.ok(samePlayer("N'Golo Kanté", 'NGolo Kante'), 'apostrophe');
+  assert.ok(!samePlayer('Lamine Yamal', 'Lamine Yamal Jr'), 'an extra word is a different name');
+  assert.ok(!samePlayer('Kim Ji-soo', 'Kim Min-jae'), 'shared family name is not enough');
+  assert.ok(maybePlayer('Rodrygo Silva de Goes', 'Rodrygo'), 'short name inside full name');
+  assert.ok(maybePlayer('Rodrygo Silva de Goes', 'Silva') && !samePlayer('Rodrygo Silva de Goes', 'Silva'), 'a common word alone goes to "may be his", never counted as his');
+  const products = [
+    { id: 1, 'product-name': 'Yang Min-hyeok #150', 'console-name': 'Soccer Cards 2024 Topps Chrome UEFA Club' },
+    { id: 2, 'product-name': 'Rodrygo #20', 'console-name': 'Soccer Cards 2022 Topps Chrome UEFA Club' },
+  ];
+  assert.deepEqual(cards(products, 'Min-hyeok Yang').map((c) => c.id), ['1']);
+  assert.deepEqual(cards(products, 'Rodrygo Silva de Goes').map((c) => c.id), [], 'a short name is never counted automatically');
+  assert.deepEqual(maybeCardsForPlayer(products, 'Rodrygo Silva de Goes').map((c) => c.id), ['2']);
+  // Price lookups for offers use the same rule.
+  const { pickProduct } = await import('../lib/price-guide.mjs');
+  assert.equal(pickProduct(products, { player: 'Min-hyeok Yang', card_number: '150', year: '2024', variant: 'Base' }).product?.id, 1);
+  console.log('Name matching checks passed.');
+}
