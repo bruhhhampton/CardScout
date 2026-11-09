@@ -2,7 +2,4 @@
   "compilerOptions": {
     "paths": { "@/*": ["./*"] }
   }
-}rm ']].mjs'
-git add -A
-git commit -m "Remove outdated baseUrl and a stray file"
-git push
+}
