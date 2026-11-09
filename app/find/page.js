@@ -29,7 +29,7 @@ export default async function FindPage({ searchParams }) {
   const scouting = isScoutRunning(scout);
   const remembered = isRemembered(jar);
   const MSG = {
-    passcode: 'Wrong team passcode. Nothing was started.', running: 'The scout is already working.', limit: 'The scout has run its daily limit. Try again tomorrow.',
+    passcode: 'Wrong team passcode. Nothing was started.', limit: 'The scout has run its daily limit. Try again tomorrow.',
     'skip-failed': 'Not saved. Run database/014_scout_memory.sql in Supabase first.',
     setup: missing ? 'Run database/013_scout_runs.sql in Supabase first.' : 'The scout could not be started. Try again.', off: 'Scouting is not set up on the server yet.',
   };
@@ -63,7 +63,9 @@ export default async function FindPage({ searchParams }) {
             )}
             <details className="extra">
               <summary>Focus on something (optional)</summary>
-              <input name="focus" aria-label="Focus" placeholder="for example Korean players, or strikers" maxLength={120} />
+              <div className="field">
+                <input name="focus" aria-label="Focus" placeholder="for example Korean players, or strikers" maxLength={120} />
+              </div>
             </details>
             <button type="submit" className="primary wide">{scout?.status === 'completed' ? 'Scout again' : 'Scout for me'}</button>
           </form>

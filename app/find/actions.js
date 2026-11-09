@@ -22,7 +22,8 @@ export async function scoutForMe(formData) {
     jar.set(AGENT_COOKIE, agentToken(), cookieOptions());
   }
   const { run } = await getLatestScout();
-  if (isScoutRunning(run)) back('running');
+  // Already scouting (a double tap, or a second phone): just show the run in progress.
+  if (isScoutRunning(run)) redirect('/find');
   if ((await countScoutsLastDay()) >= SCOUT_DAILY_LIMIT) back('limit');
   const focus = String(formData.get('focus') ?? '').trim().slice(0, 120);
   const started = await startScout(MODEL);

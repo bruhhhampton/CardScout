@@ -457,3 +457,14 @@ Result: kept
 What changed: Picking a position in "Search yourself" now changes the rating boxes and the "Best first by" list. Striker: finishing, off the ball, pace. Winger or attacker: pace, dribbling, crossing. Midfielder: passing, vision, work rate. Defender: tackling, jumping reach, positioning. Any position: pace and finishing. Goalkeeper: no rating boxes (the data has no goalkeeping ratings), youngest first. Results show the same three ratings that were searched on. "More like him" and the Scout for me agent use the same ratings for each position, and a rating that does not belong to the chosen position is ignored.
 Validation performed and outcome: Tests for every position's boxes, sort list, ignored ratings and More like him. Browser test on a phone-sized screen: each position showed its own three boxes; a defender search with tackling 12+, jumping reach 12+ and nationality Korea found Kim Ji-soo (tackling 15, jumping reach 15, positioning 13) and nothing scrolled sideways. All tests and build passed.
 Commit: Position-specific ratings in Find players
+
+## Entry 43
+Date/time: 9 Nov 2026
+Member: Daniel
+Slice: 30 - Scout message that stayed after the scout finished
+Tool: Claude (instead of Copilot)
+Exact prompt: screenshot of Find showing "The scout is already working." above a finished scout
+Result: kept
+What changed: Tapping Scout for me while a scout was already running put "already working" in the page address, so the red message stayed on screen even after the scout finished. Now a second tap just shows the scout in progress, with no red message. The focus box is styled like the other boxes.
+Validation performed and outcome: Build passed. Live check: tap Scout for me twice quickly; the second tap shows "Scouting…" and no red message stays once the picks appear.
+Commit: Fix stale "scout is already working" message
