@@ -18,7 +18,7 @@ assert.equal(positionLabel('GK'), 'Goalkeeper');
 
 // Filters: only valid values get through.
 const f = readFilters({ position: 'striker', max_age: '21', min_pace: '15', min_finishing: '99', nationality: ' Korea ', club: '', sort: 'pace' });
-assert.deepEqual(f, { position: 'striker', maxAge: 21, minPace: 15, minFinishing: null, minTackling: null, minHeading: null, nationality: 'Korea', club: '', sort: 'pace' });
+assert.deepEqual(f, { position: 'striker', maxAge: 21, mins: { pace: 15 }, nationality: 'Korea', club: '', sort: 'pace' });
 assert.equal(readFilters({ position: 'drop table', sort: 'x' }).position, '');
 assert.equal(readFilters({ sort: 'x' }).sort, 'pace');
 assert.equal(hasFilters(readFilters({})), false);
@@ -52,26 +52,34 @@ assert.equal(list[1].variant, 'Base');
   assert.ok(rankCards([{ id: 'y', year: '2024', sales_per_year: 8 }]).every((x) => !x.hot), 'too few sales, no fire');
 }
 
-// Defenders use tackling and heading; goalkeepers have no ratings in the data.
+// Each position has its own ratings (Luka's suggestion).
 {
-  const d = readFilters({ position: 'defender', min_tackling: '14', min_heading: '13', sort: 'tackling', nationality: 'Korea' });
-  assert.equal(d.minTackling, 14);
-  assert.equal(d.minHeading, 13);
+  const { shownRatings, sortsFor, similarQuery } = await import('../lib/find-players.mjs');
+  assert.deepEqual(shownRatings('striker'), ['finishing', 'off_the_ball', 'pace']);
+  assert.deepEqual(shownRatings('attacker'), ['pace', 'dribbling', 'crossing']);
+  assert.deepEqual(shownRatings('midfielder'), ['passing', 'vision', 'work_rate']);
+  assert.deepEqual(shownRatings('defender'), ['tackling', 'jumping', 'positioning']);
+  assert.deepEqual(shownRatings('keeper'), []);
+  assert.deepEqual(sortsFor('defender'), ['tackling', 'jumping', 'positioning', 'age_snapshot']);
+  // A centre-back search: tackling, jumping reach and positioning, best tackling first by default.
+  const d = readFilters({ position: 'defender', min_tackling: '14', min_jumping: '15', min_positioning: '13', nationality: 'Korea' });
+  assert.deepEqual(d.mins, { tackling: 14, jumping: 15, positioning: 13 });
   assert.equal(d.sort, 'tackling');
+  // Ratings that do not suit the position are ignored (finishing for a defender, anything for a keeper).
+  assert.deepEqual(readFilters({ position: 'defender', min_finishing: '15', min_vision: '15' }).mins, {});
   const k = readFilters({ position: 'keeper', min_tackling: '14', min_pace: '15', sort: 'pace' });
-  assert.equal(k.minTackling, null);
-  assert.equal(k.minPace, null);
+  assert.deepEqual(k.mins, {});
   assert.equal(k.sort, 'age_snapshot');
-  assert.equal(hasFilters(readFilters({ min_heading: '15' })), true);
-}
-{
-  const { similarQuery } = await import('../lib/find-players.mjs');
-  assert.equal(similarQuery({ position: 'D C', age_snapshot: 20, pace: 12, tackling: 15, heading: 14 }), 'position=defender&max_age=21&min_tackling=13&min_heading=12&sort=tackling');
-  assert.equal(similarQuery({ position: 'D C', age_snapshot: 20, pace: 12 }), 'position=defender&max_age=21&sort=age_snapshot', 'before the defending ratings are loaded');
+  // Each position's default order.
+  assert.equal(readFilters({ position: 'striker' }).sort, 'finishing');
+  assert.equal(readFilters({ position: 'midfielder', sort: 'heading' }).sort, 'passing', 'a rating that does not suit the position cannot be the order');
+  assert.equal(hasFilters(readFilters({ position: 'midfielder', min_passing: '15' })), true);
+  // More like him uses the same three ratings.
+  assert.equal(similarQuery({ position: 'D C', age_snapshot: 20, tackling: 15, jumping: 16, positioning: 14 }), 'position=defender&max_age=21&min_tackling=13&min_jumping=14&min_positioning=12&sort=tackling');
+  assert.equal(similarQuery({ position: 'M C', age_snapshot: 19, passing: 15, vision: 14, work_rate: 16 }), 'position=midfielder&max_age=20&min_passing=13&min_vision=12&min_work_rate=14&sort=passing');
+  assert.equal(similarQuery({ position: 'D C', age_snapshot: 20 }), 'position=defender&max_age=21&sort=age_snapshot', 'no ratings loaded');
   assert.equal(similarQuery({ position: 'GK', age_snapshot: 19 }), 'position=keeper&max_age=20&sort=age_snapshot');
 }
-
-console.log('Find players checks passed (no database or network used).');
 
 // Name matching between Football Manager and SportsCardsPro.
 {
@@ -97,3 +105,5 @@ console.log('Find players checks passed (no database or network used).');
   assert.equal(pickProduct(products, { player: 'Min-hyeok Yang', card_number: '150', year: '2024', variant: 'Base' }).product?.id, 1);
   console.log('Name matching checks passed.');
 }
+
+console.log('Find players checks passed (no database or network used).');

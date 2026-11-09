@@ -6,12 +6,12 @@ import { isRemembered } from '@/lib/agent-access';
 import { scoutForMe } from './actions';
 import PickCard from './pick-card';
 import RunWatcher from '../offers/[id]/run-watcher';
-import { hasFilters, isDefensive, POSITIONS, positionLabel, ratingsApply, readFilters, SORTS } from '@/lib/find-players.mjs';
+import { hasFilters, positionLabel, RATINGS, ratingsApply, readFilters, shownRatings } from '@/lib/find-players.mjs';
+import SearchForm from './search-form';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Find players · CardScout' };
 
-const RATING = Array.from({ length: 20 }, (_, i) => 20 - i);
 
 // Find promising players the shop cannot watch, using Football Manager game ratings.
 // The ratings only shortlist players. Real stats and real prices decide whether to buy.
@@ -83,65 +83,7 @@ export default async function FindPage({ searchParams }) {
 
       <details className="fold" open={searched || undefined}>
         <summary>Search yourself</summary>
-      <form method="get" className="panel find-form">
-        <div className="find-grid">
-          <div className="field">
-            <label htmlFor="position">Position</label>
-            <select id="position" name="position" defaultValue={f.position}>
-              <option value="">Any</option>
-              {Object.entries(POSITIONS).map(([k, v]) => <option key={k} value={k}>{v.label}{ratingsApply(k) ? '' : ' (age, nationality, club only)'}</option>)}
-            </select>
-          </div>
-          <div className="field">
-            <label htmlFor="max_age">Age up to</label>
-            <input id="max_age" name="max_age" inputMode="numeric" defaultValue={f.maxAge ?? ''} placeholder="for example 21" />
-          </div>
-          <div className="field">
-            <label htmlFor="min_pace">Pace at least</label>
-            <select id="min_pace" name="min_pace" defaultValue={f.minPace ?? ''}>
-              <option value="">Any</option>
-              {RATING.map((n) => <option key={n} value={n}>{n} / 20</option>)}
-            </select>
-          </div>
-          <div className="field">
-            <label htmlFor="min_finishing">Finishing at least</label>
-            <select id="min_finishing" name="min_finishing" defaultValue={f.minFinishing ?? ''}>
-              <option value="">Any</option>
-              {RATING.map((n) => <option key={n} value={n}>{n} / 20</option>)}
-            </select>
-          </div>
-          <div className="field">
-            <label htmlFor="min_tackling">Tackling at least</label>
-            <select id="min_tackling" name="min_tackling" defaultValue={f.minTackling ?? ''}>
-              <option value="">Any</option>
-              {RATING.map((n) => <option key={n} value={n}>{n} / 20</option>)}
-            </select>
-          </div>
-          <div className="field">
-            <label htmlFor="min_heading">Heading at least</label>
-            <select id="min_heading" name="min_heading" defaultValue={f.minHeading ?? ''}>
-              <option value="">Any</option>
-              {RATING.map((n) => <option key={n} value={n}>{n} / 20</option>)}
-            </select>
-          </div>
-          <div className="field">
-            <label htmlFor="nationality">Nationality</label>
-            <input id="nationality" name="nationality" defaultValue={f.nationality} placeholder="for example Korea" />
-          </div>
-          <div className="field">
-            <label htmlFor="club">Club</label>
-            <input id="club" name="club" defaultValue={f.club} placeholder="for example Ulsan" />
-          </div>
-          <div className="field">
-            <label htmlFor="sort">Best first by</label>
-            <select id="sort" name="sort" defaultValue={f.sort}>
-              {Object.entries(SORTS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-            </select>
-          </div>
-        </div>
-        <button type="submit" className="primary wide">Find players</button>
-        <p className="hint">Game ratings from a Football Manager 26 snapshot, out of 20. There are no goalkeeping ratings, so goalkeepers are searched by age, nationality and club only. Use tackling and heading for defenders. They help find players and are never used in a verdict. Clubs and ages may be out of date.</p>
-      </form>
+      <SearchForm f={f} />
       </details>
 
       {error && <p className="error" role="alert">{error}</p>}
@@ -159,17 +101,11 @@ export default async function FindPage({ searchParams }) {
                     <span className="hint">{p.age_snapshot} · {p.club_snapshot} · {p.nationality}</span>
                     <span className="hint">{positionLabel(p.position)}</span>
                   </span>
-                  {ratingsApply(f.position) && (isDefensive(f.position) && p.tackling != null ? (
+                  {ratingsApply(f.position) && (
                     <span className="offer-side ratings-mini">
-                      <span>Tackling <strong>{p.tackling}</strong></span>
-                      <span>Heading <strong>{p.heading}</strong></span>
+                      {shownRatings(f.position).map((r) => <span key={r}>{RATINGS[r]} <strong>{p[r] ?? '–'}</strong></span>)}
                     </span>
-                  ) : (
-                    <span className="offer-side ratings-mini">
-                      <span>Pace <strong>{p.pace}</strong></span>
-                      <span>Finishing <strong>{p.finishing}</strong></span>
-                    </span>
-                  ))}
+                  )}
                 </Link>
               </li>
             ))}

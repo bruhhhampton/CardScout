@@ -26,7 +26,7 @@ assert.equal(r.picks[1].checked, false, 'no real source means unchecked');
 assert.equal(r.picks[1].card, null, "another player's card is not attached");
 assert.equal(checkPicks({}, { players, cards, known }).picks.length, 0);
 
-assert.equal(similarQuery({ position: 'AM R', age_snapshot: 18, pace: 17, finishing: 12 }), 'position=attacker&max_age=19&min_pace=15&min_finishing=10&sort=pace');
+assert.equal(similarQuery({ position: 'AM R', age_snapshot: 18, pace: 17, dribbling: 14, crossing: 12 }), 'position=attacker&max_age=19&min_pace=15&min_dribbling=12&min_crossing=10&sort=pace');
 assert.equal(similarQuery({ position: 'D C', age_snapshot: 20, pace: 12, finishing: 5, tackling: 16 }), 'position=defender&max_age=21&min_tackling=14&sort=tackling');
 console.log('Scout checks passed (no AI, database or network used).');
 
@@ -52,5 +52,6 @@ console.log('Scout checks passed (no AI, database or network used).');
   assert.equal(runFocus({ trace: [{ type: 'plan', focus: 'Korean players', angle: null }] }), 'Focus asked for: Korean players');
   assert.equal(runFocus({ summary: 'Older run.', trace: [] }), 'Older run.');
   assert.equal(describeSearch({ position: 'defender', max_age: 21, min_tackling: 14, sort: 'tackling' }), 'defenders, up to 21, tackling 14+ (best tackling first)');
+  assert.equal(describeSearch({ position: 'defender', min_jumping: 15, min_positioning: 13, sort: 'jumping' }), 'defenders, jumping reach 15+, positioning 13+ (best jumping reach first)');
   console.log('Past scouts checks passed.');
 }

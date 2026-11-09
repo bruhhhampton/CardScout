@@ -446,3 +446,14 @@ Result: kept
 What changed: Cards and price lookups no longer need the exact same spelling. Names count as the same player when they have the same words in any order, ignoring accents, hyphens, apostrophes and Jr/Junior ("Min-hyeok Yang" = "Yang Min-hyeok" = "Yang Minhyeok"; "Vinícius Júnior" = "Vinicius Jr"). A shorter card name that is part of his full name ("Rodrygo" for "Rodrygo Silva de Goes") is never counted automatically; it is listed under "May be his: check the name". If a search finds nothing, it tries the name the other way round. The same rule applies to offer price lookups and the version list.
 Validation performed and outcome: New tests for name order, hyphens, accents, Jr, apostrophes, an extra word and a shared family name (not matched), short names (maybe only), and offer price lookups. Browser test: "Min-hyeok Yang" found his "Yang Min-hyeok" cards; "Rodrygo Silva de Goes" showed "Rodrygo" only under "May be his". All tests and build passed.
 Commit: Match player names across sources
+
+## Entry 42
+Date/time: 9 Nov 2026
+Member: Daniel (Luka's suggestion)
+Slice: 32 - Each position has its own ratings in Search yourself
+Tool: Claude (instead of Copilot)
+Exact prompt: Luka: position-specific attributes for the search; Daniel: "implement after cardscout names right?" then "I have added cardscoutnames into the github workspace."
+Result: kept
+What changed: Picking a position in "Search yourself" now changes the rating boxes and the "Best first by" list. Striker: finishing, off the ball, pace. Winger or attacker: pace, dribbling, crossing. Midfielder: passing, vision, work rate. Defender: tackling, jumping reach, positioning. Any position: pace and finishing. Goalkeeper: no rating boxes (the data has no goalkeeping ratings), youngest first. Results show the same three ratings that were searched on. "More like him" and the Scout for me agent use the same ratings for each position, and a rating that does not belong to the chosen position is ignored.
+Validation performed and outcome: Tests for every position's boxes, sort list, ignored ratings and More like him. Browser test on a phone-sized screen: each position showed its own three boxes; a defender search with tackling 12+, jumping reach 12+ and nationality Korea found Kim Ji-soo (tackling 15, jumping reach 15, positioning 13) and nothing scrolled sideways. All tests and build passed.
+Commit: Position-specific ratings in Find players
