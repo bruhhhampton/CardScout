@@ -567,3 +567,14 @@ Result: kept
 What changed: Looks and wording only. Scan: the front frame is the main thing on the screen with one line of instruction, the back photo is a slim control under it, the button reads "Identify card" and typing a card in is a quiet "Enter manually" line. The tick character and the repeated "Scan a card" heading are gone. Find: after a search the filters fold down to one line (for example "Defender or wing-back · Age up to 21") with Edit, so results start near the top; Edit opens the same form with the choices kept. No rules, calculations, actions or database calls changed.
 Validation performed and outcome: All 10 test files and the build passed. The browser run-through has 24 checks (added: filters fold to one line after a search, Edit opens them with the choice kept) and all passed, as did the 11 photo checks, which scan a card through the new Scan screen. Nothing scrolled sideways.
 Commit: Charcoal design system: Scan and Find filters
+
+## Entry 53
+Date/time: 10 Nov 2026
+Member: Daniel
+Slice: 40 - Charcoal design system, stage 5 (Settings)
+Tool: Claude (instead of Copilot)
+Exact prompt: "let's do stage 5"
+Result: kept
+What changed: Looks and layout only. The Settings page is a short list of groups (Learned decisions, Shop, Which cards I buy, Spending and stock, Pricing, Evidence needed, Overseas sales, weights and thresholds). Each shows how many settings it holds and folds open when tapped. Every setting is still there and all groups stay in one form, so one Save still saves everything. If a saved value is wrong, its group opens by itself and shows the error. The three long notices are now one line each, and the exchange-rate note sits inside Overseas sales. No setting, check or saved value changed.
+Validation performed and outcome: All 10 test files and the build passed. The browser run-through has 29 checks (added: eight folded groups, a group opens, Save works with every group folded, groups fold again after a save, an error opens its group) and all passed, as did the 11 photo checks. Nothing scrolled sideways.
+Commit: Charcoal design system: Settings groups

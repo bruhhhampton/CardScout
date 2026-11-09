@@ -987,3 +987,25 @@ main > details.fold > summary { color: var(--muted); font-weight: 400 !important
 .filters > summary::before { content: none; }
 .filters > summary { margin: 0; min-height: 44px; align-items: center; font-weight: 400 !important; }
 .filters > summary > span:first-child { flex: 1; text-align: left; }
+
+/* ---------- Charcoal, stage 5: Settings as a grouped list ---------- */
+.group { border-bottom: 1px solid var(--line); }
+main > .hint + .group, .settings-form > .group:first-child { border-top: 1px solid var(--line); }
+main > .group.learned { margin-top: 10px; }
+.settings-form { gap: 0; display: block; }
+.group > summary { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 0; min-height: 48px; cursor: pointer; list-style: none; font-weight: 600 !important; }
+.group > summary::-webkit-details-marker { display: none; }
+.group > summary::before { content: none; }
+.group > summary > span:first-child { min-width: 0; overflow-wrap: anywhere; }
+.group-count { flex: none; color: var(--muted); font-weight: 400 !important; font-variant-numeric: tabular-nums; }
+.group-count::after { content: '›'; margin-left: 10px; display: inline-block; }
+.group[open] > summary .group-count::after { transform: rotate(90deg); }
+.group > fieldset { border: 0; margin: 0; padding: 0 0 16px; min-width: 0; }
+.group > .hint, .group > fieldset > .hint { margin: 0 0 10px; }
+.group .past-decisions { margin: 0 0 8px; }
+.group > .empty { margin: 0 0 12px; }
+.save-row { margin-top: 16px; }
+main > .hint { margin: 6px 0; }
+details.group > summary::before, details.group[open] > summary::before, details.filters[open] > summary::before { content: none; }
+summary, .tabbtn, .offer-row { -webkit-tap-highlight-color: transparent; }
+.group[open] > summary { margin-bottom: 4px; }

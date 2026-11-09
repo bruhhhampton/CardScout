@@ -4,7 +4,8 @@ import { useActionState, useEffect, useRef } from 'react';
 import { SETTINGS_SECTIONS, SETTINGS_FIELDS } from '@/lib/settings-fields';
 import { saveSettingsAction } from './actions';
 
-export default function SettingsForm({ initial }) {
+// Each group of settings folds open. All groups stay in one form, so Save still saves everything at once.
+export default function SettingsForm({ initial, notes = {} }) {
   const [state, formAction, pending] = useActionState(saveSettingsAction, {
     status: 'idle', message: '', errors: {}, values: initial, attempt: 0,
   });
@@ -27,9 +28,12 @@ export default function SettingsForm({ initial }) {
       )}
       <form ref={formRef} action={formAction} key={state.attempt} noValidate className="settings-form">
         {SETTINGS_SECTIONS.map((sec) => (
-          <fieldset key={sec.title} className="panel">
-            <legend>{sec.title}</legend>
+          <details key={sec.title} className="group" open={sec.fields.some((f) => state.errors[f.name])}>
+            <summary><span>{sec.title}</span><span className="group-count">{sec.fields.length}</span></summary>
+          <fieldset>
+            <legend className="sr-only">{sec.title}</legend>
             {sec.intro && <p className="hint">{sec.intro}</p>}
+            {notes[sec.title] && <p className="hint">{notes[sec.title]}</p>}
             <div className="offer-form">
               {sec.fields.map((f) => {
                 const err = state.errors[f.name];
@@ -64,8 +68,9 @@ export default function SettingsForm({ initial }) {
               })}
             </div>
           </fieldset>
+          </details>
         ))}
-        <div className="offer-form"><button type="submit" disabled={pending}>{pending ? 'Saving…' : 'Save settings'}</button></div>
+        <div className="offer-form save-row"><button type="submit" disabled={pending}>{pending ? 'Saving…' : 'Save settings'}</button></div>
       </form>
     </>
   );
