@@ -45,6 +45,10 @@ export default function OwnerDecision({ offerId, remembered = false, suggestedOf
           placeholder="for example he's just broken into the first team" defaultValue={state.values?.reason ?? ''} />
         {err.reason && <span className="field-error">{err.reason}</span>}
       </div>
+      <label className="learn-toggle">
+        <input type="checkbox" name="learn" defaultChecked={state.values?.learn ?? true} />
+        <span>Do the same next time for this card<br /><span className="hint">Same player, year, set and version. You can remove it in Settings.</span></span>
+      </label>
       {!remembered && (
         <div className={`field${err.passcode ? ' has-error' : ''}`}>
           <label htmlFor="owner_passcode">Team passcode</label>

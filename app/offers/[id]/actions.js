@@ -6,8 +6,8 @@ import { getOffer, OFFER_ID_PATTERN, setOfferVariant } from '@/lib/offers';
 import { priceForPick } from '@/lib/price-guide';
 import { effectiveRates, getAudRates } from '@/lib/fx.mjs';
 import { getLatestAssessment } from '@/lib/assessments';
-import { saveOwnerDecision } from '@/lib/owner-decisions';
-import { validateDecision } from '@/lib/owner-decisions.mjs';
+import { applyToWaiting, learnedRuleForOffer, saveOwnerDecision } from '@/lib/owner-decisions';
+import { applyLearned, rulesHit, validateDecision } from '@/lib/owner-decisions.mjs';
 
 import { getSettings } from '@/lib/settings';
 import { confirmAssessment, createAssessment } from '@/lib/assessments';
@@ -47,7 +47,8 @@ export async function assessOffer(_prev, formData) {
   const { run: latest } = await getLatestRun(offerId);
   const guide = latest?.status === 'completed' && latest.price_guide?.found ? latest.price_guide.value_aud : null;
   const perYear = latest?.status === 'completed' && latest.price_guide?.found ? latest.price_guide.sales_per_year ?? null : null;
-  const result = assess(offer, { ...check.input, price_guide_aud: guide, sales_per_year: perYear }, settings);
+  const result = applyLearned(assess(offer, { ...check.input, price_guide_aud: guide, sales_per_year: perYear }, settings),
+    offer, check.input, settings, await learnedRuleForOffer(offer));
   const runId = field(formData, 'agent_run_id');
   const agentRunId = OFFER_ID_PATTERN.test(runId) ? runId : null;
   const { error } = await createAssessment(offerId, check.input, result, settings, agentRunId);
@@ -189,7 +190,7 @@ export async function pickVersion(formData) {
 // CardScout's suggestion, so future cards can show it. Nothing is bought.
 export async function decideOffer(_prev, formData) {
   const offerId = field(formData, 'offer_id');
-  const values = { decision: field(formData, 'decision'), offer_aud: field(formData, 'offer_aud'), reason: field(formData, 'reason') };
+  const values = { decision: field(formData, 'decision'), offer_aud: field(formData, 'offer_aud'), reason: field(formData, 'reason'), learn: formData.get('learn') === 'on' };
   const fail = (message, errors = {}) => ({ status: 'error', message, errors, values, attempt: Date.now() });
   if (!OFFER_ID_PATTERN.test(offerId)) return fail('This offer could not be found.');
   const jar = await cookies();
@@ -201,11 +202,14 @@ export async function decideOffer(_prev, formData) {
   if (!offer) return fail('This offer could not be found.');
   const check = validateDecision(values, offer.asking_price_aud);
   if (!check.ok) return fail('Please fix the highlighted part.', check.errors);
-  const { assessment } = await getLatestAssessment(offerId);
-  const { error } = await saveOwnerDecision(offer, assessment, check.input);
+  const [{ assessment }, { settings }] = await Promise.all([getLatestAssessment(offerId), getSettings()]);
+  const learn = formData.get('learn') === 'on';
+  const { error, saved } = await saveOwnerDecision(offer, assessment, { ...check.input, learn }, rulesHit(offer, assessment, settings));
   if (error) return fail(error);
+  // Same card still waiting for him: work it out again with what he just decided.
+  const changed = learn && settings ? await applyToWaiting(saved, settings) : 0;
   revalidatePath('/');
   revalidatePath('/review');
   revalidatePath(`/offers/${offerId}`);
-  redirect(`/offers/${offerId}?msg=decided`);
+  redirect(`/offers/${offerId}?msg=decided${changed ? `&also=${changed}` : ''}`);
 }

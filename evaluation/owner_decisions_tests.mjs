@@ -10,7 +10,7 @@ assert.equal(validateDecision({ decision: 'sell' }, 100).ok, false);
 assert.equal(validateDecision({ decision: 'offer', offer_aud: '' }, 100).errors.offer_aud, 'Enter how much to offer.');
 assert.equal(validateDecision({ decision: 'offer', offer_aud: 'abc' }, 100).ok, false);
 assert.equal(validateDecision({ decision: 'offer', offer_aud: '80.555' }, 100).ok, false);
-assert.match(validateDecision({ decision: 'offer', offer_aud: '100' }, 100).errors.offer_aud, /Tap Buy instead/);
+assert.match(validateDecision({ decision: 'offer', offer_aud: '100' }, 100).errors.offer_aud, /choose Buy/);
 assert.deepEqual(validateDecision({ decision: 'offer', offer_aud: '$80' }, 100).input, { decision: 'offer', offer_aud: 80, reason: '' });
 // An offer amount is ignored for Buy and Don't buy.
 assert.equal(validateDecision({ decision: 'dont_buy', offer_aud: '50' }, 100).input.offer_aud, null);
@@ -60,3 +60,87 @@ assert.equal(ai[0].owner_reason, '(no reason given)');
 assert.ok(!('id' in ai[0]) && !('offer_id' in ai[0]));
 
 console.log('Owner decision tests passed.');
+
+// ---------------------------------------------------------------------------
+// Learning from the owner
+import { applyLearned, blockedBy, learnedCap, learnedList, learnedRuleFor, ruleSuggestions, rulesHit, sameCard } from '../lib/owner-decisions.mjs';
+
+const S = { staff_limit_aud: 150, max_copies: 2, excluded_sets: '', base_rule: 'decline', rookie_only: true, updated_at: '2026-11-01T00:00:00Z' };
+const yamal = { id: 'y2', player: 'Lamine Yamal', year: 2023, set_name: 'Topps Chrome', variant: 'Base', asking_price_aud: 45 };
+const okInput = { condition: 'acceptable', stock_count: 0, first_team: 'yes' };
+const declined = { outcome: 'decline', reasons: ["Base card: your setting is to not buy them"], offer_ceiling_aud: 42.94 };
+const offer35 = { id: 'r1', offer_id: 'y1', created_at: '2026-11-09T03:00:00Z', decision: 'offer', offer_aud: 35, reason: 'small offer only', player: 'Yamal Lamine', year: 2023, set_name: 'topps chrome', variant: 'base', asking_price_aud: 48 };
+
+// Same card: any name order, case; year, set and version must match.
+assert.ok(sameCard(yamal, offer35));
+assert.ok(!sameCard({ ...yamal, year: 2024 }, offer35), 'another year is another card');
+assert.ok(!sameCard({ ...yamal, variant: 'Refractor' }, offer35));
+assert.ok(!sameCard({ ...yamal, set_name: 'Topps Chrome UCC' }, offer35));
+assert.ok(sameCard({ ...yamal, variant: '' }, offer35), 'an empty version counts as base');
+
+// Which decision applies
+assert.equal(learnedRuleFor(yamal, [offer35])?.id, 'r1');
+assert.equal(learnedRuleFor(yamal, [{ ...offer35, learn: false }]), null, 'the owner turned "do the same" off');
+assert.equal(learnedRuleFor(yamal, [{ ...offer35, forgotten_at: '2026-11-10' }]), null, 'removed in Settings');
+assert.equal(learnedRuleFor({ ...yamal, id: 'y1' }, [offer35]), null, 'never learns from the card itself');
+// His latest decision on that earlier card wins, even if it was not learned.
+assert.equal(learnedRuleFor(yamal, [offer35, { ...offer35, id: 'r2', created_at: '2026-11-09T04:00:00Z', learn: false }]), null);
+const newer = { ...offer35, id: 'r3', offer_id: 'y3', created_at: '2026-11-09T05:00:00Z', decision: 'buy', offer_aud: null, asking_price_aud: 50 };
+assert.equal(learnedRuleFor(yamal, [offer35, newer]).id, 'r3', 'newest decision on the same card');
+
+// Offer $35 learned: asking 45 -> counteroffer up to 35; asking 30 -> OK to buy.
+let r = applyLearned(declined, yamal, okInput, S, offer35);
+assert.equal(r.outcome, 'counteroffer');
+assert.equal(r.offer_ceiling_aud, 35);
+assert.equal(r.learned_from, 'r1');
+assert.match(r.reasons[0], /^Learned from the owner: he offered \$35\.00 for this card on 9 Nov \("small offer only"\)/);
+r = applyLearned(declined, { ...yamal, asking_price_aud: 30 }, okInput, S, offer35);
+assert.equal(r.outcome, 'eligible');
+assert.equal(r.reasons.at(-1), 'A person must still confirm before buying');
+// Buy at $50 learned: never pays more than he did.
+assert.equal(applyLearned(declined, { ...yamal, asking_price_aud: 50 }, okInput, S, newer).outcome, 'eligible');
+r = applyLearned(declined, { ...yamal, asking_price_aud: 60 }, okInput, S, newer);
+assert.equal(r.outcome, 'counteroffer');
+assert.equal(r.offer_ceiling_aud, 50);
+// Never over the staff limit.
+assert.equal(learnedCap({ decision: 'buy', asking_price_aud: 400 }, S), 150);
+r = applyLearned(declined, { ...yamal, asking_price_aud: 300 }, okInput, S, { ...newer, asking_price_aud: 400 });
+assert.equal(r.outcome, 'counteroffer');
+assert.equal(r.offer_ceiling_aud, 150);
+// Don't buy learned
+r = applyLearned({ outcome: 'owner_review', reasons: ['x'] }, yamal, okInput, S, { ...offer35, decision: 'dont_buy', offer_aud: null, reason: '' });
+assert.equal(r.outcome, 'decline');
+assert.deepEqual(r.reasons, ["Learned from the owner: he said don't buy this card on 9 Nov"]);
+// Facts about this copy stop it, and the reason says why.
+for (const [input, s2, o] of [[{ ...okInput, condition: 'unsure' }, S, yamal], [{ ...okInput, condition: 'defect' }, S, yamal],
+  [{ ...okInput, stock_count: 2 }, S, yamal], [{ ...okInput, first_team: 'no' }, S, yamal], [okInput, { ...S, excluded_sets: 'Topps Chrome' }, yamal]]) {
+  const res = applyLearned(declined, o, input, s2, offer35);
+  assert.equal(res.outcome, 'decline');
+  assert.ok(!res.learned_from);
+  assert.match(res.reasons.at(-1), /was not used because/);
+  assert.ok(blockedBy(input, s2, o));
+}
+assert.equal(applyLearned(declined, yamal, okInput, S, null), declined, 'nothing learned: unchanged');
+
+// Settings list: one per card, newest, active only.
+const list = learnedList([offer35, newer, { ...offer35, id: 'r9', offer_id: 'y9', player: 'Someone Else', forgotten_at: 'x' }]);
+assert.deepEqual(list.map((d) => d.id), ['r3']);
+
+// Which rules flagged the card when he decided.
+assert.deepEqual(rulesHit(yamal, { condition: 'acceptable', rookie_card: 'no' }, S), ['base_rule', 'rookie_only']);
+assert.deepEqual(rulesHit(yamal, null, S), []);
+
+// Suggest changing a rule after 3 decisions against it since Settings were last saved.
+const against = (i, extra = {}) => ({ id: `s${i}`, offer_id: `o${i}`, created_at: `2026-11-0${i + 2}T00:00:00Z`, decision: 'buy', rules_hit: ['base_rule'], ...extra });
+assert.deepEqual(ruleSuggestions([against(1), against(2)], S), []);
+const sug = ruleSuggestions([against(1), against(2), against(3)], S);
+assert.equal(sug.length, 1);
+assert.equal(sug[0].rule, 'base_rule');
+assert.deepEqual(sug[0].change, { base_rule: 'ask', label: 'Ask me about them instead' });
+assert.match(sug[0].text, /3 base cards that your rule turns away/);
+assert.equal(ruleSuggestions([against(1), against(2), against(3)], { ...S, base_rule: 'ask' })[0].change.base_rule, 'allow');
+assert.deepEqual(ruleSuggestions([against(1), against(2), against(3)], { ...S, base_rule: 'allow' }), [], 'rule already off');
+assert.deepEqual(ruleSuggestions([against(1), against(2), against(3, { decision: 'dont_buy' })], S), [], 'only buys and offers count');
+assert.deepEqual(ruleSuggestions([against(1), against(2), against(3)], { ...S, updated_at: '2026-11-08T00:00:00Z' }), [], 'saving Settings resets the count');
+
+console.log('Learning tests passed.');

@@ -77,7 +77,10 @@ export default async function OfferPage({ params, searchParams }) {
   }
   if (!offer) notFound();
 
-  const message = MESSAGES[sp?.msg];
+  const also = Number(sp?.also) || 0;
+  const message = sp?.msg === 'decided' && also
+    ? { kind: 'success', text: `Decision saved. CardScout also updated ${also} other card${also === 1 ? '' : 's'} waiting for you that ${also === 1 ? 'is' : 'are'} the same card. Nothing is bought.` }
+    : MESSAGES[sp?.msg];
   const remembered = isRemembered(await cookies());
   const [{ assessment }, { settings }, { run }, { decision: owner }, { decisions: past }] = await Promise.all([
     getLatestAssessment(offer.id),
@@ -88,6 +91,8 @@ export default async function OfferPage({ params, searchParams }) {
   ]);
   // How the owner decided cards like this one before.
   const similar = similarDecisions(offer, past);
+  // The owner's decision this verdict learned from, if any.
+  const learnedFrom = assessment?.learned_from ? past.find((d) => d.id === assessment.learned_from) ?? null : null;
   const fmtDate = (d) => new Date(d).toLocaleDateString('en-AU', { timeZone: 'Australia/Sydney', day: 'numeric', month: 'short' });
   const running = isRunning(run);
   const draft = run?.status === 'completed' ? run.draft : null;
@@ -169,6 +174,11 @@ export default async function OfferPage({ params, searchParams }) {
           )}
           <p className="verdict-kicker">{owner ? 'CardScout suggested' : assessment.confirmed === false ? 'CardScout suggests' : 'Confirmed verdict'}</p>
           <h2 id="verdict-heading" className="verdict-title">{head.title}</h2>
+          {learnedFrom && (
+            <p className="learned-note">
+              Learned from the owner: {decisionText(learnedFrom)} on {fmtDate(learnedFrom.created_at)}{learnedFrom.reason ? `, "${learnedFrom.reason}"` : ''}. <Link href="/settings#learned">Change in Settings</Link>
+            </p>
+          )}
           {scale && (
             <div className="ladder" aria-label="Price comparison">
               <div className="ladder-line" aria-hidden="true">
@@ -209,11 +219,11 @@ export default async function OfferPage({ params, searchParams }) {
               <OwnerDecision offerId={offer.id} remembered={remembered} suggestedOffer={suggestedOffer} />
             </div>
           )}
-          {similar.length > 0 && (
+          {similar.filter((d) => d.id !== learnedFrom?.id).length > 0 && (
             <div className="before">
               <h3>The owner decided before</h3>
               <ul className="past-decisions">
-                {similar.map((d) => (
+                {similar.filter((d) => d.id !== learnedFrom?.id).map((d) => (
                   <li key={d.id} className={`d-${d.decision}`}>
                     <strong>{decisionText(d)}</strong> · <Link href={`/offers/${d.offer_id}`}>{d.player}, {[d.year, d.set_name, d.variant].filter(Boolean).join(' ')}</Link>
                     {d.asking_price_aud != null && <span className="hint"> · asked {aud.format(Number(d.asking_price_aud))}</span>}

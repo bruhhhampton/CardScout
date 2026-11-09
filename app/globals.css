@@ -486,3 +486,11 @@ button.wide { width: 100%; }
 .past-decisions .d-buy { border-left-color: var(--tone-eligible); }
 .past-decisions .d-dont_buy { border-left-color: var(--tone-decline); }
 .past-decisions .d-offer { border-left-color: var(--tone-counteroffer); }
+.learn-toggle { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
+.learn-toggle input { width: 22px; height: 22px; margin-top: 2px; flex: none; accent-color: var(--accent); }
+.learned-note { margin: -8px 0 12px; font-size: 0.95rem; }
+.learned-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.learned-row form { flex: none; }
+.suggest { border-left: 4px solid var(--tone-counteroffer); }
+.suggest-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.suggest-actions button.primary { padding: 0 18px; }
