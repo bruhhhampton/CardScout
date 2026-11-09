@@ -12,6 +12,7 @@ const RULE_MSG = {
   locked: ['error', 'Enter the team passcode once on this phone (on any card) before changing rules.'],
 };
 import OfferList from '../offer-list';
+import Tabs from '../tabs';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Owner · CardScout' };
@@ -37,7 +38,6 @@ export default async function ReviewPage({ searchParams }) {
     <main>
       <header className="appbar">
         <h1>Owner</h1>
-        <p className="sub">Cards that need the owner&apos;s judgement. Tap one, then Buy, Don&apos;t buy or Offer.</p>
       </header>
       {error && <p className="error" role="alert">{error}</p>}
       {msg && <p className={msg[0]} role={msg[0] === 'error' ? 'alert' : 'status'}>{msg[1]}</p>}
@@ -55,31 +55,42 @@ export default async function ReviewPage({ searchParams }) {
           </div>
         </section>
       ))}
-      {!error && (
-        <>
-          <h2 className="list-heading">Waiting for you{waiting.length ? ` (${waiting.length})` : ''}</h2>
+      {/* Pending and Decided are two tabs. Both lists use the same row as Offers. */}
+      <Tabs label="Owner queue" initial="pending" tabs={[
+        { id: 'pending', label: `Pending${waiting.length ? ` (${waiting.length})` : ''}`, content: error ? null : (
           <OfferList offers={waiting} empty="Nothing waiting for the owner." />
-        </>
-      )}
-
-      <section aria-labelledby="decided-heading">
-        <h2 id="decided-heading" className="list-heading">Decided</h2>
-        {missing && <p className="error" role="alert">{SETUP_MESSAGE}</p>}
-        {!missing && latest.length === 0 && <p className="empty">No decisions yet. They show here with CardScout&apos;s suggestion next to each.</p>}
-        {settled.length > 0 && (
-          <p className="hint">On cards CardScout settled itself, the owner did the same on {agreed} of {settled.length}. Where he did not, check whether a rule in Settings should change.</p>
-        )}
-        <ul className="past-decisions">
-          {latest.slice(0, 20).map((d) => (
-            <li key={d.id} className={`d-${d.decision}`}>
-              <strong>{decisionText(d)}</strong> · <Link href={`/offers/${d.offer_id}`}>{d.player}, {[d.year, d.set_name, d.variant].filter(Boolean).join(' ')}</Link>
-              {d.asking_price_aud != null && <span className="hint"> · asked {aud.format(Number(d.asking_price_aud))}</span>}
-              {d.reason && <div>&ldquo;{d.reason}&rdquo;</div>}
-              <div className="hint">{day(d.created_at)} · {comparisonText(d)}</div>
-            </li>
-          ))}
-        </ul>
-      </section>
+        ) },
+        { id: 'decided', label: 'Decided', content: (
+          <section aria-label="Decided">
+            {missing && <p className="error" role="alert">{SETUP_MESSAGE}</p>}
+            {!missing && latest.length === 0 && <p className="empty">No decisions yet.</p>}
+            {settled.length > 0 && (
+              <p className="hint">On cards CardScout settled itself, the owner did the same on {agreed} of {settled.length}. Where he did not, check whether a rule in Settings should change.</p>
+            )}
+            {latest.length > 0 && (
+              <ul className="offer-rows">
+                {latest.slice(0, 20).map((d) => (
+                  <li key={d.id}>
+                    <Link href={`/offers/${d.offer_id}`} className={`offer-row sale-row d-${d.decision}`}>
+                      <span className="row-body">
+                        <strong className="row-title">{d.player}</strong>
+                        <span className="row-sub">{[d.year, d.set_name, d.variant].filter(Boolean).join(' · ')}</span>
+                        {d.reason && <span className="row-sub">&ldquo;{d.reason}&rdquo;</span>}
+                        <span className="row-sub">{comparisonText(d)}</span>
+                      </span>
+                      <span className="row-side">
+                        <span className="row-price">{decisionText(d)}</span>
+                        {d.asking_price_aud != null && <span className="row-date">Asked {aud.format(Number(d.asking_price_aud))}</span>}
+                        <span className="row-date">{day(d.created_at)}</span>
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        ) },
+      ]} />
     </main>
   );
 }

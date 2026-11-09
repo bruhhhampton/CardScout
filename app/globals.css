@@ -884,3 +884,23 @@ button.secondary, .chip, .copy-btn, .linkbtn.btn, .verdict-actions button:not(.p
 .photo-front.has-photo .photo-text { background: rgb(16 17 19 / 0.82); }
 .photo-icon { color: var(--muted); }
 .identifying::after { color: var(--muted); }
+
+/* ---------- Charcoal, stage 2: Owner and Find use the Offers row ---------- */
+.appbar { margin: 10px 0 0; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.tabpanel > .offer-rows, .tabpanel > section > .offer-rows { border-top: 0; }
+.tabpanel { padding-top: 0; }
+.tabpanel > .empty, .tabpanel > section > .empty, .tabpanel > section > .hint { margin: 12px 0; }
+.tablist { margin-left: -16px; margin-right: -16px; padding: 0 16px; }
+/* Decided rows: the owner's decision takes the price slot, in its status colour. */
+.sale-row.d-buy .row-price { color: var(--tone-eligible); }
+.sale-row.d-offer .row-price { color: var(--tone-counteroffer); }
+.sale-row.d-dont_buy .row-price { color: var(--tone-decline); }
+/* Player rows: ratings sit in the fixed right column. */
+.player-row .ratings-mini { display: grid; gap: 2px; color: var(--muted); font-size: var(--t-sm) !important; }
+.player-row .ratings-mini strong { color: var(--text); font-variant-numeric: tabular-nums; }
+/* Find: the search form and the scout sit flat on the page, no panel boxes. */
+.tabpanel > .panel, .tabpanel > form.panel { background: transparent; padding: 12px 0 0; border-radius: 0; }
+.past-link { font-weight: 400; }
+.suggest { background: var(--surface); }
+.tabbtn { -webkit-tap-highlight-color: transparent; }

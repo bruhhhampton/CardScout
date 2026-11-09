@@ -29,6 +29,9 @@ export default async function FindPage({ searchParams }) {
   const skippedIds = new Set(skips.map((s) => s.player_id));
   const scouting = isScoutRunning(scout);
   const remembered = isRemembered(jar);
+  // Search opens first. The Scout tab opens when a scout is running, has just finished or has a message to show.
+  const fresh = scout?.status === 'completed' && Date.now() - new Date(scout.created_at).getTime() < 15 * 60 * 1000;
+  const openScout = !searched && (scouting || fresh || Boolean(sp?.scout));
   const MSG = {
     passcode: 'Wrong team passcode. Nothing was started.', limit: 'The scout has run its daily limit. Try again tomorrow.',
     'skip-failed': 'Not saved. Run database/014_scout_memory.sql in Supabase first.',
@@ -40,15 +43,46 @@ export default async function FindPage({ searchParams }) {
   return (
     <main>
       <header className="appbar">
-        <h1>Find players</h1>
-        <p className="sub">Players worth watching in leagues the shop cannot follow.</p>
+        <h1>Find</h1>
       </header>
 
-      <Tabs label="How to find players" initial={searched ? 'search' : 'scout'} tabs={[
-        { id: 'scout', label: 'Scout for me', content: (
+      <Tabs label="How to find players" initial={openScout ? 'scout' : 'search'} tabs={[
+        { id: 'search', label: 'Search', content: (
+          <>
+      <SearchForm f={f} />
+
+      {error && <p className="error" role="alert">{error}</p>}
+      {searched && !error && (
+        <section aria-labelledby="results-heading">
+          <h2 id="results-heading" className="list-heading">{players.length ? `${players.length === 30 ? 'Top 30' : players.length} player${players.length === 1 ? '' : 's'}` : 'No players match'}</h2>
+          {players.length === 0 && <p className="empty">Try fewer filters or lower ratings.</p>}
+          {!ratingsApply(f.position) && players.length > 0 && <p className="hint">Youngest first. There are no goalkeeping ratings in the data, so none are shown.</p>}
+          <ul className="offer-rows">
+            {players.map((p) => (
+              <li key={p.player_id}>
+                <Link href={`/players/${p.player_id}`} className="offer-row sale-row player-row">
+                  <span className="row-body">
+                    <strong className="row-title">{p.name}</strong>
+                    <span className="row-sub">{p.age_snapshot} · {p.club_snapshot} · {p.nationality}</span>
+                    <span className="row-sub">{positionLabel(p.position)}</span>
+                  </span>
+                  {ratingsApply(f.position) && (
+                    <span className="row-side ratings-mini">
+                      {shownRatings(f.position).map((r) => <span key={r}>{RATINGS[r]} <strong>{p[r] ?? '–'}</strong></span>)}
+                    </span>
+                  )}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+          </>
+        ) },
+        { id: 'scout', label: 'Scout', content: (
       <section className="panel scout" aria-labelledby="scout-heading">
-        <h2 id="scout-heading">Scout for me</h2>
-        <p className="sub">One tap. CardScout looks for young players worth watching, checks their real form this season and finds their cards. Nothing is bought.</p>
+        <h2 id="scout-heading" className="sr-only">Scout</h2>
+        <p className="sub">Finds young players, checks their real form this season and lists their cards. Nothing is bought.</p>
         {note && <p className="error" role="alert">{note}</p>}
         {done && <p className="success" role="status">{done}</p>}
         {scouting ? (
@@ -85,38 +119,6 @@ export default async function FindPage({ searchParams }) {
         )}
         <p className="past-link"><Link href="/find/history">Past scouts →</Link></p>
       </section>
-        ) },
-        { id: 'search', label: 'Search yourself', content: (
-          <>
-      <SearchForm f={f} />
-
-      {error && <p className="error" role="alert">{error}</p>}
-      {searched && !error && (
-        <section aria-labelledby="results-heading">
-          <h2 id="results-heading" className="list-heading">{players.length ? `${players.length === 30 ? 'Top 30' : players.length} player${players.length === 1 ? '' : 's'}` : 'No players match'}</h2>
-          {players.length === 0 && <p className="empty">Try fewer filters or lower ratings.</p>}
-          {!ratingsApply(f.position) && players.length > 0 && <p className="hint">Youngest first. There are no goalkeeping ratings in the data, so none are shown.</p>}
-          <ul className="offer-rows">
-            {players.map((p) => (
-              <li key={p.player_id}>
-                <Link href={`/players/${p.player_id}`} className="offer-row">
-                  <span className="offer-main">
-                    <strong>{p.name}</strong>
-                    <span className="hint">{p.age_snapshot} · {p.club_snapshot} · {p.nationality}</span>
-                    <span className="hint">{positionLabel(p.position)}</span>
-                  </span>
-                  {ratingsApply(f.position) && (
-                    <span className="offer-side ratings-mini">
-                      {shownRatings(f.position).map((r) => <span key={r}>{RATINGS[r]} <strong>{p[r] ?? '–'}</strong></span>)}
-                    </span>
-                  )}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-          </>
         ) },
       ]} />
     </main>

@@ -534,3 +534,14 @@ Result: kept
 What changed: Looks only. The navy look is replaced by charcoal (canvas #101113, surface #1A1B1E, divider #2A2C30) with no background pattern. One typeface (Inter); the typewriter face is gone and small labels are 11px capitals. Status is coloured text: green OK to buy, blue Counteroffer, amber Ask the owner, red Don't buy, grey Not assessed. Offer rows have no boxes: the player, then year, set and number, then version and grade on the left (wrapping as needed), and the asking price, verdict and date in a fixed right-hand column. A thumbnail shows only when the offer has a photo. The Offers screen has a plain title with the count; the "Waiting for the owner" box and the floating Scan button were removed because the Owner and Scan tabs already do those jobs. Buttons have 6px corners; the confirm button is green, neutral actions are white and secondary actions are outlined. No rules, calculations, actions or database calls changed.
 Validation performed and outcome: All 10 test files and the build passed. The browser run-through (17 checks) and the photo run-through (11 checks) passed on a phone-sized screen and nothing scrolled sideways. The row was checked with a short name, a long set name, a numbered parallel, a graded four-figure card, a card with a photo and two near-identical cards of different versions.
 Commit: Charcoal design system: colours, type and offer rows
+
+## Entry 50
+Date/time: 10 Nov 2026
+Member: Daniel
+Slice: 37 - Charcoal design system, stage 2 (Owner and Find rows)
+Tool: Claude (instead of Copilot)
+Exact prompt: "Alright, proceed with stage 2"
+Result: kept
+What changed: Looks and layout only. The Owner screen has two tabs, Pending (with the count) and Decided, and both lists use the same row as Offers. A decided row shows the owner's decision in its status colour where the price sits, with the asking price and date under it, and his reason and what CardScout had suggested on the left. The Find screen opens on Search, with Scout as the second tab; the Scout tab opens by itself when a scout is running, has just finished or has a message. Player results use the same row, with the ratings in the right-hand column. The intro paragraphs on both screens were removed or cut to one line. No rules, calculations, actions or database calls changed.
+Validation performed and outcome: All 10 test files and the build passed. The browser run-through now has 20 checks (added: Search opens first, the Scout tab shows the scout form, the Pending tab lists cards, the Decided tab lists the decision) and all passed, as did the 11 photo checks. Nothing scrolled sideways.
+Commit: Charcoal design system: Owner and Find rows
