@@ -1,7 +1,7 @@
 // Player photo matching (lib/player-photo-match.mjs). No network or database used.
 // Run: node evaluation/player_photo_tests.mjs
 import assert from 'node:assert/strict';
-import { cleanName, isApiPhotoUrl, needsLookup, pickProfile, sameName, sameNation, searchTerms } from '../lib/player-photo-match.mjs';
+import { cleanName, clubTerms, isApiPhotoUrl, needsLookup, pickClubs, pickFromSquads, pickProfile, sameName, sameNation, searchTerms } from '../lib/player-photo-match.mjs';
 
 // Names: word order, hyphens, accents, initials
 assert.ok(sameName('Kim Ji-soo', 'Kim Ji-Soo'));
@@ -64,6 +64,20 @@ assert.equal(pickProfile(okon, [{ id: 1, name: 'I. Okon', age: 30, nationality: 
 assert.equal(pickProfile(okon, [{ id: 1, name: 'I. Okon', age: 21, nationality: 'Nigeria', photo: photo(1) }]).status, 'none', 'other nationality');
 assert.equal(pickProfile(okon, [{ id: 1, name: 'I. Okon', age: 21, nationality: 'South Africa', photo: 'https://example.com/1.png' }]).status, 'none', 'photo from elsewhere');
 assert.equal(pickProfile(okon, []).status, 'none');
+
+// Backup through the club's squad
+const team = (id, name, country = 'X') => ({ team: { id, name, country, national: false } });
+assert.deepEqual(pickClubs('Arsenal', [team(42, 'Arsenal'), team(1, 'Arsenal W'), team(2, 'Arsenal Tula')]), [42]);
+assert.deepEqual(pickClubs('Barcelona', [team(529, 'Barcelona'), team(3, 'Barcelona SC')]), [529]);
+assert.deepEqual(pickClubs('Juventus', [team(496, 'Juventus'), team(4, 'Juventus'), team(5, 'Juventus')]), [496, 4, 5]);
+assert.deepEqual(pickClubs('Como 1907', [team(895, 'Como')]), [895]);
+assert.deepEqual(pickClubs('Fussballclub RB Salzburg', [team(571, 'Red Bull Salzburg'), team(7, 'Salzburg')]), [571]);
+assert.deepEqual(pickClubs('RB Leipzig', [team(173, 'RB Leipzig')]), [173]);
+assert.deepEqual(clubTerms('AFC Ajax'), ['ajax']);
+const myles = { name: 'Myles Lewis-Skelly', nationality: 'England,Barbados', age_snapshot: 18 };
+assert.equal(pickFromSquads(myles, [[{ id: 1, name: 'M. Lewis-Skelly', age: 20, photo: photo(1) }, { id: 2, name: 'B. Saka', age: 25, photo: photo(2) }]]).profile.id, 1);
+assert.equal(pickFromSquads(myles, [[{ id: 1, name: 'M. Lewis-Skelly', age: 22, photo: photo(1) }]]).status, 'none', 'age too far off');
+assert.equal(pickFromSquads(myles, [[{ id: 1, name: 'M. Lewis-Skelly', age: 20, photo: photo(1) }], [{ id: 3, name: 'M. Lewis-Skelly', age: 19, photo: photo(3) }]]).status, 'unsure');
 
 // Photos only from API-Football's image server
 assert.ok(isApiPhotoUrl('https://media.api-sports.io/football/players/276.png'));

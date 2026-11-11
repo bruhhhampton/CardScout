@@ -38,7 +38,7 @@ const todo = ids.filter((id) => needsLookup(saved.get(id), Date.now(), recheck))
 console.log(`${ids.length} players picked by past scouts. ${ids.length - todo.length} already looked up. Looking up ${todo.length} now.\n`);
 if (Number.isFinite(left) && left < todo.length * 2) console.log(`Note: that may need up to ${todo.length * 2} requests. If it stops at the limit, run it again tomorrow.\n`);
 
-const { data: players } = await supabase.from('players').select('player_id, name, nationality, age_snapshot').in('player_id', todo);
+const { data: players } = await supabase.from('players').select('player_id, name, nationality, age_snapshot, club_snapshot').in('player_id', todo);
 const counts = { found: 0, none: 0, unsure: 0, placeholder: 0, skipped: 0 };
 for (const [i, p] of (players ?? []).entries()) {
   let row;
