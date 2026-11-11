@@ -1108,3 +1108,25 @@ main.signin { min-height: calc(100dvh - 60px); display: flex; flex-direction: co
 .signin-form .keep { margin-top: 4px; min-height: 40px; font-size: var(--t-sm) !important; color: var(--muted); }
 .signin-form .keep input { width: 16px; height: 16px; }
 .signin-foot { text-align: center; border-top: 0; }
+
+/* ---------- Clearer tabs, Learned from the owner, sign-in box (12 Nov 2026) ---------- */
+/* Tabs as one segmented control: three equal parts, the selected one filled, so it is obvious they are tabs. */
+.tablist { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 2px; padding: 2px; margin: 14px 0 0; background: var(--surface); border: 0; border-radius: 8px; }
+.tabbtn { min-height: 36px; border: 0 !important; border-radius: 6px; background: transparent; color: var(--muted); font-weight: 600 !important; font-size: var(--t-md) !important; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 0 8px; }
+.tabbtn.on { background: #2E3035; color: var(--text); }
+.tab-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--tone-counteroffer); display: inline-block; }
+.tabpanel { padding-top: 4px; }
+/* Learned from the owner, at the top of Details */
+.learning { padding: 12px 0; border-bottom: 1px solid var(--line); }
+.learning h3 { margin: 0 0 6px; font-size: var(--t-lg) !important; font-weight: 600 !important; letter-spacing: 0; color: var(--text); text-transform: none; }
+.learning h4 { margin: 12px 0 4px; font-size: var(--t-xs) !important; font-weight: 600 !important; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+.learning-used { margin: 0; }
+.learning-used strong { color: var(--tone-counteroffer); font-weight: 600 !important; }
+.learning .before { border-top: 0; padding: 0; }
+.to-details { margin: 8px 0; }
+.how-worked { margin: 12px 0; }
+/* Sign-in: the passcode box the same quiet style as other inputs, not a big filled block. */
+.signin-form input[type='password'] { height: 40px; background: transparent; padding: 0 12px; }
+.signin-form button { height: 40px; }
+.signin-mid { max-width: 300px; }
+.signin-form input[type='password']:focus, .signin-form input[type='password']:focus-visible { outline: none; border-color: var(--muted); }

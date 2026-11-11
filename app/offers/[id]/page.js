@@ -141,9 +141,11 @@ export default async function OfferPage({ params, searchParams }) {
     : [];
   const overridden = overriddenKeys.map((r) => RULE_WORDS[r]?.what).filter(Boolean);
   const exceptionNote = learnedFrom ? `Overridden by the owner's decision on ${fmtDate(learnedFrom.created_at)} (${decisionText(learnedFrom)}).` : '';
+  // The owner's decisions on similar cards (not this exact one), shown in Details.
+  const others = similar.filter((d) => d.id !== learnedFrom?.id);
   const conflict = overridden.length > 0 && (
     <p className="owner-exception" role="note">
-      <strong>Owner exception.</strong> The shop doesn&apos;t usually buy {overridden.join(' or ')}, but the owner chose &ldquo;{decisionText(learnedFrom)}&rdquo; for this exact card on {fmtDate(learnedFrom.created_at)}{learnedFrom.reason ? ` ("${learnedFrom.reason}")` : ''}. CardScout follows his decision. <Link href="/settings#learned">Remove it in Settings</Link>
+      <strong>Owner exception.</strong> The shop doesn&apos;t usually buy {overridden.join(' or ')}, but the owner chose &ldquo;{decisionText(learnedFrom)}&rdquo; for this exact card on {fmtDate(learnedFrom.created_at)}{learnedFrom.reason ? ` ("${learnedFrom.reason}")` : ''}. CardScout follows his decision. <Link href={`/offers/${offer.id}?tab=workings`}>See what it learned</Link>
     </p>
   );
   const why = assessment ? whyLines(assessment, offer, run) : [];
@@ -210,7 +212,7 @@ export default async function OfferPage({ params, searchParams }) {
         </div>
       )}
 
-      <Tabs label="This card" tabs={[
+      <Tabs label="This card" initial={sp?.tab === 'workings' ? 'workings' : undefined} tabs={[
         { id: 'decision', label: 'Decision', content: (
           <>
           {running ? (
@@ -271,20 +273,8 @@ export default async function OfferPage({ params, searchParams }) {
               <OwnerDecision offerId={offer.id} remembered={remembered} suggestedOffer={suggestedOffer} />
             </div>
           )}
-          {similar.filter((d) => d.id !== learnedFrom?.id).length > 0 && (
-            <div className="before">
-              <h3>Earlier owner decisions</h3>
-              <ul className="past-decisions">
-                {similar.filter((d) => d.id !== learnedFrom?.id).map((d) => (
-                  <li key={d.id} className={`d-${d.decision}`}>
-                    <strong>{decisionText(d)}</strong> · <Link href={`/offers/${d.offer_id}`}>{d.player}, {[d.year, d.set_name, d.variant].filter(Boolean).join(' ')}</Link>
-                    {d.asking_price_aud != null && <span className="hint"> · asked {aud.format(Number(d.asking_price_aud))}</span>}
-                    {d.reason && <div>&ldquo;{d.reason}&rdquo;</div>}
-                    <div className="hint">{d.why} · {fmtDate(d.created_at)}{compareWithSuggestion(d) === 'differed' ? ` · ${comparisonText(d)}` : ''}</div>
-                  </li>
-                ))}
-              </ul>
-            </div>
+          {others.length > 0 && (
+            <p className="hint to-details">The owner has decided {others.length} similar card{others.length === 1 ? '' : 's'} before. <Link href={`/offers/${offer.id}?tab=workings`}>See them in Details</Link></p>
           )}
           <h3>Assessment</h3>
           <dl className="why">
@@ -304,7 +294,34 @@ export default async function OfferPage({ params, searchParams }) {
       )}
           </>
         ) },
-        { id: 'workings', label: 'Details', content: draft ? (
+        { id: 'workings', label: learnedFrom || others.length ? <>Details<span className="tab-dot" aria-label="(includes what the owner taught CardScout)" /></> : 'Details', content: (
+          <>
+            {/* What CardScout learned from the owner, shown first so it is plain to see. */}
+            <section className="learning" aria-labelledby="learning-heading">
+              <h3 id="learning-heading">Learned from the owner</h3>
+              {learnedFrom ? (
+                <p className="learning-used"><strong>Used for this card.</strong> The owner chose &ldquo;{decisionText(learnedFrom)}&rdquo; for this exact card on {fmtDate(learnedFrom.created_at)}{learnedFrom.reason ? ` ("${learnedFrom.reason}")` : ''}, so CardScout follows that{overridden.length ? ` instead of the rule against ${overridden.join(' or ')}` : ''}. <Link href="/settings#learned">Remove it in Settings</Link></p>
+              ) : (
+                <p className="hint">No owner decision on this exact card yet. When the owner decides it, CardScout follows his decision the next time it comes in.</p>
+              )}
+              {others.length > 0 && (
+                <div className="before">
+                  <h4>The owner&apos;s decisions on similar cards</h4>
+                  <ul className="past-decisions">
+                    {others.map((d) => (
+                      <li key={d.id} className={`d-${d.decision}`}>
+                        <strong>{decisionText(d)}</strong> · <Link href={`/offers/${d.offer_id}`}>{d.player}, {[d.year, d.set_name, d.variant].filter(Boolean).join(' ')}</Link>
+                        {d.asking_price_aud != null && <span className="hint"> · asked {aud.format(Number(d.asking_price_aud))}</span>}
+                        {d.reason && <div>&ldquo;{d.reason}&rdquo;</div>}
+                        <div className="hint">{d.why} · {fmtDate(d.created_at)}{compareWithSuggestion(d) === 'differed' ? ` · ${comparisonText(d)}` : ''}</div>
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="hint">The AI sees these too, as background. Only a decision on the exact same card is followed automatically.</p>
+                </div>
+              )}
+            </section>
+            {draft ? (
             <div className="draft">
             <p className="hint">
               Drafted {new Date(run.created_at).toLocaleString('en-AU', { timeZone: 'Australia/Sydney' })} · {run.model} · {run.searches} search(es)
@@ -461,7 +478,11 @@ export default async function OfferPage({ params, searchParams }) {
             )}
             <p className="evidence-link"><Link href={`/offers/${offer.id}/evidence`}>All the evidence and what the AI did →</Link></p>
           </div>
-        ) : null },
+            ) : (
+              <p className="hint how-worked">No AI draft for this card yet, so there are no workings to show. Run the AI from Decision or Change.</p>
+            )}
+          </>
+        ) },
         { id: 'change', label: assessment ? 'Change' : 'Manual', content: settings ? (
           <div className="change">
             {assessment && !running && (
