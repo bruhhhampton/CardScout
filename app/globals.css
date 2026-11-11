@@ -1009,3 +1009,11 @@ main > .hint { margin: 6px 0; }
 details.group > summary::before, details.group[open] > summary::before, details.filters[open] > summary::before { content: none; }
 summary, .tabbtn, .offer-row { -webkit-tap-highlight-color: transparent; }
 .group[open] > summary { margin-bottom: 4px; }
+
+/* ---------- Player photo on the player page (12 Nov 2026) ---------- */
+.player-head.with-photo { display: grid; grid-template-columns: minmax(0, 1fr) 80px; gap: 12px; align-items: start; }
+.player-photo { margin: 4px 0 0; display: grid; gap: 4px; justify-items: end; }
+.player-photo img { width: 80px; height: 80px; object-fit: cover; border-radius: 6px; background: var(--surface); }
+.player-photo figcaption { font-size: var(--t-xs) !important; color: var(--muted); }
+.player-head.with-photo { grid-template-columns: minmax(0, 1fr) auto; }
+.player-photo figcaption { white-space: nowrap; }

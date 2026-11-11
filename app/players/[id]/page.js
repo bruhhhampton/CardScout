@@ -2,7 +2,9 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ATTRIBUTE_GROUPS, ATTRIBUTE_LABELS, DEFENDING_GROUP, getPlayer, PLAYER_ID_PATTERN } from '@/lib/players';
 import { positionLabel, similarQuery } from '@/lib/find-players.mjs';
+import { after } from 'next/server';
 import { playerCards } from '@/lib/price-guide';
+import { ensurePlayerPhoto } from '@/lib/player-photos';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Player · CardScout' };
@@ -18,16 +20,32 @@ export default async function PlayerPage({ params }) {
     if (error) return <main><p className="error" role="alert">{error}</p></main>;
     notFound();
   }
-  const { cards, maybe = [], reason } = await playerCards(player.name);
+  // The photo lookup runs alongside the cards. The page waits at most 4 seconds for it;
+  // a slow lookup still finishes in the background and the photo shows next time.
+  const photoLookup = ensurePlayerPhoto(player);
+  after(() => photoLookup);
+  const [{ cards, maybe = [], reason }, photo] = await Promise.all([
+    playerCards(player.name),
+    Promise.race([photoLookup, new Promise((r) => setTimeout(() => r(null), 4000))]),
+  ]);
 
   return (
     <main>
       <p className="back"><Link href="/find">← Find players</Link></p>
-      <header className="appbar">
-        <h1>{player.name}</h1>
-        <p className="sub">{positionLabel(player.position)}</p>
-        <p className="hint">{player.age_snapshot} · {player.club_snapshot} · {player.nationality} (from the game snapshot; may be out of date)</p>
-        <p><Link href={`/find?${similarQuery(player)}`} className="chip">More like him</Link></p>
+      <header className={`appbar player-head${photo?.status === 'found' ? ' with-photo' : ''}`}>
+        <div>
+          <h1>{player.name}</h1>
+          <p className="sub">{positionLabel(player.position)}</p>
+          <p className="hint">{player.age_snapshot} · {player.club_snapshot} · {player.nationality} (from the game snapshot; may be out of date)</p>
+          <p><Link href={`/find?${similarQuery(player)}`} className="chip">More like him</Link></p>
+        </div>
+        {/* Only when exactly one API-Football profile has the same name, nationality and age. */}
+        {photo?.status === 'found' && (
+          <figure className="player-photo">
+            <img src={`/player-photo/${player.player_id}`} alt={`${player.name}`} width="80" height="80" />
+            <figcaption>Photo: API-Football</figcaption>
+          </figure>
+        )}
       </header>
 
       <section className="panel" aria-labelledby="cards-heading">
