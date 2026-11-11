@@ -21,6 +21,7 @@ const TABS = [
 
 export default function BottomNav() {
   const path = usePathname() ?? '/';
+  if (path === '/signin') return null; // no tabs before signing in
   return (
     <nav className="tabbar" aria-label="Main">
       {TABS.map((t) => {

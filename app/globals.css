@@ -1084,3 +1084,27 @@ section.flat > h2 { font-size: var(--t-lg) !important; font-weight: 600 !importa
 .brand-o { width: 11px; height: 17px; }
 .appbar h1, .screen-head h1 { font-size: 15px !important; font-weight: 600 !important; letter-spacing: 0.01em; }
 .appbar.player-head h1 { font-size: var(--t-xl) !important; }
+
+/* ---------- Sign-in screen (12 Nov 2026) ---------- */
+main.signin { min-height: calc(100dvh - 60px); display: flex; flex-direction: column; padding-bottom: 0; }
+.signin-mid { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 24px 0; }
+.signin-line { color: var(--muted); text-align: center; margin: 0 0 28px; }
+.signin-form { display: grid; gap: 6px; }
+.signin-form label { font-size: var(--t-sm) !important; font-weight: 600 !important; color: var(--muted); }
+.signin-form input[type='password'] { height: 48px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--text); padding: 0 14px; font-size: 16px !important; }
+.signin-form .keep { display: flex; gap: 10px; align-items: center; margin-top: 10px; font-weight: 400 !important; font-size: var(--t-md) !important; min-height: 44px; }
+.signin-form .keep input { width: 20px; height: 20px; accent-color: #F2F3F5; }
+.signin-form button { margin-top: 10px; height: 48px; border: 0; border-radius: 6px; background: #F2F3F5; color: #101113; font-weight: 600 !important; font-size: 15px !important; }
+.signin-form button:disabled { opacity: 0.6; }
+.signin-foot { color: var(--muted); font-size: var(--t-sm) !important; padding: 16px 0 calc(16px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); }
+.signout { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; margin: 6px 0; }
+.signout .linkbtn { background: none; border: 0; padding: 0; color: var(--text); text-decoration: underline; text-underline-offset: 2px; font-size: var(--t-sm) !important; cursor: pointer; }
+.signin-form .field-error { font-size: var(--t-sm) !important; font-weight: 400 !important; margin: 2px 0 0; color: var(--tone-decline); }
+/* Sign-in, tighter: a narrower column in the upper part of the screen, controls the same height as the rest of the app. */
+.signin-mid { justify-content: flex-start; padding-top: 16vh; width: 100%; max-width: 320px; margin: 0 auto; }
+.signin-line { margin-bottom: 20px; }
+.signin-form input[type='password'] { height: 44px; }
+.signin-form button { height: 44px; font-size: var(--t-md) !important; margin-top: 6px; }
+.signin-form .keep { margin-top: 4px; min-height: 40px; font-size: var(--t-sm) !important; color: var(--muted); }
+.signin-form .keep input { width: 16px; height: 16px; }
+.signin-foot { text-align: center; border-top: 0; }
