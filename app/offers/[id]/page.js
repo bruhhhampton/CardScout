@@ -10,7 +10,7 @@ import AssessForm from './assess-form';
 import AgentPanel from './agent-panel';
 import { getLatestRun, isRunning } from '@/lib/agent-runs';
 import RunWatcher from './run-watcher';
-import { headline, holdUps, sellerWords, STATUS_WORDS, walkthrough, whyLines } from '@/lib/explain.mjs';
+import { applyOwnerException, headline, holdUps, sellerWords, STATUS_WORDS, walkthrough, whyLines } from '@/lib/explain.mjs';
 import CopyButton from './copy-button';
 import { cookies } from 'next/headers';
 import { versionLabels } from '@/lib/price-guide.mjs';
@@ -133,20 +133,23 @@ export default async function OfferPage({ params, searchParams }) {
   // The individual sold sales the server counted for this card (real records only).
   const soldSales = (run?.sales ?? []).filter((x) => x.accepted);
   const site = (u) => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return 'Sale'; } };
-  // A verdict that follows an earlier owner decision even though one of his don't-buy rules flags this card.
-  // Shown for review only: the logic is not changed here.
-  const overridden = learnedFrom && learnedFrom.decision !== 'dont_buy' && settings && assessment
-    ? rulesHit(offer, assessment, settings).filter((r) => r === 'rookie_only' || settings[r] === 'decline').map((r) => RULE_WORDS[r]?.what).filter(Boolean)
+  // Owner exception: the verdict follows the owner's earlier decision on this exact card, even though one of
+  // his don't-buy rules flags it. Agreed by the team (DECISIONS.md, 12 Nov 2026): his decision on the same card
+  // wins, capped at what he paid and the staff limit; set, condition, stock and first-team stops still win.
+  const overriddenKeys = learnedFrom && learnedFrom.decision !== 'dont_buy' && settings && assessment
+    ? rulesHit(offer, assessment, settings).filter((r) => r === 'rookie_only' || settings[r] === 'decline')
     : [];
+  const overridden = overriddenKeys.map((r) => RULE_WORDS[r]?.what).filter(Boolean);
+  const exceptionNote = learnedFrom ? `Overridden by the owner's decision on ${fmtDate(learnedFrom.created_at)} (${decisionText(learnedFrom)}).` : '';
   const conflict = overridden.length > 0 && (
-    <p className="conflict" role="note">
-      For review: your rule is not to buy {overridden.join(' or ')}. This recommendation follows the owner&apos;s earlier decision on this card instead.
+    <p className="owner-exception" role="note">
+      <strong>Owner exception.</strong> The shop doesn&apos;t usually buy {overridden.join(' or ')}, but the owner chose &ldquo;{decisionText(learnedFrom)}&rdquo; for this exact card on {fmtDate(learnedFrom.created_at)}{learnedFrom.reason ? ` ("${learnedFrom.reason}")` : ''}. CardScout follows his decision. <Link href="/settings#learned">Remove it in Settings</Link>
     </p>
   );
   const why = assessment ? whyLines(assessment, offer, run) : [];
   const holds = assessment ? holdUps(assessment) : [];
   // The four questions Cerf asks, with the sums, for staff to learn from.
-  const steps = assessment && !running ? walkthrough(assessment, run, offer, settings ?? {}) : [];
+  const steps = assessment && !running ? applyOwnerException(walkthrough(assessment, run, offer, settings ?? {}), overriddenKeys, exceptionNote) : [];
   // The owner's offer box starts at CardScout's highest offer, if it is below the asking price.
   const suggestedOffer = assessment?.offer_ceiling_aud != null && Number(assessment.offer_ceiling_aud) < asking ? String(Number(assessment.offer_ceiling_aud)) : null;
   const askOwner = assessment?.outcome === 'owner_review' && !owner;
@@ -198,7 +201,7 @@ export default async function OfferPage({ params, searchParams }) {
           )}
           <p className="verdict-kicker">{owner ? 'Recommendation was' : assessment.confirmed === false ? 'Recommendation' : 'Recorded decision'}</p>
           <h2 id="verdict-heading" className="verdict-title">{head.title}</h2>
-          {learnedFrom && (
+          {learnedFrom && !conflict && (
             <p className="learned-note">
               Based on the owner&apos;s earlier decision: {decisionText(learnedFrom)} on {fmtDate(learnedFrom.created_at)}{learnedFrom.reason ? `, "${learnedFrom.reason}"` : ''}. <Link href="/settings#learned">Change in Settings</Link>
             </p>
@@ -303,8 +306,6 @@ export default async function OfferPage({ params, searchParams }) {
         ) },
         { id: 'workings', label: 'Details', content: draft ? (
             <div className="draft">
-            {conflict}
-
             <p className="hint">
               Drafted {new Date(run.created_at).toLocaleString('en-AU', { timeZone: 'Australia/Sydney' })} · {run.model} · {run.searches} search(es)
             </p>
@@ -330,7 +331,7 @@ export default async function OfferPage({ params, searchParams }) {
                       <ul className="step-rows">
                         {st.rows.map((r) => (
                           <li key={r.label} className={`row-${r.status}`}>
-                            <span className="row-mark" aria-hidden="true">{{ pass: '✓', stop: '✕', check: '?', info: '·', score: '' }[r.status]}</span>
+                            <span className="row-mark" aria-hidden="true">{{ pass: '✓', stop: '✕', check: '?', info: '·', score: '', owner: '↺' }[r.status]}</span>
                             <div>
                               {r.status === 'score' ? (
                                 <>

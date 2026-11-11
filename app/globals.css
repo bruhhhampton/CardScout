@@ -1072,3 +1072,15 @@ section.flat > h2 { font-size: var(--t-lg) !important; font-weight: 600 !importa
 .choose-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
 .choose-actions .chip.quiet { background: transparent; color: var(--text); border-color: var(--line); }
 .player-photo figcaption a { color: var(--muted); }
+
+/* ---------- Owner exception, and page titles below the logo (12 Nov 2026) ---------- */
+.owner-exception { margin: 10px 0 0; color: var(--muted); font-size: var(--t-sm) !important; line-height: 1.5; }
+.owner-exception strong { color: var(--text); font-weight: 600 !important; }
+.owner-exception a { color: var(--muted); }
+.step-owner .step-chip, .row-owner .row-mark { color: var(--tone-counteroffer); }
+/* The CardScout wordmark is the largest text at the top; screen titles (Offers, Find, Scan, Owner, Settings)
+   sit under it at 15px. A player's name on his page stays large because it is that page's subject. */
+.brand span { font-size: 17px !important; }
+.brand-o { width: 11px; height: 17px; }
+.appbar h1, .screen-head h1 { font-size: 15px !important; font-weight: 600 !important; letter-spacing: 0.01em; }
+.appbar.player-head h1 { font-size: var(--t-xl) !important; }

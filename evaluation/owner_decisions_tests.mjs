@@ -144,3 +144,27 @@ assert.deepEqual(ruleSuggestions([against(1), against(2), against(3, { decision:
 assert.deepEqual(ruleSuggestions([against(1), against(2), against(3)], { ...S, updated_at: '2026-11-08T00:00:00Z' }), [], 'saving Settings resets the count');
 
 console.log('Learning tests passed.');
+
+// Owner exceptions in the walkthrough (lib/explain.mjs applyOwnerException), 12 Nov 2026.
+{
+  const { applyOwnerException } = await import('../lib/explain.mjs');
+  const assert = (await import('node:assert/strict')).default;
+  const steps = [{ key: 'rules', status: 'stop', rows: [
+    { label: 'Set', status: 'pass', text: 'ok' },
+    { label: 'Base card', status: 'stop', text: 'It is a base card.' },
+    { label: 'Stock', status: 'pass', text: 'ok' },
+  ] }, { key: 'worth', status: 'pass', rows: [] }];
+  const out = applyOwnerException(steps, ['base_rule'], 'Overridden by the owner.');
+  assert.equal(out[0].rows[1].status, 'owner', 'the overridden rule no longer stops');
+  assert.match(out[0].rows[1].text, /Overridden by the owner/);
+  assert.equal(out[0].status, 'owner', 'the step shows the exception');
+  assert.deepEqual(out[1], steps[1], 'other steps untouched');
+  // A stock stop is never overridden, so the step still stops.
+  const stockStop = [{ ...steps[0], rows: [...steps[0].rows.slice(0, 2), { label: 'Stock', status: 'stop', text: 'too many' }] }];
+  const out2 = applyOwnerException(stockStop, ['base_rule'], 'x');
+  assert.equal(out2[0].status, 'stop');
+  assert.equal(out2[0].rows[2].status, 'stop');
+  // Nothing overridden: unchanged.
+  assert.equal(applyOwnerException(steps, [], 'x'), steps);
+  console.log('Owner exception walkthrough checks passed.');
+}

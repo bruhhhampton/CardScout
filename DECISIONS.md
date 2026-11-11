@@ -44,3 +44,10 @@
 - Sold prices come from web search until an approved data source is found. Every sale needs a link the agent actually saw; the server checks and counts them.
 - Staff confirm stock, condition and every draft value before the plain-code rules run.
 - Team passcode and daily cap (default 30) because the link has no login. Web search costs about $10 per 1,000 searches plus tokens.
+
+## Owner exceptions (12 Nov 2026)
+- Decision: when the owner decides a card (Buy or Offer), CardScout follows that decision the next time the same card comes in, even if one of his "don't buy" rules (base cards, makers, expensive cards, defects, rookie cards only) flags it. This is how CardScout evolves from the owner's feedback, as the course feedback asked, rather than applying only static rules.
+- Limits: same card only (player, year, set and version); never above what the owner paid or the staff limit; the set, condition, stock and first-team checks still stop a card; a person still records every decision and nothing is bought automatically. The owner can remove any exception in Settings under Learned decisions.
+- From single decisions to rules: after the owner overrides the same rule 3 times, the Owner tab suggests changing the rule itself.
+- On screen: the card page says "Owner exception" with the date and his decision, and in Details the overridden rule reads "Overridden by the owner's decision" instead of "Stops here", so the recommendation and the explanation agree.
+- Considered and not chosen: making "don't buy" rules strict (the card would go back to the owner every time, so nothing would be learned). An expiry date on exceptions was discussed and left for later.
