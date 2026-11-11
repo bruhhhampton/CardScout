@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { cookies } from 'next/headers';
 import { findPlayers } from '@/lib/players';
 import { getLatestScout, getSkips, isScoutRunning } from '@/lib/scout-runs';
+import { playersWithPhotos } from '@/lib/player-photos';
 import { isRemembered } from '@/lib/agent-access';
 import { scoutForMe } from './actions';
 import PickCard from './pick-card';
@@ -28,6 +29,7 @@ export default async function FindPage({ searchParams }) {
   ]);
   const skippedIds = new Set(skips.map((s) => s.player_id));
   const scouting = isScoutRunning(scout);
+  const withPhoto = await playersWithPhotos((scout?.picks ?? []).map((p) => p.player_id));
   const remembered = isRemembered(jar);
   // Search opens first. The Scout tab opens when a scout is running, has just finished or has a message to show.
   const fresh = scout?.status === 'completed' && Date.now() - new Date(scout.created_at).getTime() < 15 * 60 * 1000;
@@ -119,7 +121,7 @@ export default async function FindPage({ searchParams }) {
             <p className="hint">Scouted {new Date(scout.created_at).toLocaleString('en-AU', { timeZone: 'Australia/Sydney', dateStyle: 'medium', timeStyle: 'short' })}. {scout.summary}</p>
             {scout.picks.length === 0 && <p className="empty">No players passed the real-form check this time. Try again with a focus.</p>}
             <ol className="picks">
-              {scout.picks.filter((p) => !skippedIds.has(p.player_id)).map((p) => <PickCard key={p.player_id} p={p} />)}
+              {scout.picks.filter((p) => !skippedIds.has(p.player_id)).map((p) => <PickCard key={p.player_id} p={p} photo={withPhoto.has(p.player_id)} />)}
             </ol>
           </>
         )}

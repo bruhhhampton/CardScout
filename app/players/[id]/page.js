@@ -31,7 +31,7 @@ export default async function PlayerPage({ params }) {
 
   return (
     <main>
-      <p className="back"><Link href="/find">← Find players</Link></p>
+      <p className="back"><Link href="/find">← Find</Link></p>
       <header className={`appbar player-head${photo?.status === 'found' ? ' with-photo' : ''}`}>
         <div>
           <h1>{player.name}</h1>
@@ -48,7 +48,7 @@ export default async function PlayerPage({ params }) {
         )}
       </header>
 
-      <section className="panel" aria-labelledby="cards-heading">
+      <section className="flat" aria-labelledby="cards-heading">
         <h2 id="cards-heading">His cards</h2>
         {reason && <p className="hint">{reason}</p>}
         {!reason && cards.length === 0 && maybe.length === 0 && <p className="empty">SportsCardsPro lists no cards under this name, in either order.</p>}
@@ -59,8 +59,8 @@ export default async function PlayerPage({ params }) {
                 <span>
                   {(c.hot || c.rookie_year) && (
                     <span className="card-tags">
-                      {c.hot && <span className="tag hot">🔥 Hot</span>}
-                      {c.rookie_year && <span className="tag rookie">⭐ Rookie year</span>}
+                      {c.hot && <span className="tag hot">Hot</span>}
+                      {c.rookie_year && <span className="tag rookie">Rookie year</span>}
                     </span>
                   )}
                   <strong>{c.title}</strong>
@@ -68,7 +68,7 @@ export default async function PlayerPage({ params }) {
                     <span className="hint">{[c.loose_usd != null && `About US$${c.loose_usd.toFixed(2)} ungraded`, c.sales_per_year != null && `${c.sales_per_year} sold a year`].filter(Boolean).join(' · ')}</span>
                   )}
                 </span>
-                <Link href={scanLink(c)} className="chip">Assess this card</Link>
+                <Link href={scanLink(c)} className="chip">Assess</Link>
               </li>
             ))}
           </ul>
@@ -81,16 +81,16 @@ export default async function PlayerPage({ params }) {
               {maybe.map((c) => (
                 <li key={c.id}>
                   <span><strong>{c.player}</strong><span className="hint">{c.title}</span></span>
-                  <Link href={scanLink(c)} className="chip">Assess this card</Link>
+                  <Link href={scanLink(c)} className="chip">Assess</Link>
                 </li>
               ))}
             </ul>
           </>
         )}
-        <p className="hint">Best first. 🔥 Hot: his most-sold cards, with at least 20 sold a year on SportsCardsPro. ⭐ Rookie year: his first season, which collectors want most. Assessing a card checks his real form and the owner&apos;s rules before anything is bought.</p>
+        <p className="hint">Best first. Hot: his most-sold cards, with at least 20 sold a year on SportsCardsPro. Rookie year: his first season, which collectors want most. Assessing a card checks his real form and the owner&apos;s rules before anything is bought.</p>
       </section>
 
-      <section className="panel" aria-labelledby="ratings-heading">
+      <section className="flat" aria-labelledby="ratings-heading">
         <h2 id="ratings-heading">Game ratings (for context only)</h2>
         {/^GK/i.test(String(player.position ?? '')) && (
           <p className="hint">There are no goalkeeping ratings (handling, reflexes) in the data, so judge him on his real form.</p>

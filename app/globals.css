@@ -1017,3 +1017,46 @@ summary, .tabbtn, .offer-row { -webkit-tap-highlight-color: transparent; }
 .player-photo figcaption { font-size: var(--t-xs) !important; color: var(--muted); }
 .player-head.with-photo { grid-template-columns: minmax(0, 1fr) auto; }
 .player-photo figcaption { white-space: nowrap; }
+
+/* ---------- Scout picks, Past scouts and the player page (12 Nov 2026) ---------- */
+/* Scout picks: a row like Offers, with a small photo only when there is one, and one line of small buttons. */
+.picks { list-style: none; margin: 0; padding: 0; display: block; }
+.pick { background: transparent; border-radius: 0; padding: 12px 0; border-bottom: 1px solid var(--line); display: block; }
+.pick:last-child { border-bottom: 0; }
+.pick.with-photo { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 12px; align-items: start; }
+.pick-photo { width: 44px; height: 44px; border-radius: 4px; object-fit: cover; background: var(--surface); }
+.pick-body { display: grid; gap: 2px; min-width: 0; }
+.pick-name { color: var(--text) !important; text-decoration: none !important; font-size: var(--t-lg) !important; font-weight: 600 !important; }
+.pick-why { margin: 4px 0 0; }
+.pick-body > .hint, .pick-body > .field-error { margin: 2px 0 0; }
+.pick-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.pick-actions form { margin: 0; }
+.pick-actions .chip, .card-rows .chip { min-height: 32px; padding: 0 10px; font-size: var(--t-sm) !important; font-weight: 600 !important; border-radius: 6px; display: inline-flex; align-items: center; }
+.pick-actions .chip:not(.quiet) { background: #F2F3F5; color: #101113; border-color: #F2F3F5; }
+.tabpanel .scout .picks { border-top: 1px solid var(--line); margin-top: 8px; }
+
+/* Past scouts: one folded line per run. */
+.scout-runs { list-style: none; margin: 8px 0 0; padding: 0; border-top: 1px solid var(--line); }
+.scout-run > summary { align-items: center; }
+.scout-run > summary > span:first-child { display: grid; gap: 2px; }
+.scout-run .run-when { font-size: var(--t-xs) !important; }
+.run-focus { font-weight: 600; }
+.scout-run[open] > summary { border-bottom: 0; }
+.how-searched { margin: 4px 0 12px; }
+.how-searched > summary { color: var(--muted); min-height: 36px; display: flex; align-items: center; cursor: pointer; font-weight: 400 !important; }
+.how-searched > summary::before { content: none; }
+.skips { margin-top: 20px; }
+.skips h2 { font-size: var(--t-lg) !important; font-weight: 600 !important; margin: 0 0 4px; }
+
+/* Player page: flat sections, card rows with a small Assess button, plain tags. */
+section.flat { margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--line); }
+section.flat > h2 { font-size: var(--t-lg) !important; font-weight: 600 !important; margin: 0 0 8px; }
+.card-rows { list-style: none; margin: 0; padding: 0; }
+.card-rows li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); background: transparent; border-radius: 0; }
+.card-rows li strong { display: block; font-weight: 600 !important; overflow-wrap: anywhere; }
+.card-tags { display: flex; gap: 8px; margin-bottom: 2px; }
+.tag, .tag.hot, .tag.rookie { background: transparent !important; padding: 0 !important; border: 0; font-size: var(--t-xs) !important; font-weight: 600 !important; text-transform: uppercase; letter-spacing: 0.05em; }
+.tag.hot { color: var(--tone-owner_review) !important; }
+.tag.rookie { color: var(--tone-counteroffer) !important; }
+.scout-runs { display: block; gap: 0; }
+.pick { border: 0; border-bottom: 1px solid var(--line); }

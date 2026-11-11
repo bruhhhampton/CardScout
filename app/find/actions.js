@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { MODEL } from '@/lib/agent';
 import { runScout } from '@/lib/scout';
+import { ensurePlayerPhotos } from '@/lib/player-photos';
 import { addSkip, removeSkip, countScoutsLastDay, finishScout, getLatestScout, isScoutRunning, startScout } from '@/lib/scout-runs';
 import { AGENT_COOKIE, agentToken, cookieOptions, isRemembered, passcodeOk } from '@/lib/agent-access';
 
@@ -31,6 +32,8 @@ export async function scoutForMe(formData) {
   after(async () => {
     const row = await runScout({ focus });
     await finishScout(started.id, row);
+    // Look up photos for the picks once, so Past scouts can show them.
+    await ensurePlayerPhotos((row.picks ?? []).map((p) => p.player_id));
   });
   revalidatePath('/find');
   back('started');
