@@ -5,6 +5,8 @@ import { positionLabel, similarQuery } from '@/lib/find-players.mjs';
 import { after } from 'next/server';
 import { playerCards } from '@/lib/price-guide';
 import { ensurePlayerPhoto } from '@/lib/player-photos';
+import { scannedCards } from '@/lib/photos';
+import { scanFor } from '@/lib/card-photo-match.mjs';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Player · CardScout' };
@@ -12,8 +14,9 @@ export const metadata = { title: 'Player · CardScout' };
 const scanLink = (c) => `/scan?${new URLSearchParams({ player: c.player, year: c.year, set_name: c.set_name, card_number: c.card_number, variant: c.variant })}`;
 
 // A player found in Find players: who he is (game ratings, for context only) and which of his cards exist.
-export default async function PlayerPage({ params }) {
+export default async function PlayerPage({ params, searchParams }) {
   const { id } = await params;
+  const sp = await searchParams;
   if (!PLAYER_ID_PATTERN.test(id)) notFound();
   const { player, error } = await getPlayer(id);
   if (!player) {
@@ -24,10 +27,12 @@ export default async function PlayerPage({ params }) {
   // a slow lookup still finishes in the background and the photo shows next time.
   const photoLookup = ensurePlayerPhoto(player);
   after(() => photoLookup);
-  const [{ cards, maybe = [], reason }, photo] = await Promise.all([
+  const [{ cards, maybe = [], reason }, photo, scans] = await Promise.all([
     playerCards(player.name),
     Promise.race([photoLookup, new Promise((r) => setTimeout(() => r(null), 4000))]),
+    scannedCards(),
   ]);
+  const PHOTO_MSG = { chosen: 'Photo saved.', none: 'Saved: no photo for him.', auto: 'CardScout will match him again next time.' };
 
   return (
     <main>
@@ -42,11 +47,15 @@ export default async function PlayerPage({ params }) {
         {/* Only when exactly one API-Football profile has the same name, nationality and age. */}
         {photo?.status === 'found' && (
           <figure className="player-photo">
-            <img src={`/player-photo/${player.player_id}`} alt={`${player.name}`} width="80" height="80" />
-            <figcaption>Photo: API-Football</figcaption>
+            <img src={`/player-photo/${player.player_id}?v=${encodeURIComponent(photo.checked_at ?? '')}`} alt={`${player.name}`} width="80" height="80" />
+            <figcaption>Photo: API-Football · <Link href={`/players/${player.player_id}/photo`}>Wrong?</Link></figcaption>
           </figure>
         )}
       </header>
+      {PHOTO_MSG[sp?.photo] && <p className="success" role="status">{PHOTO_MSG[sp.photo]}</p>}
+      {photo && photo.status !== 'found' && !photo.chosen_by_person && (
+        <p className="hint"><Link href={`/players/${player.player_id}/photo`}>Choose photo</Link></p>
+      )}
 
       <section className="flat" aria-labelledby="cards-heading">
         <h2 id="cards-heading">His cards</h2>
@@ -54,8 +63,12 @@ export default async function PlayerPage({ params }) {
         {!reason && cards.length === 0 && maybe.length === 0 && <p className="empty">SportsCardsPro lists no cards under this name, in either order.</p>}
         {cards.length > 0 && (
           <ul className="card-rows">
-            {cards.map((c) => (
-              <li key={c.id}>
+            {cards.map((c) => {
+              // A picture only when the shop has scanned this exact card before.
+              const scan = scanFor(c, scans);
+              return (
+              <li key={c.id} className={scan ? 'with-scan' : undefined}>
+                {scan && <Link href={`/offers/${scan.id}`} className="scan-thumb"><img src={`/photo/${scan.id}`} alt="" width="40" height="56" loading="lazy" /></Link>}
                 <span>
                   {(c.hot || c.rookie_year) && (
                     <span className="card-tags">
@@ -70,7 +83,8 @@ export default async function PlayerPage({ params }) {
                 </span>
                 <Link href={scanLink(c)} className="chip">Assess</Link>
               </li>
-            ))}
+              );
+            })}
           </ul>
         )}
         {maybe.length > 0 && (
@@ -87,7 +101,7 @@ export default async function PlayerPage({ params }) {
             </ul>
           </>
         )}
-        <p className="hint">Best first. Hot: his most-sold cards, with at least 20 sold a year on SportsCardsPro. Rookie year: his first season, which collectors want most. Assessing a card checks his real form and the owner&apos;s rules before anything is bought.</p>
+        <p className="hint">Best first. Hot: his most-sold cards, with at least 20 sold a year on SportsCardsPro. Rookie year: his first season, which collectors want most. A picture shows when the shop has scanned that exact card before. Assessing a card checks his real form and the owner&apos;s rules before anything is bought.</p>
       </section>
 
       <section className="flat" aria-labelledby="ratings-heading">

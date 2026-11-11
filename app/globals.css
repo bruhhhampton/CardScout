@@ -1060,3 +1060,15 @@ section.flat > h2 { font-size: var(--t-lg) !important; font-weight: 600 !importa
 .tag.rookie { color: var(--tone-counteroffer) !important; }
 .scout-runs { display: block; gap: 0; }
 .pick { border: 0; border-bottom: 1px solid var(--line); }
+
+/* ---------- Choose photo, and card pictures from the shop's own scans (12 Nov 2026) ---------- */
+.card-rows li.with-scan { grid-template-columns: 40px minmax(0, 1fr) auto; }
+.scan-thumb img { width: 40px; height: 56px; object-fit: cover; border-radius: 2px; display: block; background: var(--surface); }
+.choose-list { list-style: none; margin: 8px 0 0; padding: 0; border-top: 1px solid var(--line); }
+.choose-list li { display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.choose-list img { width: 56px; height: 56px; object-fit: cover; border-radius: 4px; background: var(--surface); }
+.choose-list form, .choose-actions form { margin: 0; }
+.choose-list .chip, .choose-actions .chip { min-height: 36px; padding: 0 12px; border-radius: 6px; font-size: var(--t-sm) !important; font-weight: 600 !important; background: #F2F3F5; color: #101113; border: 1px solid #F2F3F5; }
+.choose-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+.choose-actions .chip.quiet { background: transparent; color: var(--text); border-color: var(--line); }
+.player-photo figcaption a { color: var(--muted); }
